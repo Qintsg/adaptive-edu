@@ -1,0 +1,427 @@
+{
+    // ============================================
+    // 自适应学习系统 - 测试数据配置文件
+    // ============================================
+    // 
+    // 本文件包含系统测试所需的所有测试数据
+    // 格式：JSON5（支持注释和尾随逗号）
+    // 
+    // 使用方法：
+    //   python test.py create_test_data  # 根据此文件创建测试数据
+    // 
+
+    // ============================================
+    // 用户数据
+    // ============================================
+    "users": {
+        // 管理员账号
+        "admin": {
+            "username": "admin",
+            "password": "Admin123456",
+            "email": "admin@edu.qintsg.xyz",
+            "role": "admin",
+            "description": "系统管理员账号"
+        },
+
+        // 教师账号列表
+        "teachers": [
+            {
+                "username": "teacher1",
+                "password": "Test123456",
+                "email": "teacher@edu.qintsg.xyz",
+                "role": "teacher",
+                "real_name": "张老师",
+                "description": "大数据课程主讲教师"
+            },
+            {
+                "username": "teacher2",
+                "password": "Test123456",
+                "email": "teacher2@edu.qintsg.xyz",
+                "role": "teacher",
+                "real_name": "李老师",
+                "description": "机器学习课程主讲教师"
+            }
+        ],
+
+        // 学生账号列表
+        "students": [
+            {
+                "username": "student1",
+                "password": "Test123456",
+                "email": "student1@edu.qintsg.xyz",
+                "role": "student",
+                "real_name": "学生1",
+                "student_id": "20240001"
+            },
+            {
+                "username": "student2",
+                "password": "Test123456",
+                "email": "student2@edu.qintsg.xyz",
+                "role": "student",
+                "real_name": "学生2",
+                "student_id": "20240002"
+            },
+            {
+                "username": "student3",
+                "password": "Test123456",
+                "email": "student3@edu.qintsg.xyz",
+                "role": "student",
+                "real_name": "学生3",
+                "student_id": "20240003"
+            },
+            {
+                "username": "student4",
+                "password": "Test123456",
+                "email": "student4@edu.qintsg.xyz",
+                "role": "student",
+                "real_name": "学生4",
+                "student_id": "20240004"
+            },
+            {
+                "username": "student5",
+                "password": "Test123456",
+                "email": "student5@edu.qintsg.xyz",
+                "role": "student",
+                "real_name": "学生5",
+                "student_id": "20240005"
+            }
+        ]
+    },
+
+    // ============================================
+    // 学习习惯偏好数据
+    // ============================================
+    "habit_preferences": [
+        {
+            "student_index": 0,
+            "preferred_resource": "video",
+            "preferred_study_time": "evening",
+            "study_pace": "moderate",
+            "study_duration": "medium",
+            "review_frequency": "weekly",
+            "learning_style": "visual",
+            "accept_challenge": true,
+            "daily_goal_minutes": 60,
+            "weekly_goal_days": 5,
+            "reminder_settings": {"enabled": true, "frequency": "daily"}
+        },
+        {
+            "student_index": 1,
+            "preferred_resource": "document",
+            "preferred_study_time": "morning",
+            "study_pace": "slow",
+            "study_duration": "long",
+            "review_frequency": "daily",
+            "learning_style": "reading",
+            "accept_challenge": false,
+            "daily_goal_minutes": 90,
+            "weekly_goal_days": 7,
+            "reminder_settings": {"enabled": true, "frequency": "weekly"}
+        },
+        {
+            "student_index": 2,
+            "preferred_resource": "exercise",
+            "preferred_study_time": "afternoon",
+            "study_pace": "fast",
+            "study_duration": "short",
+            "review_frequency": "before_exam",
+            "learning_style": "kinesthetic",
+            "accept_challenge": true,
+            "daily_goal_minutes": 30,
+            "weekly_goal_days": 3,
+            "reminder_settings": {"enabled": false, "frequency": "never"}
+        },
+        {
+            "student_index": 3,
+            "preferred_resource": "video",
+            "preferred_study_time": "morning",
+            "study_pace": "adaptive",
+            "study_duration": "medium",
+            "review_frequency": "spaced",
+            "learning_style": "auditory",
+            "accept_challenge": true,
+            "daily_goal_minutes": 60,
+            "weekly_goal_days": 5,
+            "reminder_settings": {"enabled": true, "frequency": "daily"}
+        },
+        {
+            "student_index": 4,
+            "preferred_resource": "mixed",
+            "preferred_study_time": "evening",
+            "study_pace": "moderate",
+            "study_duration": "long",
+            "review_frequency": "weekly",
+            "learning_style": "visual",
+            "accept_challenge": true,
+            "daily_goal_minutes": 120,
+            "weekly_goal_days": 5,
+            "reminder_settings": {"enabled": true, "frequency": "weekly"}
+        }
+    ],
+
+    // ============================================
+    // 激活码数据
+    // ============================================
+    "activation_codes": [
+        {
+            "code": "TEACHER1",
+            "code_type": "teacher",
+            "remark": "测试用教师激活码"
+        },
+        {
+            "code": "ADMIN001",
+            "code_type": "admin",
+            "remark": "测试用管理员激活码"
+        }
+    ],
+
+    // ============================================
+    // 课程数据
+    // ============================================
+    "courses": [
+        {
+            "name": "大数据技术与应用",
+            "description": "本课程介绍大数据的基本概念、技术架构和应用场景。涵盖Hadoop、Spark等主流大数据技术。",
+            "is_public": true,
+            "initial_assessment_count": 10,
+            "teacher_index": 0  // 使用第一个教师
+        },
+        {
+            "name": "机器学习导论",
+            "description": "本课程介绍监督学习、神经网络和模型评估等核心内容。",
+            "is_public": true,
+            "initial_assessment_count": 50,
+            "teacher_index": 1
+        },
+        {
+            "name": "数据可视化基础",
+            "description": "本课程覆盖可视化设计原则、常用图表和交互式分析。",
+            "is_public": true,
+            "initial_assessment_count": 8,
+            "teacher_index": 0
+        }
+    ],
+
+    // ============================================
+    // 班级数据
+    // ============================================
+    "classes": [
+        {
+            "name": "2024春季班",
+            "description": "2024年春季学期教学班级",
+            "semester": "2024春",
+            "teacher_index": 0,
+            "course_indices": [0]  // 大数据技术与应用
+        },
+        {
+            "name": "2024机器学习班",
+            "description": "机器学习导论实践班级",
+            "semester": "2024春",
+            "teacher_index": 1,
+            "course_indices": [0, 1, 2]  // 大数据 + 机器学习 + 可视化
+        }
+    ],
+
+    // ============================================
+    // 班级邀请码数据
+    // ============================================
+    "class_invitations": [
+        {
+            "code": "JOIN01",
+            "class_index": 0,
+            "max_uses": 50
+        },
+        {
+            "code": "JOIN02",
+            "class_index": 0,
+            "max_uses": 30
+        }
+    ],
+
+    // ============================================
+    // 知识点、题库、资源等课程数据
+    // create_test_data 会根据下列最小种子数据生成多课程基础闭环
+    // ============================================
+    "course_seed_content": {
+        "大数据技术与应用": {
+            "knowledge_points": [
+                {"key": "bd_intro", "name": "大数据概述", "chapter": "第1章", "description": "理解大数据基本概念与应用场景"},
+                {"key": "bd_hadoop", "name": "Hadoop 生态", "chapter": "第2章", "description": "理解 HDFS 与 MapReduce 的定位"},
+                {"key": "bd_spark", "name": "Spark 基础", "chapter": "第3章", "description": "掌握 Spark 核心组件与计算模型"}
+            ],
+            "relations": [
+                {"pre": "bd_intro", "post": "bd_hadoop"},
+                {"pre": "bd_hadoop", "post": "bd_spark"}
+            ],
+            "resources": [
+                {"title": "大数据课程导读", "type": "document", "point_keys": ["bd_intro"], "chapter_number": "1.1", "url": "https://hadoop.apache.org/docs/stable/", "description": "课程整体导读资料"},
+                {"title": "Hadoop 架构概览", "type": "document", "point_keys": ["bd_hadoop"], "chapter_number": "2.1", "url": "https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/ClusterSetup.html", "description": "Hadoop 架构与组件说明"},
+                {"title": "Spark 入门视频", "type": "video", "point_keys": ["bd_spark"], "chapter_number": "3.1", "url": "https://spark.apache.org/docs/latest/quick-start.html", "description": "Spark 基础快速入门视频"}
+            ],
+            "questions": [
+                {"content": "以下哪一项最符合大数据的特征？", "point_keys": ["bd_intro"], "options": [{"label": "A", "content": "容量大"}, {"label": "B", "content": "速度快"}, {"label": "C", "content": "多样性"}, {"label": "D", "content": "以上都是"}], "answer": {"answer": "D"}, "analysis": "大数据通常强调 4V 等特征。"},
+                {"content": "HDFS 主要解决的是哪类问题？", "point_keys": ["bd_hadoop"], "options": [{"label": "A", "content": "分布式存储"}, {"label": "B", "content": "图像识别"}, {"label": "C", "content": "模型训练"}, {"label": "D", "content": "事务处理"}], "answer": {"answer": "A"}, "analysis": "HDFS 是 Hadoop 的分布式文件系统。"},
+                {"content": "Spark 相比传统 MapReduce 更强调内存计算。", "question_type": "true_false", "point_keys": ["bd_spark"], "options": [], "answer": {"answer": true}, "analysis": "Spark 的核心优势之一是以内存计算提升迭代效率。"}
+            ]
+        },
+        "机器学习导论": {
+            "knowledge_points": [
+                {"key": "ml_intro", "name": "机器学习概述", "chapter": "第1章", "description": "理解机器学习基本任务"},
+                {"key": "ml_supervised", "name": "监督学习", "chapter": "第2章", "description": "理解分类与回归问题"},
+                {"key": "ml_eval", "name": "模型评估", "chapter": "第3章", "description": "掌握准确率与召回率等指标"}
+            ],
+            "relations": [
+                {"pre": "ml_intro", "post": "ml_supervised"},
+                {"pre": "ml_supervised", "post": "ml_eval"}
+            ],
+            "resources": [
+                {"title": "机器学习课程导论", "type": "document", "point_keys": ["ml_intro"], "chapter_number": "1.1", "url": "https://scikit-learn.org/stable/tutorial/basic/tutorial.html", "description": "机器学习问题分类导读"},
+                {"title": "监督学习案例解析", "type": "document", "point_keys": ["ml_supervised"], "chapter_number": "2.1", "url": "https://scikit-learn.org/stable/supervised_learning.html", "description": "监督学习基础案例"},
+                {"title": "模型评估指标说明", "type": "link", "point_keys": ["ml_eval"], "chapter_number": "3.1", "url": "https://scikit-learn.org/stable/modules/model_evaluation.html", "description": "模型评估相关外部资料"}
+            ],
+            "questions": [
+                {"content": "机器学习的核心目标通常是让模型从数据中学习什么能力？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "从样本规律中获得对未知数据的预测或决策能力"}, {"label": "B", "content": "只保存训练数据的原始文本"}, {"label": "C", "content": "完全替代数据库事务处理"}, {"label": "D", "content": "手工枚举所有可能答案"}], "answer": {"answer": "A"}, "analysis": "机器学习强调从数据中学习规律，并把规律泛化到未见样本。", "difficulty": "easy", "score": 2},
+                {"content": "监督学习通常需要什么样的数据？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "带标签数据"}, {"label": "B", "content": "无标签数据"}, {"label": "C", "content": "仅图像数据"}, {"label": "D", "content": "仅文本数据"}], "answer": {"answer": "A"}, "analysis": "监督学习依赖输入特征与目标标签之间的对应关系来训练模型。", "difficulty": "easy", "score": 2},
+                {"content": "准确率和召回率都属于模型评估指标。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "准确率、召回率、精确率和 F1 值都是分类任务中的常见评估指标。", "difficulty": "easy", "score": 2},
+                {"content": "在机器学习任务中，特征通常指什么？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "用于描述样本并输入模型的变量"}, {"label": "B", "content": "模型最终输出的文件名"}, {"label": "C", "content": "数据库中的唯一主键"}, {"label": "D", "content": "训练过程中的随机报错信息"}], "answer": {"answer": "A"}, "analysis": "特征是刻画样本属性的输入变量，例如房屋面积、用户年龄或文本词频。", "difficulty": "easy", "score": 2},
+                {"content": "下列哪一个问题更典型地属于分类任务？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "判断邮件是否为垃圾邮件"}, {"label": "B", "content": "预测明天具体气温数值"}, {"label": "C", "content": "计算两个矩阵相乘结果"}, {"label": "D", "content": "压缩图片文件大小"}], "answer": {"answer": "A"}, "analysis": "分类任务输出离散类别，垃圾邮件识别通常输出“垃圾/非垃圾”类别。", "difficulty": "easy", "score": 2},
+                {"content": "在二分类混淆矩阵中，TP 表示什么？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "真实为正类且预测为正类的样本数"}, {"label": "B", "content": "真实为负类且预测为正类的样本数"}, {"label": "C", "content": "真实为正类但预测为负类的样本数"}, {"label": "D", "content": "真实为负类且预测为负类的样本数"}], "answer": {"answer": "A"}, "analysis": "TP 是 True Positive，表示正类样本被模型正确预测为正类。", "difficulty": "medium", "score": 2},
+                {"content": "训练集和测试集应当完全相同，这样才能保证模型评估最公平。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": false}, "analysis": "训练集用于拟合模型，测试集用于估计泛化能力；二者完全相同会造成评估过于乐观。", "difficulty": "easy", "score": 2},
+                {"content": "线性回归最常用于解决哪类监督学习问题？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "连续数值预测问题"}, {"label": "B", "content": "无监督聚类问题"}, {"label": "C", "content": "图像无损压缩问题"}, {"label": "D", "content": "操作系统进程调度问题"}], "answer": {"answer": "A"}, "analysis": "线性回归用于建模特征与连续目标值之间的关系。", "difficulty": "easy", "score": 2},
+                {"content": "当类别极度不平衡时，仅依赖准确率可能掩盖少数类识别效果。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "在类别不平衡场景中，模型可能只预测多数类也得到高准确率，此时应结合召回率、精确率、F1 等指标。", "difficulty": "medium", "score": 2},
+                {"content": "泛化能力描述的是模型在哪些数据上的表现能力？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "未在训练中见过的新样本"}, {"label": "B", "content": "只在训练集中重复出现的样本"}, {"label": "C", "content": "模型参数表中的字段名"}, {"label": "D", "content": "编程语言运行时日志"}], "answer": {"answer": "A"}, "analysis": "泛化能力关注模型能否把训练中学到的规律应用到未见样本。", "difficulty": "easy", "score": 2},
+                {"content": "逻辑回归虽然名称中有“回归”，但常用于哪类任务？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "分类任务"}, {"label": "B", "content": "数据库索引构建"}, {"label": "C", "content": "无监督降维"}, {"label": "D", "content": "文本编码格式转换"}], "answer": {"answer": "A"}, "analysis": "逻辑回归通过 Sigmoid 或 Softmax 等形式输出类别概率，常用于分类。", "difficulty": "medium", "score": 2},
+                {"content": "召回率主要衡量正类样本中有多少被模型找回。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "召回率等于 TP / (TP + FN)，关注真实正类中被正确识别的比例。", "difficulty": "easy", "score": 2},
+                {"content": "过拟合通常表现为模型在哪种情况下效果较差？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "训练集表现很好但测试集表现明显下降"}, {"label": "B", "content": "训练集和测试集都完全无法运行"}, {"label": "C", "content": "模型没有任何参数"}, {"label": "D", "content": "数据没有被存储到硬盘"}], "answer": {"answer": "A"}, "analysis": "过拟合说明模型过度贴合训练数据噪声，导致泛化性能下降。", "difficulty": "medium", "score": 2},
+                {"content": "决策树模型进行划分时通常希望节点划分后样本更纯。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "决策树常通过信息增益、基尼指数等准则选择能提高类别纯度的划分。", "difficulty": "medium", "score": 2},
+                {"content": "精确率 Precision 的含义最接近下列哪一项？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "预测为正类的样本中有多少确实为正类"}, {"label": "B", "content": "真实正类中有多少被找回"}, {"label": "C", "content": "所有样本中有多少属于负类"}, {"label": "D", "content": "模型训练所需的总轮数"}], "answer": {"answer": "A"}, "analysis": "精确率等于 TP / (TP + FP)，关注正类预测结果的可靠性。", "difficulty": "medium", "score": 2},
+                {"content": "欠拟合通常说明模型过于简单或训练不足，无法捕捉数据中的有效规律。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "欠拟合时模型在训练集和测试集上通常都表现不佳，需要提升模型能力或改进特征。", "difficulty": "medium", "score": 2},
+                {"content": "K 近邻算法进行预测时主要依据什么？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "待预测样本附近训练样本的标签或数值"}, {"label": "B", "content": "操作系统当前时间"}, {"label": "C", "content": "数据库表的创建顺序"}, {"label": "D", "content": "代码文件的扩展名"}], "answer": {"answer": "A"}, "analysis": "KNN 根据距离度量寻找邻近样本，并由邻居的标签投票或数值平均得到预测。", "difficulty": "medium", "score": 2},
+                {"content": "F1 值综合考虑了精确率和召回率。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "F1 是精确率和召回率的调和平均，常用于二者需要平衡的场景。", "difficulty": "easy", "score": 2},
+                {"content": "机器学习中的标签通常指什么？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "监督学习中样本对应的目标输出"}, {"label": "B", "content": "网页中的 HTML 标签"}, {"label": "C", "content": "数据库连接密码"}, {"label": "D", "content": "模型文件所在文件夹"}], "answer": {"answer": "A"}, "analysis": "标签是监督学习的目标值，例如类别名、是否违约或房价数值。", "difficulty": "easy", "score": 2},
+                {"content": "支持向量机的基本思想之一是寻找能够较好分隔样本的决策边界。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "SVM 通过最大化间隔来寻找分隔超平面，并可结合核函数处理非线性问题。", "difficulty": "medium", "score": 2},
+                {"content": "均方误差 MSE 更常用于评估哪类任务？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "回归任务"}, {"label": "B", "content": "二分类混淆矩阵可视化"}, {"label": "C", "content": "文本分词任务中的停用词表"}, {"label": "D", "content": "模型部署端口检测"}], "answer": {"answer": "A"}, "analysis": "MSE 衡量预测数值与真实数值的平方误差，主要用于回归模型评估。", "difficulty": "easy", "score": 2},
+                {"content": "数据预处理可能包括缺失值处理、标准化、编码类别变量等步骤。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "良好的预处理能提升数据质量，使模型更稳定地学习特征规律。", "difficulty": "easy", "score": 2},
+                {"content": "监督学习中回归任务的输出通常是什么？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "连续数值"}, {"label": "B", "content": "固定类别标签"}, {"label": "C", "content": "数据库事务日志"}, {"label": "D", "content": "网页样式表"}], "answer": {"answer": "A"}, "analysis": "回归任务预测连续目标值，例如价格、温度、销量等。", "difficulty": "easy", "score": 2},
+                {"content": "交叉验证的主要作用是什么？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "更稳健地估计模型在不同数据划分下的泛化表现"}, {"label": "B", "content": "删除所有训练样本"}, {"label": "C", "content": "把分类任务强制改成回归任务"}, {"label": "D", "content": "绕过模型训练直接上线"}], "answer": {"answer": "A"}, "analysis": "交叉验证通过多次划分训练和验证数据，降低单次划分带来的偶然性。", "difficulty": "medium", "score": 2},
+                {"content": "“没有免费午餐”定理说明不存在一个算法能在所有任务上都绝对最优。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "不同数据分布和任务目标需要不同归纳偏置，算法选择要结合具体问题。", "difficulty": "hard", "score": 2},
+                {"content": "正则化在监督学习中的常见作用是什么？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "限制模型复杂度以缓解过拟合"}, {"label": "B", "content": "让模型记住所有训练样本编号"}, {"label": "C", "content": "替换数据库备份策略"}, {"label": "D", "content": "保证训练集准确率必定为100%"}], "answer": {"answer": "A"}, "analysis": "L1、L2 等正则化通过惩罚复杂参数帮助模型提升泛化能力。", "difficulty": "medium", "score": 2},
+                {"content": "ROC 曲线展示的是不同阈值下 TPR 与 FPR 的关系。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "ROC 曲线横轴常为假正率 FPR，纵轴常为真正率 TPR。", "difficulty": "hard", "score": 2},
+                {"content": "下列哪项更可能导致数据泄漏？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "把测试集信息用于特征选择或预处理参数拟合"}, {"label": "B", "content": "只在训练集上拟合标准化参数"}, {"label": "C", "content": "把数据划分为训练集和测试集"}, {"label": "D", "content": "在训练前固定随机种子"}], "answer": {"answer": "A"}, "analysis": "数据泄漏会让模型提前接触评估数据的信息，导致评估结果虚高。", "difficulty": "hard", "score": 2},
+                {"content": "神经网络由多个神经元和连接权重组成，可以通过训练调整参数。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "神经网络通过前向传播计算输出，并通过反向传播等方法更新权重。", "difficulty": "medium", "score": 2},
+                {"content": "验证集的主要用途是什么？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "调参和模型选择"}, {"label": "B", "content": "替代训练集参与全部梯度更新"}, {"label": "C", "content": "保存生产数据库密码"}, {"label": "D", "content": "只用于绘制课程封面"}], "answer": {"answer": "A"}, "analysis": "验证集常用于比较模型方案、调节超参数，并帮助决定训练停止时机。", "difficulty": "medium", "score": 2},
+                {"content": "特征工程的目的之一是构造更能表达问题规律的输入表示。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "合适的特征能让模型更容易学习到有效关系，尤其在传统机器学习中非常关键。", "difficulty": "medium", "score": 2},
+                {"content": "梯度下降算法主要用来做什么？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "沿损失函数下降方向迭代更新模型参数"}, {"label": "B", "content": "把训练数据直接导出为图片"}, {"label": "C", "content": "生成数据库自增主键"}, {"label": "D", "content": "随机删除评估指标"}], "answer": {"answer": "A"}, "analysis": "梯度下降利用损失函数对参数的梯度来逐步降低训练损失。", "difficulty": "medium", "score": 2},
+                {"content": "AUC 越接近 1，通常表示分类模型排序区分能力越强。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "AUC 衡量模型对正负样本的排序能力，随机模型通常接近 0.5。", "difficulty": "medium", "score": 2},
+                {"content": "机器学习项目中建立基线模型的价值是什么？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "提供一个可比较的最低可用参考水平"}, {"label": "B", "content": "保证复杂模型永远不需要评估"}, {"label": "C", "content": "替代业务问题定义"}, {"label": "D", "content": "删除所有原始数据"}], "answer": {"answer": "A"}, "analysis": "基线模型帮助判断后续复杂方法是否真正带来收益。", "difficulty": "medium", "score": 2},
+                {"content": "损失函数用于衡量模型预测与真实目标之间的差异。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "训练过程通常通过最小化损失函数来更新模型参数。", "difficulty": "easy", "score": 2},
+                {"content": "MAE 指标的特点是基于哪种误差？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "预测值与真实值差异的绝对值平均"}, {"label": "B", "content": "所有分类标签的字符串长度"}, {"label": "C", "content": "模型参数数量的平方"}, {"label": "D", "content": "训练样本编号的平均值"}], "answer": {"answer": "A"}, "analysis": "MAE 是 Mean Absolute Error，常用于回归任务，含义直观且对异常值比 MSE 更不敏感。", "difficulty": "medium", "score": 2},
+                {"content": "超参数是在训练开始前或训练过程中由训练算法直接从数据中学习出来的模型权重。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": false}, "analysis": "超参数通常由人为设定或通过搜索选择，例如学习率、树深度；模型权重才是训练学习到的参数。", "difficulty": "medium", "score": 2},
+                {"content": "随机森林相比单棵决策树通常通过什么方式提升稳定性？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "集成多棵树并综合它们的预测"}, {"label": "B", "content": "只保留树的根节点"}, {"label": "C", "content": "禁止使用任何特征"}, {"label": "D", "content": "把分类标签改成文件路径"}], "answer": {"answer": "A"}, "analysis": "随机森林通过 Bagging 和随机特征选择构建多棵树，降低单模型方差。", "difficulty": "medium", "score": 2},
+                {"content": "测试集应尽量只在最终评估时使用，以减少反复调参造成的评估偏差。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "频繁根据测试集结果调参会让测试集间接参与模型选择，削弱最终评估可信度。", "difficulty": "medium", "score": 2},
+                {"content": "非监督学习与监督学习的关键区别之一是什么？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "非监督学习通常没有人工标注的目标标签"}, {"label": "B", "content": "非监督学习不能处理数值数据"}, {"label": "C", "content": "监督学习不需要训练数据"}, {"label": "D", "content": "监督学习只能用于压缩文件"}], "answer": {"answer": "A"}, "analysis": "非监督学习从无标签数据中发现结构，例如聚类、降维和异常检测。", "difficulty": "easy", "score": 2},
+                {"content": "在监督学习中，特征缩放可能帮助基于距离或梯度的模型更稳定训练。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "KNN、SVM、线性模型梯度优化等方法常会受到特征量纲影响，标准化可提升稳定性。", "difficulty": "medium", "score": 2},
+                {"content": "宏平均 Macro Average 在多分类评估中通常如何计算？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "先分别计算每个类别指标，再对类别做简单平均"}, {"label": "B", "content": "只统计样本数最多的类别"}, {"label": "C", "content": "把全部预测概率直接相乘"}, {"label": "D", "content": "忽略少数类并删除其样本"}], "answer": {"answer": "A"}, "analysis": "宏平均让每个类别权重相同，适合关注各类别均衡表现的场景。", "difficulty": "hard", "score": 2},
+                {"content": "偏差-方差权衡用于分析模型误差来源和复杂度选择。", "question_type": "true_false", "point_keys": ["ml_intro"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "高偏差常对应欠拟合，高方差常对应过拟合，需要在模型复杂度和泛化之间平衡。", "difficulty": "hard", "score": 2},
+                {"content": "朴素贝叶斯分类器中的“朴素”通常指什么假设？", "question_type": "single_choice", "point_keys": ["ml_supervised"], "options": [{"label": "A", "content": "给定类别条件下特征之间相互独立"}, {"label": "B", "content": "所有样本必须完全相同"}, {"label": "C", "content": "模型不能使用概率"}, {"label": "D", "content": "分类结果只能有一个类别"}], "answer": {"answer": "A"}, "analysis": "朴素贝叶斯以条件独立假设简化概率计算，常用于文本分类等任务。", "difficulty": "hard", "score": 2},
+                {"content": "在二分类中，调高判定为正类的阈值通常可能降低召回率。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "阈值升高会让更少样本被预测为正类，通常减少 TP，也可能降低召回率。", "difficulty": "medium", "score": 2},
+                {"content": "下列哪一项属于机器学习建模前的问题定义工作？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "明确预测目标、输入数据和业务评价标准"}, {"label": "B", "content": "随机选择一个最复杂模型直接上线"}, {"label": "C", "content": "删除所有字段名以避免理解数据"}, {"label": "D", "content": "只关注界面颜色而不看任务目标"}], "answer": {"answer": "A"}, "analysis": "问题定义决定任务类型、数据范围和成功标准，是建模前的关键步骤。", "difficulty": "medium", "score": 2},
+                {"content": "监督学习模型训练时通常需要通过训练数据优化模型参数。", "question_type": "true_false", "point_keys": ["ml_supervised"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": true}, "analysis": "训练过程依据样本特征、标签和损失函数调整参数，使预测更接近真实目标。", "difficulty": "easy", "score": 2},
+                {"content": "RMSE 与 MSE 的关系是什么？", "question_type": "single_choice", "point_keys": ["ml_eval"], "options": [{"label": "A", "content": "RMSE 是 MSE 的平方根"}, {"label": "B", "content": "MSE 是 RMSE 的平方根"}, {"label": "C", "content": "二者只用于文本分词"}, {"label": "D", "content": "二者与回归误差无关"}], "answer": {"answer": "A"}, "analysis": "RMSE 对 MSE 开方后与目标变量保持相同量纲，便于解释回归误差大小。", "difficulty": "easy", "score": 2},
+                {"content": "模型评估只需要看训练集准确率，测试集表现可以忽略。", "question_type": "true_false", "point_keys": ["ml_eval"], "options": [{"value": "true", "label": "正确", "content": "正确"}, {"value": "false", "label": "错误", "content": "错误"}], "answer": {"answer": false}, "analysis": "训练集表现无法可靠代表泛化能力，测试集或独立验证数据对评估至关重要。", "difficulty": "easy", "score": 2},
+                {"content": "测试集在机器学习流程中的主要作用是什么？", "question_type": "single_choice", "point_keys": ["ml_intro"], "options": [{"label": "A", "content": "用于最终评估模型的泛化能力"}, {"label": "B", "content": "用于反复拟合模型参数"}, {"label": "C", "content": "用于替代训练集减少训练成本"}, {"label": "D", "content": "用于保存模型的日志文件"}], "answer": {"answer": "A"}, "analysis": "测试集应尽量只在最终评估时使用，用于估计模型面对未见数据时的表现。", "difficulty": "easy", "score": 2}
+            ]
+        },
+        "数据可视化基础": {
+            "knowledge_points": [
+                {"key": "viz_principle", "name": "可视化设计原则", "chapter": "第1章", "description": "理解清晰表达与信息负载平衡"},
+                {"key": "viz_chart", "name": "常用图表", "chapter": "第2章", "description": "掌握柱状图、折线图等基础图表"},
+                {"key": "viz_story", "name": "数据叙事", "chapter": "第3章", "description": "理解图表组织与故事线设计"}
+            ],
+            "relations": [
+                {"pre": "viz_principle", "post": "viz_chart"},
+                {"pre": "viz_chart", "post": "viz_story"}
+            ],
+            "resources": [
+                {"title": "可视化原则速览", "type": "document", "point_keys": ["viz_principle"], "chapter_number": "1.1", "url": "https://observablehq.com/@d3/learn-d3", "description": "可视化设计原则简介"},
+                {"title": "基础图表实战", "type": "video", "point_keys": ["viz_chart"], "chapter_number": "2.1", "url": "https://echarts.apache.org/handbook/en/get-started/", "description": "常用图表制作示例"},
+                {"title": "数据叙事案例", "type": "document", "point_keys": ["viz_story"], "chapter_number": "3.1", "url": "https://www.tableau.com/learn/articles/data-storytelling", "description": "典型数据叙事结构案例"}
+            ],
+            "questions": [
+                {"content": "以下哪类图表更适合展示时间趋势？", "point_keys": ["viz_chart"], "options": [{"label": "A", "content": "折线图"}, {"label": "B", "content": "饼图"}, {"label": "C", "content": "词云"}, {"label": "D", "content": "矩阵图"}], "answer": {"answer": "A"}, "analysis": "折线图适合表示随时间变化的趋势。"}
+            ]
+        }
+    },
+
+    // ============================================
+    // 问卷题目数据（与 assessments/views.py 的自动创建逻辑一致）
+    // ============================================
+    // 习惯问卷（10题）和能力C-WAIS量表（16题）由后端自动创建默认题目
+    "survey_questions": {
+        "habit": [],
+        "ability": []
+    },
+
+    // ============================================
+    // Neo4j专用知识图谱测试数据
+    // ============================================
+    // 这部分数据直接导入Neo4j，不进入PostgreSQL
+    "neo4j_knowledge_graph": [
+        {
+            // 大数据技术与应用 - 知识图谱
+            "course_id": 1,
+            "course_name": "大数据技术与应用",
+            "points": [
+                {"id": 101, "name": "大数据概述", "chapter": "第一章", "point_type": "knowledge", "level": 1, "description": "大数据基本概念"},
+                {"id": 102, "name": "Hadoop生态系统", "chapter": "第二章", "point_type": "knowledge", "level": 1, "description": "Hadoop核心组件"},
+                {"id": 103, "name": "HDFS分布式存储", "chapter": "第二章", "point_type": "knowledge", "level": 2, "description": "HDFS架构原理"},
+                {"id": 104, "name": "MapReduce编程", "chapter": "第三章", "point_type": "skill", "level": 2, "description": "MapReduce编程模型"},
+                {"id": 105, "name": "Spark基础", "chapter": "第四章", "point_type": "knowledge", "level": 1, "description": "Spark核心概念"},
+                {"id": 106, "name": "Spark SQL", "chapter": "第四章", "point_type": "skill", "level": 2, "description": "Spark SQL数据分析"}
+            ],
+            "relations": [
+                {"pre_id": 101, "post_id": 102, "type": "prerequisite"},
+                {"pre_id": 102, "post_id": 103, "type": "prerequisite"},
+                {"pre_id": 102, "post_id": 104, "type": "prerequisite"},
+                {"pre_id": 103, "post_id": 105, "type": "prerequisite"},
+                {"pre_id": 105, "post_id": 106, "type": "prerequisite"}
+            ]
+        },
+        {
+            // 机器学习导论 - 知识图谱
+            "course_id": 3,
+            "course_name": "机器学习导论",
+            "points": [
+                {"id": 301, "name": "机器学习概述", "chapter": "第一章", "point_type": "knowledge", "level": 1, "description": "ML基本概念"},
+                {"id": 302, "name": "监督学习", "chapter": "第二章", "point_type": "knowledge", "level": 1, "description": "分类与回归"},
+                {"id": 303, "name": "决策树", "chapter": "第二章", "point_type": "knowledge", "level": 2, "description": "决策树算法"},
+                {"id": 304, "name": "神经网络", "chapter": "第三章", "point_type": "knowledge", "level": 2, "description": "神经网络基础"},
+                {"id": 305, "name": "深度学习", "chapter": "第四章", "point_type": "knowledge", "level": 3, "description": "深度神经网络"},
+                {"id": 306, "name": "模型评估", "chapter": "第五章", "point_type": "skill", "level": 2, "description": "模型评估方法"}
+            ],
+            "relations": [
+                {"pre_id": 301, "post_id": 302, "type": "prerequisite"},
+                {"pre_id": 302, "post_id": 303, "type": "prerequisite"},
+                {"pre_id": 302, "post_id": 304, "type": "prerequisite"},
+                {"pre_id": 304, "post_id": 305, "type": "prerequisite"},
+                {"pre_id": 302, "post_id": 306, "type": "prerequisite"}
+            ]
+        }
+    ],
+
+    // ============================================
+    // 元信息
+    // ============================================
+    "_meta": {
+        "version": "1.0.0",
+        "description": "自适应学习系统测试数据（仅含用户/课程/班级等基础数据）",
+        "author": "自适应学习系统团队",
+        "last_updated": "2025-07-14",
+        "notes": {
+            "postgresql": "用户、课程、班级、激活码等基础数据存储在PostgreSQL",
+            "neo4j": "知识图谱(知识点、关系)存储在Neo4j图数据库",
+            "surveys": "习惯问卷和能力量表由后端API自动创建默认题目",
+            "course_data": "知识点、题库、资源等课程数据请通过 python tools.py bootstrap-course-assets 命令导入"
+        }
+    }
+}

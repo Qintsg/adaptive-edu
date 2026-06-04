@@ -1,0 +1,158 @@
+listTeacherResources:
+  get:
+    tags: [Knowledge]
+    operationId: listTeacherResources
+    summary: 教师查询课程资源
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - name: type
+        in: query
+        schema:
+          type: string
+      - name: resource_type
+        in: query
+        schema:
+          type: string
+      - name: point_id
+        in: query
+        schema:
+          type: integer
+      - $ref: ../components/parameters.yaml#/Page
+      - $ref: ../components/parameters.yaml#/PageSize
+    responses:
+      "200":
+        description: data 包含 total、resources[]。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+
+createTeacherResource:
+  post:
+    tags: [Knowledge]
+    operationId: createTeacherResource
+    summary: 教师创建课程资源
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            $ref: ../components/schemas/ResourceWriteRequest.yaml
+        application/json:
+          schema:
+            $ref: ../components/schemas/ResourceWriteRequest.yaml
+    responses:
+      "201":
+        $ref: ../components/responses.yaml#/Created
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+
+uploadTeacherResource:
+  post:
+    tags: [Knowledge]
+    operationId: uploadTeacherResource
+    summary: 上传课程资源文件
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file, course_id]
+            properties:
+              file:
+                type: string
+                format: binary
+              course_id:
+                type: integer
+              title:
+                type: string
+              resource_type:
+                type: string
+              description:
+                type: string
+    responses:
+      "201":
+        $ref: ../components/responses.yaml#/Created
+
+
+      "200":
+        $ref: ../components/responses.yaml#/Success
+teacherResourcesResourceId:
+  get:
+    tags: [Knowledge]
+    operationId: getTeacherResource
+    summary: 获取教师资源详情
+    parameters:
+      - $ref: ../components/parameters.yaml#/ResourceIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+  put:
+    tags: [Knowledge]
+    operationId: updateTeacherResource
+    summary: 更新教师资源
+    parameters:
+      - $ref: ../components/parameters.yaml#/ResourceIdPath
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            $ref: ../components/schemas/ResourceWriteRequest.yaml
+        application/json:
+          schema:
+            $ref: ../components/schemas/ResourceWriteRequest.yaml
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+
+deleteTeacherResource:
+  delete:
+    tags: [Knowledge]
+    operationId: deleteTeacherResource
+    summary: 删除教师资源
+    parameters:
+      - $ref: ../components/parameters.yaml#/ResourceIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+linkTeacherResourceKnowledge:
+  post:
+    tags: [Knowledge]
+    operationId: linkTeacherResourceKnowledge
+    summary: 关联资源到知识点
+    parameters:
+      - $ref: ../components/parameters.yaml#/ResourceIdPath
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [knowledge_point_ids]
+            properties:
+              knowledge_point_ids:
+                type: array
+                items:
+                  type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success

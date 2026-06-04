@@ -1,0 +1,300 @@
+.summary-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.summary-layout.single-summary {
+  grid-template-columns: 1fr;
+}
+
+.summary-text {
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-soft);
+  white-space: pre-line;
+  color: var(--text-regular);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.summary-lenses {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.summary-block {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-elevated);
+}
+
+.strength-block {
+  box-shadow: inset 4px 0 0 rgba(16, 124, 16, 0.45);
+}
+
+.weakness-block {
+  box-shadow: inset 4px 0 0 rgba(241, 161, 10, 0.55);
+}
+
+.summary-strength,
+.summary-weakness {
+  margin: 8px 0 0;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.summary-strength {
+  color: var(--success-color);
+}
+
+.summary-weakness {
+  color: var(--warning-color);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header.stacked strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+.card-eyebrow {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mastery-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.mastery-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mastery-pulse {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-soft);
+  min-width: 0;
+}
+
+.mastery-pulse span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.mastery-pulse strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.mastery-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.mastery-stat {
+  min-width: 0;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  text-align: center;
+}
+
+.mastery-stat.warning {
+  background: rgba(184, 141, 71, 0.14);
+}
+
+.mastery-stat strong {
+  display: block;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.mastery-stat span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.focus-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 244, 206, 0.42);
+  min-width: 0;
+}
+
+.focus-cluster > span {
+  color: var(--warning-color);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mastery-chart-scroller {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 8px;
+  border-radius: 16px;
+}
+
+.ai-content .ai-lead {
+  margin: 0 0 12px;
+  color: var(--text-regular);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.suggestion-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 88px;
+  padding: 14px 14px 14px 48px;
+  border: 1px solid rgba(15, 108, 189, 0.1);
+  border-radius: 14px;
+  background: var(--bg-elevated);
+}
+
+.suggestion-card span {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  color: rgba(15, 108, 189, 0.28);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.suggestion-card p {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.ai-loading {
+  padding: 16px 0;
+}
+
+.ai-progress-stage {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  animation: stage-fade 0.5s ease;
+}
+
+@keyframes stage-fade {
+  from {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.ai-placeholder {
+  min-height: 170px;
+}
+
+.retry-row {
+  margin-top: 12px;
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .profile-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-hero,
+  .summary-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-side {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+@media (max-width: 768px) {
+  .assessment-empty-card,
+  .hero-main,
+  .hero-side {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .assessment-empty-card,
+  .profile-hero,
+  .hero-side,
+  .metric-strip,
+  .ability-insights,
+  .mastery-pulse,
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-hero {
+    padding: 18px;
+  }
+
+  .hero-main {
+    display: flex;
+  }
+
+  .profile-score-card,
+  .refresh-btn {
+    width: 100%;
+  }
+
+  .mastery-summary {
+    grid-template-columns: 1fr;
+  }
+}

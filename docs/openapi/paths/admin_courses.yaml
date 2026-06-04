@@ -1,0 +1,301 @@
+listAdminCourses:
+  get:
+    tags: [Admin, Courses]
+    operationId: listAdminCourses
+    summary: 管理员查询课程列表
+    parameters:
+      - $ref: ../components/parameters.yaml#/Page
+      - $ref: ../components/parameters.yaml#/PageSize
+      - name: query
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+createAdminCourse:
+  post:
+    tags: [Admin, Courses]
+    operationId: createAdminCourse
+    summary: 管理员创建课程
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              teacher_id:
+                type: integer
+    responses:
+      "201":
+        $ref: ../components/responses.yaml#/Created
+
+
+adminCoursesCourseId:
+  get:
+    tags: [Admin, Courses]
+    operationId: getAdminCourseDetail
+    summary: 管理员获取课程详情
+    parameters:
+      - name: course_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+  put:
+    tags: [Admin, Courses]
+    operationId: updateAdminCourse
+    summary: 管理员更新课程
+    parameters:
+      - name: course_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+  delete:
+    tags: [Admin, Courses]
+    operationId: deleteAdminCourse
+    summary: 管理员删除课程
+    parameters:
+      - name: course_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+assignTeacherToCourse:
+  post:
+    tags: [Admin, Courses]
+    operationId: assignTeacherToCourse
+    summary: 为课程分配教师
+    parameters:
+      - name: course_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [teacher_id]
+            properties:
+              teacher_id:
+                type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+getAdminCourseStatistics:
+  get:
+    tags: [Admin, Courses]
+    operationId: getAdminCourseStatistics
+    summary: 管理员获取课程统计
+    parameters:
+      - name: course_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+listAdminClasses:
+  get:
+    tags: [Admin, Courses]
+    operationId: listAdminClasses
+    summary: 管理员查询班级列表
+    parameters:
+      - $ref: ../components/parameters.yaml#/Page
+      - $ref: ../components/parameters.yaml#/PageSize
+      - name: query
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+createAdminClass:
+  post:
+    tags: [Admin, Courses]
+    operationId: createAdminClass
+    summary: 管理员创建班级
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+              teacher_id:
+                type: integer
+              description:
+                type: string
+              semester:
+                type: string
+    responses:
+      "201":
+        $ref: ../components/responses.yaml#/Created
+
+
+adminClassesClassId:
+  get:
+    tags: [Admin, Courses]
+    operationId: getAdminClassDetail
+    summary: 管理员获取班级详情
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+  put:
+    tags: [Admin, Courses]
+    operationId: updateAdminClass
+    summary: 管理员更新班级
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+  delete:
+    tags: [Admin, Courses]
+    operationId: deleteAdminClass
+    summary: 管理员删除班级
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+listAdminClassStudents:
+  get:
+    tags: [Admin, Courses]
+    operationId: listAdminClassStudents
+    summary: 管理员查看班级学生
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+addAdminClassStudents:
+  post:
+    tags: [Admin, Courses]
+    operationId: addAdminClassStudents
+    summary: 管理员向班级添加学生
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [student_ids]
+            properties:
+              student_ids:
+                type: array
+                items:
+                  type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+removeAdminClassStudent:
+  delete:
+    tags: [Admin, Courses]
+    operationId: removeAdminClassStudent
+    summary: 管理员从班级移除学生
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+      - name: student_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+assignTeacherToClass:
+  post:
+    tags: [Admin, Courses]
+    operationId: assignTeacherToClass
+    summary: 为班级分配教师
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [teacher_id]
+            properties:
+              teacher_id:
+                type: integer
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+getAdminClassStatistics:
+  get:
+    tags: [Admin, Courses]
+    operationId: getAdminClassStatistics
+    summary: 管理员获取班级统计
+    parameters:
+      - $ref: ../components/parameters.yaml#/ClassIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success

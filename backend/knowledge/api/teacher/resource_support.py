@@ -1,0 +1,328 @@
+"""教师端资源库视图支持逻辑。"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from typing import cast
+
+from application.teacher.contracts import first_present
+from knowledge.models import KnowledgePoint, Resource
+from knowledge.api.teacher.helpers import KnowledgePointRelationSetter, replace_knowledge_points
+
+
+@dataclass(frozen=True)
+class ResourceWritePayload:
+    """资源创建或更新的标准化输入。"""
+
+    title: object
+    resource_type: object
+    url: object
+    points: object
+    duration: int | None
+    chapter_number: object
+    sort_order: int | None
+    description: object
+    is_visible: object | None = None
+    processing_status: object | None = None
+    processing_message: object | None = None
+
+
+def filtered_teacher_resources(course_id: object, query_params: object):
+    """按课程和查询参数过滤资源。"""
+    resources = Resource.objects.filter(course_id=course_id).prefetch_related("knowledge_points").order_by("sort_order", "id")
+    resource_type = query_params.get("type")
+    keyword = query_params.get("keyword") or query_params.get("title", "")
+    point_id = query_params.get("point_id")
+    if resource_type:
+        resources = resources.filter(resource_type=resource_type)
+    if keyword:
+        resources = resources.filter(title__icontains=keyword)
+    if point_id:
+        resources = resources.filter(knowledge_points__id=point_id)
+    return resources
+
+
+def resource_list_payload(resource: Resource) -> dict[str, object]:
+    """序列化资源列表项。"""
+    file_url, file_format = resource_file_display(resource)
+    knowledge_points = cast(list[KnowledgePoint], list(resource.knowledge_points.all()))
+    first_point = knowledge_points[0] if knowledge_points else None
+    return {
+        "resource_id": getattr(resource, "id", None) or getattr(resource, "pk", None),
+        "title": resource.title,
+        "type": resource.resource_type,
+        "url": resource.url or file_url,
+        "format": file_format,
+        "point_id": first_point.id if first_point else None,
+        "point_name": ", ".join(point.name for point in knowledge_points) if knowledge_points else "",
+        "points": [{"id": point.id, "name": point.name} for point in knowledge_points],
+        "description": getattr(resource, "description", "") or "",
+        "visible": resource.is_visible,
+        "processing_status": resource.processing_status,
+        "processing_message": resource.processing_message or "",
+        "created_at": resource.created_at.isoformat(),
+        "duration": resource.duration,
+        "duration_display": resource_duration_display(resource.duration),
+        "chapter_number": resource.chapter_number,
+        "sort_order": resource.sort_order,
+    }
+
+
+def resource_file_display(resource: Resource) -> tuple[str | None, str]:
+    """安全读取资源文件 URL 和格式。"""
+    try:
+        if not resource.file:
+            return None, ""
+        file_url = resource.file.url
+        file_name = getattr(resource.file, "name", "") or ""
+        return file_url, file_name.split(".")[-1] if "." in file_name else ""
+    except (ValueError, AttributeError):
+        return None, ""
+
+
+def resource_duration_display(duration: int | None) -> str | None:
+    """格式化资源时长。"""
+    if not duration:
+        return None
+    return f"{duration // 60:02d}:{duration % 60:02d}"
+
+
+def resource_detail_payload(resource: Resource) -> dict[str, object]:
+    """序列化资源详情。"""
+    return {
+        "resource_id": resource.id,
+        "title": resource.title,
+        "type": resource.resource_type,
+        "url": resource.url or "",
+        "file": resource.file.url if resource.file else None,
+        "description": resource.description or "",
+        "duration": resource.duration,
+        "chapter_number": resource.chapter_number or "",
+        "sort_order": resource.sort_order,
+        "is_visible": resource.is_visible,
+        "processing_status": resource.processing_status,
+        "processing_message": resource.processing_message or "",
+        "knowledge_points": list(resource.knowledge_points.values_list("id", flat=True)),
+        "course_id": resource.course_id,
+    }
+
+
+def parse_resource_write_payload(data: object, *, partial: bool) -> ResourceWritePayload:
+    """解析资源创建或更新字段。"""
+    default_sort = data.get("sort_order") if partial else data.get("sort_order", 0)
+    return ResourceWritePayload(
+        title=first_present(data, "title", "resource_name"),
+        resource_type=first_present(data, "type", "resource_type"),
+        url=first_present(data, "url", "resource_url"),
+        points=parse_resource_points(data),
+        duration=parse_optional_int(data.get("duration")),
+        chapter_number=data.get("chapter_number"),
+        sort_order=parse_optional_int(default_sort),
+        description=data.get("description", "" if not partial else None),
+        is_visible=first_present(data, "visible", "is_visible") if partial else None,
+        processing_status=first_present(data, "processing_status", "status"),
+        processing_message=data.get("processing_message"),
+    )
+
+
+def parse_resource_points(data: object) -> object:
+    """
+    解析 points / knowledge_point_ids / point_id 入参。
+
+    :param data: DRF 请求数据对象。
+    :return: 可传给知识点关联管理器的 ID 列表或单个 ID。
+    """
+    points = first_resource_point_value(data)
+    point_id = data.get("point_id") or data.get("knowledge_point_id")
+    if isinstance(points, str):
+        try:
+            points = json.loads(points)
+        except json.JSONDecodeError:
+            points = [item.strip() for item in points.split(",") if item.strip()]
+    if points is None and point_id:
+        return [point_id]
+    if points is None:
+        return None
+    if points == "":
+        return []
+    if isinstance(points, (list, tuple, set)):
+        return [point for point in points if point not in (None, "")]
+    return points
+
+
+def first_resource_point_value(data: object) -> object:
+    """
+    读取资源知识点入参，保留 multipart 重复字段的多值语义。
+
+    :param data: DRF 请求数据对象。
+    :return: 原始知识点 ID 入参。
+    """
+    keys = ("points", "knowledge_point_ids", "knowledge_points")
+    if hasattr(data, "getlist"):
+        for key in keys:
+            if not resource_point_key_exists(data, key):
+                continue
+            values = [value for value in data.getlist(key) if value not in (None, "")]
+            if len(values) > 1:
+                return values
+            if len(values) == 1:
+                return values[0]
+            return []
+
+    for key in keys:
+        if not resource_point_key_exists(data, key):
+            continue
+        value = data.get(key)
+        return value
+    return None
+
+
+def resource_point_key_exists(data: object, key: str) -> bool:
+    """
+    判断请求数据中是否显式包含知识点字段。
+
+    :param data: DRF 请求数据对象。
+    :param key: 待检查字段名。
+    :return: 字段是否存在。
+    """
+    try:
+        return key in data
+    except TypeError:
+        return hasattr(data, "get") and data.get(key) is not None
+
+
+def parse_optional_int(value: object) -> int | None:
+    """解析可选整数。"""
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def create_resource_from_payload(
+    *,
+    course_id: object,
+    payload: ResourceWritePayload,
+    file: object,
+    user: object,
+) -> Resource:
+    """创建资源并按需关联知识点。"""
+    normalized_points = normalize_resource_point_ids(course_id, payload.points)
+    processing_status = normalize_resource_processing_status(
+        payload.processing_status,
+        has_resource=bool(file or payload.url),
+    )
+    resource = Resource.objects.create(
+        course_id=course_id,
+        title=payload.title,
+        resource_type=payload.resource_type,
+        url=payload.url,
+        file=file,
+        description=payload.description,
+        duration=payload.duration,
+        chapter_number=payload.chapter_number if payload.chapter_number else None,
+        sort_order=payload.sort_order or 0,
+        processing_status=processing_status,
+        processing_message=payload.processing_message or "",
+        uploaded_by=user,
+    )
+    replace_resource_points(resource, normalized_points)
+    return resource
+
+
+def update_resource_from_payload(resource: Resource, payload: ResourceWritePayload) -> None:
+    """按部分字段更新资源。"""
+    normalized_points = normalize_resource_point_ids(resource.course_id, payload.points)
+    if payload.title:
+        resource.title = payload.title
+    if payload.resource_type:
+        resource.resource_type = payload.resource_type
+    if payload.url:
+        resource.url = payload.url
+    if payload.is_visible is not None:
+        resource.is_visible = payload.is_visible
+    if payload.description is not None:
+        resource.description = payload.description
+    if payload.duration is not None:
+        resource.duration = payload.duration
+    if payload.chapter_number is not None:
+        resource.chapter_number = payload.chapter_number
+    if payload.sort_order is not None:
+        resource.sort_order = payload.sort_order
+    if payload.processing_status:
+        resource.processing_status = normalize_resource_processing_status(
+            payload.processing_status,
+            has_resource=bool(resource.file or resource.url),
+        )
+    if payload.processing_message is not None:
+        resource.processing_message = payload.processing_message
+    resource.save()
+    replace_resource_points(resource, normalized_points)
+
+
+def normalize_resource_point_ids(course_id: object, points: object) -> list[int] | None:
+    """
+    校验并标准化资源知识点 ID。
+
+    :param course_id: 资源所属课程 ID。
+    :param points: 原始知识点 ID 入参。
+    :return: 标准化后的知识点 ID 列表；未传字段时返回 None。
+    :raises ValueError: 知识点 ID 格式错误或不属于当前课程。
+    """
+    if points is None:
+        return None
+
+    raw_points = points if isinstance(points, (list, tuple, set)) else [points]
+    point_ids: list[int] = []
+    for point in raw_points:
+        if point in (None, ""):
+            continue
+        raw_point_id = getattr(point, "id", point)
+        try:
+            point_ids.append(int(str(raw_point_id).strip()))
+        except (TypeError, ValueError):
+            raise ValueError("知识点ID格式错误") from None
+
+    if not point_ids:
+        return []
+
+    existing_ids = set(
+        KnowledgePoint.objects.filter(
+            id__in=point_ids,
+            course_id=course_id,
+        ).values_list("id", flat=True)
+    )
+    if set(point_ids) - existing_ids:
+        raise ValueError("知识点不存在或不属于当前课程")
+    return point_ids
+
+
+def replace_resource_points(resource: Resource, points: object) -> None:
+    """替换资源知识点关联。"""
+    if points is None:
+        return
+    normalized_points = points if isinstance(points, (list, tuple, set)) else [points]
+    replace_knowledge_points(cast(KnowledgePointRelationSetter, resource.knowledge_points), normalized_points)
+
+
+def resource_create_result(resource: Resource) -> dict[str, object]:
+    """构造创建成功响应。"""
+    return {
+        "resource_id": getattr(resource, "id", None) or getattr(resource, "pk", None),
+        "title": resource.title,
+        "url": resource.url or (resource.file.url if resource.file else None),
+        "processing_status": resource.processing_status,
+        "processing_message": resource.processing_message or "",
+    }
+
+
+def normalize_resource_processing_status(raw_status: object, *, has_resource: bool) -> str:
+    """规范化资源导入状态，避免旧调用方缺省时只能看到 uploaded。"""
+    status_text = str(raw_status or "").strip().lower()
+    allowed_statuses = {choice[0] for choice in Resource.PROCESSING_STATUS_CHOICES}
+    if status_text in allowed_statuses:
+        return status_text
+    return "ready" if has_resource else "uploaded"

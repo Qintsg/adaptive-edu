@@ -1,0 +1,261 @@
+.ai-assistant-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - 142px);
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.45fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel-header,
+.detail-header,
+.search-result-main,
+.search-result-meta,
+.composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-header-tags {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-stage-status {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.search-panel,
+.chat-panel {
+  min-height: 0;
+  height: 100%;
+}
+
+.search-panel :deep(.el-card__body),
+.chat-panel :deep(.el-card__body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-panel :deep(.el-card__body) {
+  gap: 14px;
+}
+
+.search-box {
+  margin-bottom: 0;
+}
+
+.search-results {
+  display: grid;
+  gap: 8px;
+  max-height: min(30vh, 260px);
+  overflow: auto;
+  padding-right: 4px;
+  flex: 0 0 auto;
+}
+
+.search-result-item {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 108, 189, 0.08);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.search-result-item.active,
+.search-result-item:hover {
+  border-color: rgba(15, 108, 189, 0.28);
+  transform: translateY(-1px);
+}
+
+.search-result-summary,
+.point-description {
+  display: block;
+  margin: 0;
+  line-height: 1.7;
+  color: #606266;
+  overflow-wrap: anywhere;
+}
+
+.point-detail-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(15, 108, 189, 0.12);
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.point-detail-card h3 {
+  margin: 0;
+  color: #303133;
+}
+
+.point-mastery {
+  display: grid;
+  gap: 8px;
+}
+
+.relation-groups {
+  display: grid;
+  gap: 12px;
+}
+
+.relation-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #909399;
+  font-size: 13px;
+}
+
+.relation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-text {
+  color: #909399;
+  font-size: 13px;
+}
+
+.chat-history {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  padding-right: 6px;
+}
+
+.chat-message {
+  display: flex;
+}
+
+.chat-message.user {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: min(88%, 760px);
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(15, 108, 189, 0.08);
+}
+
+.chat-message.user .message-bubble {
+  background: linear-gradient(135deg, rgba(15, 108, 189, 0.92), rgba(91, 157, 237, 0.82));
+  color: #fff;
+}
+
+.message-content :deep(p) {
+  margin: 0;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.message-context {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.typing {
+  color: #606266;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-stage-text {
+  animation: stage-fade 0.5s ease;
+}
+
+.typing-dots span {
+  animation: dot-blink 1.4s infinite;
+  opacity: 0;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-blink {
+  0%, 20% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes stage-fade {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+.chat-composer {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.composer-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #909399;
+  font-size: 13px;
+}
+
+.composer-shortcut {
+  color: #606266;
+}
+
+@media (max-width: 960px) {
+  .ai-assistant-view {
+    min-height: auto;
+  }
+
+  .assistant-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-panel {
+    order: -1;
+  }
+
+  .chat-history {
+    height: 420px;
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 720px) {
+  .composer-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

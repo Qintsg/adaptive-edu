@@ -1,0 +1,5575 @@
+openapi: 3.0.3
+info:
+  title: WisdomEdu API
+  version: 2026.05.12
+  description: 知识图谱驱动的个性化自适应学习系统后端接口契约。本文档依据后端路由、视图、support 与 serializer 逐项人工整理。
+servers:
+  - url: http://127.0.0.1:8000
+    description: 本地 Django 开发服务
+  - url: /
+    description: 同源生产或反向代理入口
+security:
+  - jwtAuth: []
+tags:
+  - name: Health
+    description: 服务可用性检查。
+  - name: Auth
+    description: 注册、登录、JWT、用户信息和密码管理。
+  - name: Profile
+    description: 学生学习者画像、习惯偏好和教师/管理员画像查看。
+  - name: Courses
+    description: 课程、班级、邀请码、公告和课程统计。
+  - name: Knowledge
+    description: 知识图谱、知识点、关系、资源和题库。
+  - name: Assessments
+    description: 初始知识测评、能力评测、习惯问卷和画像生成。
+  - name: Learning
+    description: 个性化学习路径、节点进度、阶段测试和仪表盘。
+  - name: Exams
+    description: 作业考试、提交、反馈报告、成绩和分析。
+  - name: AI
+    description: LLM、GraphRAG、学习建议、路径规划和 KT 兼容接口。
+  - name: Admin
+    description: 管理端用户、课程、班级、激活码和统计接口。
+  - name: Logs
+    description: 管理端操作日志查询、统计、导出和清理。
+  - name: Common
+    description: 前端公共元数据接口。
+paths:
+  /health/:
+    get:
+      tags:
+        - Health
+      operationId: healthCheck
+      summary: 健康检查
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      operationId: register
+      summary: 注册学生、教师或管理员账号
+      description: 学生可直接注册；教师和管理员需要提交有效激活码。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum:
+                    - student
+                    - teacher
+                    - admin
+                  default: student
+                real_name:
+                  type: string
+                student_id:
+                  type: string
+                activation_code:
+                  type: string
+                  description: 教师和管理员注册必填。
+      responses:
+        '200':
+          description: 注册成功，data 包含 user_id、username、role、token、refresh。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: login
+      summary: 登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                username:
+                  type: string
+                  description: 登录账号；也兼容 `account` 字段。
+                account:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: 登录成功，data 包含 user_id、username、role、token、refresh。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      operationId: logout
+      summary: 登出并尝试加入 refresh token 黑名单
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/userinfo:
+    get:
+      tags:
+        - Auth
+      operationId: getUserInfo
+      summary: 获取当前用户信息
+      responses:
+        '200':
+          description: data 包含用户基础信息、班级列表与课程列表。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/userinfo/update:
+    put:
+      tags:
+        - Auth
+      operationId: updateUserInfo
+      summary: 更新当前用户信息和头像
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                real_name:
+                  type: string
+                student_id:
+                  type: string
+                avatar:
+                  type: string
+                  format: binary
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                real_name:
+                  type: string
+                student_id:
+                  type: string
+      responses:
+        '200':
+          description: data 包含 updated_fields 与 avatar。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/token/refresh:
+    post:
+      tags:
+        - Auth
+      operationId: refreshToken
+      summary: 刷新 JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh
+              properties:
+                refresh:
+                  type: string
+      responses:
+        '200':
+          description: data 包含新的 token 与 refresh。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/password/change:
+    post:
+      tags:
+        - Auth
+      operationId: changePassword
+      summary: 修改当前用户密码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - new_password
+              properties:
+                old_password:
+                  type: string
+                  format: password
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/password/reset/send:
+    post:
+      tags:
+        - Auth
+      operationId: sendPasswordResetCode
+      summary: 发送密码重置验证码
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/password/reset:
+    post:
+      tags:
+        - Auth
+      operationId: resetPassword
+      summary: 使用验证码重置密码
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+                - new_password
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 6
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/profile:
+    get:
+      tags:
+        - Profile
+      operationId: getStudentProfile
+      summary: 获取当前学生画像
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 knowledge_mastery、ability_scores、habit_preferences、learner_tags、profile_summary、weakness、suggestion、strength、last_update。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/profile/habit:
+    put:
+      tags:
+        - Profile
+      operationId: updateHabitPreference
+      summary: 更新学习习惯偏好
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferred_resource:
+                  type: string
+                preferred_study_time:
+                  type: string
+                study_pace:
+                  type: string
+                study_duration:
+                  type: string
+                review_frequency:
+                  type: string
+                learning_style:
+                  type: string
+                accept_challenge:
+                  type: boolean
+                daily_goal_minutes:
+                  type: integer
+                weekly_goal_days:
+                  type: integer
+                preferences:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/profile/update:
+    post:
+      tags:
+        - Profile
+      operationId: refreshStudentProfile
+      summary: 重新生成当前学生课程画像
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 course_id、summary、weakness、suggestion、strength、kt_enhanced。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/profile/history:
+    get:
+      tags:
+        - Profile
+      operationId: getStudentProfileHistory
+      summary: 获取学生画像历史
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: data 包含 course_id 与 history[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/profile/compare:
+    get:
+      tags:
+        - Profile
+      operationId: compareStudentProfile
+      summary: 按日期对比学生画像快照
+      parameters:
+        - name: date1
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: date2
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/profile/export:
+    post:
+      tags:
+        - Profile
+      operationId: exportStudentProfile
+      summary: 导出学生画像 JSON 文件
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonDownload'
+  /api/admin/activation-codes:
+    get:
+      tags:
+        - Admin
+      operationId: listActivationCodes
+      summary: 管理员分页查询激活码
+      parameters:
+        - name: code_type
+          in: query
+          schema:
+            type: string
+            enum:
+              - teacher
+              - admin
+        - name: is_used
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、page、page_size、codes[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/activation-codes/generate:
+    post:
+      tags:
+        - Admin
+      operationId: generateActivationCodes
+      summary: 批量生成激活码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code_type:
+                  type: string
+                  enum:
+                    - teacher
+                    - admin
+                  default: teacher
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                expires_days:
+                  type: integer
+                remark:
+                  type: string
+      responses:
+        '201':
+          description: data.codes[] 包含 id、code、code_type、expires_at。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/activation-codes/batch-delete:
+    post:
+      tags:
+        - Admin
+      operationId: batchDeleteActivationCodes
+      summary: 批量删除未使用激活码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code_ids
+              properties:
+                code_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data.deleted_count 为删除数量。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/activation-codes/validate:
+    post:
+      tags:
+        - Admin
+      operationId: validateActivationCode
+      summary: 校验激活码可用性
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+      responses:
+        '200':
+          description: data 包含 code、code_type、is_valid、is_used、expires_at。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/admin/activation-codes/export:
+    get:
+      tags:
+        - Admin
+      operationId: exportActivationCodes
+      summary: 导出激活码 CSV
+      parameters:
+        - name: code_type
+          in: query
+          schema:
+            type: string
+            enum:
+              - teacher
+              - admin
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/admin/activation-codes/{code_id}:
+    get:
+      tags:
+        - Admin
+      operationId: getActivationCode
+      summary: 获取单个激活码详情
+      parameters:
+        - name: code_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Admin
+      operationId: deleteActivationCode
+      summary: 删除未使用激活码
+      parameters:
+        - name: code_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/users:
+    get:
+      tags:
+        - Admin
+      operationId: listAdminUsers
+      summary: 管理员分页查询用户
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum:
+              - student
+              - teacher
+              - admin
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - inactive
+      responses:
+        '200':
+          description: data 包含 total、page、size、users[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/admin/users/create:
+    post:
+      tags:
+        - Admin
+      operationId: createAdminUser
+      summary: 管理员创建用户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+                - role
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                role:
+                  type: string
+                  enum:
+                    - student
+                    - teacher
+                    - admin
+                email:
+                  type: string
+                phone:
+                  type: string
+                real_name:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/users/batch-delete:
+    post:
+      tags:
+        - Admin
+      operationId: batchDeleteAdminUsers
+      summary: 批量删除用户
+      description: 当前管理员账号会被排除，不允许删除自己。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_ids
+              properties:
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/users/import:
+    post:
+      tags:
+        - Admin
+      operationId: importAdminUsers
+      summary: 导入用户 CSV 或 Excel
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 支持 .csv、.xlsx、.xls。
+      responses:
+        '200':
+          description: data 包含 created_count 与 skipped[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/users/export:
+    get:
+      tags:
+        - Admin
+      operationId: exportAdminUsers
+      summary: 导出用户 CSV
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum:
+              - student
+              - teacher
+              - admin
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/admin/users/template:
+    get:
+      tags:
+        - Admin
+      operationId: downloadAdminUserImportTemplate
+      summary: 下载用户导入模板 CSV
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/admin/users/{user_id}:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminUserDetail
+      summary: 获取用户详情
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/users/{user_id}/update:
+    put:
+      tags:
+        - Admin
+      operationId: updateAdminUser
+      summary: 管理员更新用户资料
+      description: 不允许管理员修改自己的角色。
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                phone:
+                  type: string
+                real_name:
+                  type: string
+                role:
+                  type: string
+                  enum:
+                    - student
+                    - teacher
+                    - admin
+      responses:
+        '200':
+          description: data 包含 user_id 与 updated_fields。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/users/{user_id}/delete:
+    delete:
+      tags:
+        - Admin
+      operationId: deleteAdminUser
+      summary: 删除用户
+      description: 不允许删除当前管理员自己。
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/users/{user_id}/reset-password:
+    post:
+      tags:
+        - Admin
+      operationId: resetAdminUserPassword
+      summary: 重置用户密码
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_password:
+                  type: string
+                  description: 省略时后端生成随机密码并返回。
+      responses:
+        '200':
+          description: data 可能包含生成的 new_password。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/admin/users/{user_id}/disable:
+    post:
+      tags:
+        - Admin
+      operationId: disableAdminUser
+      summary: 禁用用户
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/users/{user_id}/enable:
+    post:
+      tags:
+        - Admin
+      operationId: enableAdminUser
+      summary: 启用用户
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/student-profiles:
+    get:
+      tags:
+        - Admin
+        - Profile
+      operationId: listAdminStudentProfiles
+      summary: 管理员分页查看学生画像摘要
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、page、page_size、profiles[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/admin/student-profiles/{student_id}:
+    get:
+      tags:
+        - Admin
+        - Profile
+      operationId: getAdminStudentProfileDetail
+      summary: 管理员查看学生画像详情
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含画像、习惯、能力、答题统计等。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/students/{user_id}/profile:
+    get:
+      tags:
+        - Profile
+      operationId: getTeacherStudentProfile
+      summary: 教师查看学生画像详情
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 user_id、course_id、knowledge_mastery、answer_stats、profile_history 等。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/students/{user_id}/refresh-profile:
+    post:
+      tags:
+        - Profile
+      operationId: refreshTeacherStudentProfile
+      summary: 教师刷新指定学生课程画像
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 summary、weakness、suggestion。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/courses:
+    get:
+      tags:
+        - Courses
+      operationId: listCourses
+      summary: 获取当前用户可访问课程
+      description: 学生返回已加入班级发布的课程；教师和管理员返回自己可管理或已发布的课程。
+      responses:
+        '200':
+          description: data 包含 courses[] 与 current_course_id。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/courses/select:
+    post:
+      tags:
+        - Courses
+      operationId: selectCourse
+      summary: 选择当前课程上下文
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                class_id:
+                  type: integer
+                  nullable: true
+      responses:
+        '200':
+          description: data 包含 course_id、course_name、class_id、class_name。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/courses/search:
+    get:
+      tags:
+        - Courses
+      operationId: searchCourses
+      summary: 搜索课程
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、page、page_size、courses[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/classes:
+    get:
+      tags:
+        - Courses
+      operationId: listStudentClasses
+      summary: 获取学生加入的班级
+      responses:
+        '200':
+          description: data 为班级列表，包含已发布课程摘要。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/classes/{class_id}:
+    get:
+      tags:
+        - Courses
+      operationId: getStudentClassDetail
+      summary: 获取学生班级详情
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/classes/join:
+    post:
+      tags:
+        - Courses
+      operationId: joinStudentClass
+      summary: 使用邀请码加入班级
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+      responses:
+        '200':
+          description: data 包含 class 与 courses 信息。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/classes/{class_id}/leave:
+    delete:
+      tags:
+        - Courses
+      operationId: leaveStudentClass
+      summary: 退出班级
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/courses/create:
+    post:
+      tags:
+        - Courses
+      operationId: createTeacherCourse
+      summary: 教师创建课程
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                course_name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                cover:
+                  type: string
+                is_published:
+                  type: boolean
+                target_class_id:
+                  type: integer
+                  description: 兼容创建后发布到班级的旧字段。
+      responses:
+        '201':
+          description: data 为新课程摘要。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/courses/my:
+    get:
+      tags:
+        - Courses
+      operationId: listMyTeacherCourses
+      summary: 获取教师创建的课程
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/courses/{course_id}:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherCourse
+      summary: 获取教师课程详情
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Courses
+      operationId: updateTeacherCourse
+      summary: 更新教师课程
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                course_name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                is_published:
+                  type: boolean
+      responses:
+        '200':
+          description: data 包含 course_id 与 updated_fields。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/courses/{course_id}/workspace:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherCourseWorkspace
+      summary: 获取教师课程工作台聚合数据
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/courses/{course_id}/delete:
+    delete:
+      tags:
+        - Courses
+      operationId: deleteTeacherCourse
+      summary: 删除教师课程
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/courses/{course_id}/cover/upload:
+    post:
+      tags:
+        - Courses
+      operationId: uploadTeacherCourseCover
+      summary: 上传课程封面
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                cover:
+                  type: string
+                  format: binary
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: data 包含 cover_url。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/courses/{course_id}/statistics:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherCourseStatistics
+      summary: 获取教师课程统计
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/courses/{course_id}/settings:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherCourseSettings
+      summary: 获取课程设置
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 merged config。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/courses/{course_id}/settings/update:
+    put:
+      tags:
+        - Courses
+      operationId: updateTeacherCourseSettings
+      summary: 更新课程设置
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - config
+              properties:
+                config:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/classes/create:
+    post:
+      tags:
+        - Courses
+      operationId: createTeacherClass
+      summary: 教师创建班级
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                class_name:
+                  type: string
+                description:
+                  type: string
+                semester:
+                  type: string
+                course_id:
+                  type: integer
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/classes/my:
+    get:
+      tags:
+        - Courses
+      operationId: listMyTeacherClasses
+      summary: 获取教师班级列表
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/classes/{class_id}:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherClass
+      summary: 获取教师班级详情
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    put:
+      tags:
+        - Courses
+      operationId: updateTeacherClass
+      summary: 更新教师班级
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                semester:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/classes/{class_id}/delete:
+    delete:
+      tags:
+        - Courses
+      operationId: deleteTeacherClass
+      summary: 删除教师班级
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/classes/{class_id}/progress:
+    get:
+      tags:
+        - Courses
+      operationId: getTeacherClassProgress
+      summary: 获取班级学习进度
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/classes/{class_id}/courses:
+    get:
+      tags:
+        - Courses
+      operationId: listTeacherClassCourses
+      summary: 获取班级已发布课程
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/classes/{class_id}/publish-course:
+    post:
+      tags:
+        - Courses
+      operationId: publishCourseToClass
+      summary: 向班级发布课程
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/classes/{class_id}/courses/{course_id}:
+    delete:
+      tags:
+        - Courses
+      operationId: unpublishCourseFromClass
+      summary: 从班级取消发布课程
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/classes/{class_id}/invitations:
+    get:
+      tags:
+        - Courses
+      operationId: listClassInvitations
+      summary: 获取班级邀请码列表
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/invitations/generate:
+    post:
+      tags:
+        - Courses
+      operationId: generateClassInvitation
+      summary: 生成班级邀请码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - class_id
+              properties:
+                class_id:
+                  type: integer
+                max_uses:
+                  type: integer
+                expires_days:
+                  type: integer
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/invitations/{invitation_id}:
+    delete:
+      tags:
+        - Courses
+      operationId: deleteClassInvitation
+      summary: 删除班级邀请码
+      parameters:
+        - name: invitation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/classes/{class_id}/students:
+    get:
+      tags:
+        - Courses
+      operationId: listTeacherClassStudents
+      summary: 获取班级学生列表
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/classes/{class_id}/students/{user_id}:
+    delete:
+      tags:
+        - Courses
+      operationId: removeStudentFromTeacherClass
+      summary: 从班级移除学生
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/classes/{class_id}/student-profiles:
+    get:
+      tags:
+        - Courses
+        - Profile
+      operationId: listTeacherClassStudentProfiles
+      summary: 获取班级学生画像摘要
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/classes/{class_id}/announcements:
+    get:
+      tags:
+        - Courses
+      operationId: listClassAnnouncements
+      summary: 获取班级公告
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Courses
+      operationId: createClassAnnouncement
+      summary: 发布班级公告
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/teacher/announcements/{announcement_id}:
+    put:
+      tags:
+        - Courses
+      operationId: updateClassAnnouncement
+      summary: 更新班级公告
+      parameters:
+        - name: announcement_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags:
+        - Courses
+      operationId: deleteClassAnnouncement
+      summary: 删除班级公告
+      parameters:
+        - name: announcement_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/courses:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: listAdminCourses
+      summary: 管理员查询课程列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/courses/create:
+    post:
+      tags:
+        - Admin
+        - Courses
+      operationId: createAdminCourse
+      summary: 管理员创建课程
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                teacher_id:
+                  type: integer
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+  /api/admin/courses/{course_id}:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: getAdminCourseDetail
+      summary: 管理员获取课程详情
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    put:
+      tags:
+        - Admin
+        - Courses
+      operationId: updateAdminCourse
+      summary: 管理员更新课程
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    delete:
+      tags:
+        - Admin
+        - Courses
+      operationId: deleteAdminCourse
+      summary: 管理员删除课程
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/courses/{course_id}/assign-teacher:
+    post:
+      tags:
+        - Admin
+        - Courses
+      operationId: assignTeacherToCourse
+      summary: 为课程分配教师
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - teacher_id
+              properties:
+                teacher_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/courses/{course_id}/statistics:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: getAdminCourseStatistics
+      summary: 管理员获取课程统计
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/classes:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: listAdminClasses
+      summary: 管理员查询班级列表
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/classes/create:
+    post:
+      tags:
+        - Admin
+        - Courses
+      operationId: createAdminClass
+      summary: 管理员创建班级
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                teacher_id:
+                  type: integer
+                description:
+                  type: string
+                semester:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+  /api/admin/classes/{class_id}:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: getAdminClassDetail
+      summary: 管理员获取班级详情
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    put:
+      tags:
+        - Admin
+        - Courses
+      operationId: updateAdminClass
+      summary: 管理员更新班级
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    delete:
+      tags:
+        - Admin
+        - Courses
+      operationId: deleteAdminClass
+      summary: 管理员删除班级
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/classes/{class_id}/students:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: listAdminClassStudents
+      summary: 管理员查看班级学生
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/classes/{class_id}/students/add:
+    post:
+      tags:
+        - Admin
+        - Courses
+      operationId: addAdminClassStudents
+      summary: 管理员向班级添加学生
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student_ids
+              properties:
+                student_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/classes/{class_id}/students/{student_id}:
+    delete:
+      tags:
+        - Admin
+        - Courses
+      operationId: removeAdminClassStudent
+      summary: 管理员从班级移除学生
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/classes/{class_id}/assign-teacher:
+    post:
+      tags:
+        - Admin
+        - Courses
+      operationId: assignTeacherToClass
+      summary: 为班级分配教师
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - teacher_id
+              properties:
+                teacher_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/classes/{class_id}/statistics:
+    get:
+      tags:
+        - Admin
+        - Courses
+      operationId: getAdminClassStatistics
+      summary: 管理员获取班级统计
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/overview:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminStatisticsOverview
+      summary: 管理员仪表盘总览统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/users:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminUserStatistics
+      summary: 用户统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/courses:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminCourseStatisticsList
+      summary: 课程统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/learning:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminLearningStatistics
+      summary: 学习统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/exams:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminExamStatistics
+      summary: 作业考试统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/active-users:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminActiveUserStatistics
+      summary: 活跃用户统计
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/report:
+    get:
+      tags:
+        - Admin
+      operationId: getAdminStatisticsReport
+      summary: 管理端统计报告
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/statistics/export:
+    get:
+      tags:
+        - Admin
+      operationId: exportAdminStatistics
+      summary: 导出管理端统计
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/student/knowledge-map:
+    get:
+      tags:
+        - Knowledge
+      operationId: getStudentKnowledgeMap
+      summary: 获取学生课程知识图谱
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 nodes、edges、course_id 等图谱数据。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/knowledge-points/{point_id}:
+    get:
+      tags:
+        - Knowledge
+      operationId: getStudentKnowledgePointDetail
+      summary: 获取学生知识点详情
+      parameters:
+        - $ref: '#/components/parameters/PointIdPath'
+        - $ref: '#/components/parameters/CourseId'
+        - name: include_graph_rag
+          in: query
+          description: 是否构造 GraphRAG 证据摘要。
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/knowledge-points/{point_id}/resources:
+    get:
+      tags:
+        - Knowledge
+      operationId: listStudentKnowledgePointResources
+      summary: 获取知识点关联学习资源
+      parameters:
+        - $ref: '#/components/parameters/PointIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/knowledge/points:
+    get:
+      tags:
+        - Knowledge
+      operationId: listStudentKnowledgePoints
+      summary: 获取学生课程知识点列表
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: chapter
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/knowledge/relations:
+    get:
+      tags:
+        - Knowledge
+      operationId: listStudentKnowledgeRelations
+      summary: 获取学生课程知识点关系
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/knowledge/mastery:
+    get:
+      tags:
+        - Knowledge
+      operationId: getStudentKnowledgeMastery
+      summary: 获取学生知识点掌握度
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 mastery[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/knowledge/mastery/update:
+    put:
+      tags:
+        - Knowledge
+      operationId: updateStudentKnowledgeMastery
+      summary: 更新学生知识点掌握度
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - knowledge_point_id
+                - mastery_rate
+              properties:
+                knowledge_point_id:
+                  type: integer
+                point_id:
+                  type: integer
+                  description: 兼容字段。
+                mastery_rate:
+                  type: number
+                  format: float
+                mastery:
+                  type: number
+                  format: float
+                  description: 兼容字段。
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/knowledge/search:
+    get:
+      tags:
+        - Knowledge
+      operationId: searchStudentKnowledge
+      summary: 搜索学生可见知识点
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/resources:
+    get:
+      tags:
+        - Knowledge
+      operationId: listStudentResources
+      summary: 获取学生课程资源
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum:
+              - default
+              - title
+              - type
+              - newest
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: point_id
+          in: query
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 resources[]、total、page、page_size。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/resources:
+    get:
+      tags:
+        - Knowledge
+      operationId: listTeacherResources
+      summary: 教师查询课程资源
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+        - name: point_id
+          in: query
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、resources[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/resources/create:
+    post:
+      tags:
+        - Knowledge
+      operationId: createTeacherResource
+      summary: 教师创建课程资源
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceWriteRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceWriteRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/resources/upload:
+    post:
+      tags:
+        - Knowledge
+      operationId: uploadTeacherResource
+      summary: 上传课程资源文件
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - course_id
+              properties:
+                file:
+                  type: string
+                  format: binary
+                course_id:
+                  type: integer
+                title:
+                  type: string
+                resource_type:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '201':
+          $ref: '#/components/responses/Created'
+  /api/teacher/resources/{resource_id}:
+    get:
+      tags:
+        - Knowledge
+      operationId: getTeacherResource
+      summary: 获取教师资源详情
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Knowledge
+      operationId: updateTeacherResource
+      summary: 更新教师资源
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceWriteRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceWriteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/resources/{resource_id}/delete:
+    delete:
+      tags:
+        - Knowledge
+      operationId: deleteTeacherResource
+      summary: 删除教师资源
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/resources/{resource_id}/link-knowledge:
+    post:
+      tags:
+        - Knowledge
+      operationId: linkTeacherResourceKnowledge
+      summary: 关联资源到知识点
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - knowledge_point_ids
+              properties:
+                knowledge_point_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/questions:
+    get:
+      tags:
+        - Knowledge
+      operationId: listTeacherQuestions
+      summary: 教师查询题库
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: question_type
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+        - name: point_id
+          in: query
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、questions[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/questions/create:
+    post:
+      tags:
+        - Knowledge
+      operationId: createTeacherQuestion
+      summary: 教师创建题目
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '201':
+          $ref: '#/components/responses/Created'
+  /api/teacher/questions/batch-delete:
+    post:
+      tags:
+        - Knowledge
+      operationId: batchDeleteTeacherQuestions
+      summary: 批量删除题目
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question_ids
+              properties:
+                question_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data.deleted_count 为删除数量。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/questions/import:
+    post:
+      tags:
+        - Knowledge
+      operationId: importTeacherQuestions
+      summary: 导入题库文件
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - course_id
+              properties:
+                file:
+                  type: string
+                  format: binary
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 imported_count 与 skipped/errors。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/questions/export:
+    get:
+      tags:
+        - Knowledge
+      operationId: exportTeacherQuestions
+      summary: 导出题库 CSV
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/teacher/questions/template:
+    get:
+      tags:
+        - Knowledge
+      operationId: downloadTeacherQuestionTemplate
+      summary: 下载题库导入模板
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/teacher/questions/{question_id}:
+    get:
+      tags:
+        - Knowledge
+      operationId: getTeacherQuestion
+      summary: 获取题目详情
+      parameters:
+        - $ref: '#/components/parameters/QuestionIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    put:
+      tags:
+        - Knowledge
+      operationId: replaceTeacherQuestion
+      summary: 更新题目
+      parameters:
+        - $ref: '#/components/parameters/QuestionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/questions/{question_id}/update:
+    put:
+      tags:
+        - Knowledge
+      operationId: updateTeacherQuestion
+      summary: 更新题目兼容路径
+      parameters:
+        - $ref: '#/components/parameters/QuestionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionWriteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/questions/{question_id}/delete:
+    delete:
+      tags:
+        - Knowledge
+      operationId: deleteTeacherQuestion
+      summary: 删除题目
+      parameters:
+        - $ref: '#/components/parameters/QuestionIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/questions/{question_id}/link-knowledge:
+    post:
+      tags:
+        - Knowledge
+      operationId: linkTeacherQuestionKnowledge
+      summary: 关联题目到知识点
+      parameters:
+        - $ref: '#/components/parameters/QuestionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - knowledge_point_ids
+              properties:
+                knowledge_point_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/knowledge-relations:
+    get:
+      tags:
+        - Knowledge
+      operationId: listTeacherKnowledgeRelations
+      summary: 教师查询知识关系
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/knowledge-relations/create:
+    post:
+      tags:
+        - Knowledge
+      operationId: createTeacherKnowledgeRelation
+      summary: 创建知识点关系
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - from_point_id
+                - to_point_id
+                - relation_type
+              properties:
+                course_id:
+                  type: integer
+                from_point_id:
+                  type: integer
+                to_point_id:
+                  type: integer
+                relation_type:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/knowledge-relations/{relation_id}:
+    delete:
+      tags:
+        - Knowledge
+      operationId: deleteTeacherKnowledgeRelation
+      summary: 删除知识点关系
+      parameters:
+        - name: relation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/knowledge-points:
+    get:
+      tags:
+        - Knowledge
+      operationId: listTeacherKnowledgePoints
+      summary: 教师查询知识点
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/knowledge-points/create:
+    post:
+      tags:
+        - Knowledge
+      operationId: createTeacherKnowledgePoint
+      summary: 创建知识点
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - point_name
+              properties:
+                course_id:
+                  type: integer
+                point_name:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                prerequisites:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: integer
+                    - type: string
+                chapter:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/knowledge-points/{point_id}:
+    get:
+      tags:
+        - Knowledge
+      operationId: getTeacherKnowledgePoint
+      summary: 获取教师知识点详情
+      parameters:
+        - $ref: '#/components/parameters/PointIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+    put:
+      tags:
+        - Knowledge
+      operationId: updateTeacherKnowledgePoint
+      summary: 更新知识点
+      parameters:
+        - $ref: '#/components/parameters/PointIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                point_name:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                chapter:
+                  type: string
+                order:
+                  type: integer
+                is_published:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/knowledge-points/{point_id}/delete:
+    delete:
+      tags:
+        - Knowledge
+      operationId: deleteTeacherKnowledgePoint
+      summary: 删除知识点
+      parameters:
+        - $ref: '#/components/parameters/PointIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/knowledge-map/import:
+    post:
+      tags:
+        - Knowledge
+      operationId: importTeacherKnowledgeMap
+      summary: 导入知识图谱
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - course_id
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 支持 .json、.xlsx、.xls，最大 10MB。
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/knowledge-map/save:
+    post:
+      tags:
+        - Knowledge
+      operationId: saveTeacherKnowledgeMap
+      summary: 保存课程知识图谱草稿
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - nodes
+                - edges
+              properties:
+                course_id:
+                  type: integer
+                nodes:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                edges:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/knowledge-map/publish:
+    post:
+      tags:
+        - Knowledge
+      operationId: publishTeacherKnowledgeMap
+      summary: 发布课程知识图谱
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                confirm:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/teacher/knowledge-map/build-rag-index:
+    post:
+      tags:
+        - Knowledge
+      operationId: buildTeacherKnowledgeMapRagIndex
+      summary: 构建课程 GraphRAG 索引
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/knowledge-map/export:
+    get:
+      tags:
+        - Knowledge
+      operationId: exportTeacherKnowledgeMap
+      summary: 导出课程知识图谱 JSON
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonDownload'
+  /api/teacher/knowledge-map/template:
+    get:
+      tags:
+        - Knowledge
+      operationId: downloadTeacherKnowledgeMapTemplate
+      summary: 下载知识图谱导入模板
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonDownload'
+  /api/student/assessments/status:
+    get:
+      tags:
+        - Assessments
+      operationId: getAssessmentStatus
+      summary: 查询当前用户初始测评完成状态
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 ability_done、habit_done、knowledge_done、courses[]、next_step 等。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/assessments/initial/knowledge:
+    get:
+      tags:
+        - Assessments
+      operationId: getKnowledgeAssessment
+      summary: 获取课程知识测评题目
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 assessment_id、title、questions[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/assessments/initial/knowledge/submit:
+    post:
+      tags:
+        - Assessments
+      operationId: submitKnowledgeAssessment
+      summary: 提交课程知识测评
+      description: 提交后会保存本次测评掌握度快照；题目级 MEFKT 会接收所有作答题目，未绑定知识点的题目以 question_id 参与历史序列。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - answers
+              properties:
+                course_id:
+                  type: integer
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - question_id
+                      - answer
+                    properties:
+                      question_id:
+                        type: integer
+                      answer:
+                        description: 学生答案，结构随题型变化。
+      responses:
+        '200':
+          description: data 包含 score、total_score、mastery、question_details、generating、completed。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/assessments/initial/knowledge/result:
+    get:
+      tags:
+        - Assessments
+      operationId: getKnowledgeAssessmentResult
+      summary: 获取课程知识测评结果和异步生成状态
+      description: mastery 返回本次知识测评结果快照，不混入异步路径或画像刷新写入的课程全量掌握度基线。
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 score、mastery、question_details、feedback_report、generating、generation_error、completed。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/assessments/initial/ability:
+    get:
+      tags:
+        - Assessments
+      operationId: getAbilityAssessment
+      summary: 获取学习能力评测题目
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 assessment_id、title、questions[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/assessments/initial/ability/retake:
+    get:
+      tags:
+        - Assessments
+      operationId: retakeAbilityAssessment
+      summary: 重新获取学习能力评测题目
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/assessments/initial/ability/submit:
+    post:
+      tags:
+        - Assessments
+      operationId: submitAbilityAssessment
+      summary: 提交学习能力评测
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answers
+              properties:
+                course_id:
+                  type: integer
+                answers:
+                  oneOf:
+                    - type: object
+                      additionalProperties: true
+                    - type: array
+                      items:
+                        type: object
+                        required:
+                          - question_id
+                          - answer
+                        properties:
+                          question_id:
+                            type: integer
+                          answer:
+                            description: 学生答案，结构随题型变化。
+      responses:
+        '200':
+          description: data 包含 score、ability_analysis、completed。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/assessments/initial/habit:
+    get:
+      tags:
+        - Assessments
+      operationId: getHabitSurvey
+      summary: 获取学习习惯问卷
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含 survey_id、title、questions[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/assessments/initial/habit/submit:
+    post:
+      tags:
+        - Assessments
+      operationId: submitHabitSurvey
+      summary: 提交学习习惯问卷
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - responses
+              properties:
+                course_id:
+                  type: integer
+                responses:
+                  oneOf:
+                    - type: object
+                      additionalProperties: true
+                    - type: array
+                      items:
+                        type: object
+                        required:
+                          - question_id
+                          - answer
+                        properties:
+                          question_id:
+                            type: integer
+                          answer:
+                            description: 问卷答案，结构随题型变化。
+      responses:
+        '200':
+          description: data 包含 preferences、completed。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/assessments/profile/generate:
+    post:
+      tags:
+        - Assessments
+        - Profile
+      operationId: generateCourseProfile
+      summary: 根据测评结果生成课程画像
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 course_id、course_name、summary、weakness、suggestion。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/student/learning-path:
+    get:
+      tags:
+        - Learning
+      operationId: getLearningPath
+      summary: 获取个性化学习路径
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 为 LearningPath；未完成测评时 need_assessment=true 并给出 next_step。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/learning-path/adjust:
+    post:
+      tags:
+        - Learning
+      operationId: adjustLearningPath
+      summary: 刷新或调整学习路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                reason:
+                  type: string
+                  description: manual_refresh、rebuild、refresh 时重建；其它值插入补强节点。
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/learning-progress:
+    get:
+      tags:
+        - Learning
+      operationId: getLearningProgress
+      summary: 获取学习路径进度
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 total_nodes、completed_nodes、progress_rate、study_time、current_node。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/path-nodes/{node_id}:
+    get:
+      tags:
+        - Learning
+      operationId: getPathNodeDetail
+      summary: 获取学习路径节点详情
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: data 包含节点信息、资源、进度和当前掌握度。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/start:
+    post:
+      tags:
+        - Learning
+      operationId: startLearningNode
+      summary: 开始学习节点
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          description: data 包含 node_id、status。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/student/path-nodes/{node_id}/complete:
+    post:
+      tags:
+        - Learning
+      operationId: completePathNode
+      summary: 标记学习节点完成
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          description: data 包含 node_id、status、path_refreshed。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/student/path-nodes/{node_id}/skip:
+    post:
+      tags:
+        - Learning
+      operationId: skipPathNode
+      summary: 跳过学习节点
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/resources:
+    get:
+      tags:
+        - Learning
+      operationId: listPathNodeResources
+      summary: 获取节点资源列表兼容接口
+      description: 现阶段返回空 resources[]，推荐使用 ai-resources 接口。
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/ai-resources:
+    get:
+      tags:
+        - Learning
+        - AI
+      operationId: getPathNodeAIResources
+      summary: 获取节点 AI 推荐资源
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          description: data 包含 internal_resources、external_resources、service_status。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/resources/{resource_id}/complete:
+    post:
+      tags:
+        - Learning
+      operationId: completeNodeResource
+      summary: 标记节点资源学习完成
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '200':
+          description: data 包含 completed_resources 等进度字段。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/resources/{resource_id}/pause:
+    post:
+      tags:
+        - Learning
+      operationId: pauseNodeResource
+      summary: 暂停资源学习并保存位置
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+        - $ref: '#/components/parameters/ResourceIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                position:
+                  description: 前端播放或阅读位置。
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/exams:
+    get:
+      tags:
+        - Learning
+        - Exams
+      operationId: listPathNodeExams
+      summary: 获取节点测验列表
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          description: data.exams[] 包含 exam_id、title、duration、pass_score。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/exams/{exam_id}/submit:
+    post:
+      tags:
+        - Learning
+        - Exams
+      operationId: submitNodeExam
+      summary: 提交节点练习或小测验
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answers
+              properties:
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含 score、total_score、passed、mistakes、mastery_update、node_status。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/stage-test:
+    get:
+      tags:
+        - Learning
+        - Exams
+      operationId: getStageTest
+      summary: 获取阶段测试题目
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      responses:
+        '200':
+          description: data 包含阶段测试题、已有结果或空状态。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/path-nodes/{node_id}/stage-test/submit:
+    post:
+      tags:
+        - Learning
+        - Exams
+      operationId: submitStageTest
+      summary: 提交阶段测试答案
+      parameters:
+        - $ref: '#/components/parameters/NodeIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answers
+              properties:
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含得分、通过状态、反馈报告、掌握度变化与节点状态。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/dashboard:
+    get:
+      tags:
+        - Learning
+      operationId: getStudentDashboard
+      summary: 获取学生仪表盘聚合数据
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 progress、study_time、nodes_preview、recent_mastery、pending_exams。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/exams:
+    get:
+      tags:
+        - Exams
+      operationId: listStudentExams
+      summary: 获取学生可见作业列表
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - name: type
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: data 包含 total、exams[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/exams/{exam_id}:
+    get:
+      tags:
+        - Exams
+      operationId: getStudentExamDetail
+      summary: 获取作业详情和题目
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 包含 exam_id、title、description、total_score、pass_score、duration、questions[]，不含标准答案。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/submit:
+    post:
+      tags:
+        - Exams
+      operationId: submitStudentExam
+      summary: 提交作业答案
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answers
+              properties:
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含 submission_id、score、pass_score、passed、question_details、mistakes、mastery_changes、feedback_report。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/exams/{exam_id}/result:
+    get:
+      tags:
+        - Exams
+      operationId: getStudentExamResult
+      summary: 获取作业结果
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 包含分数、通过状态、提交时间和 question_details。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/draft:
+    post:
+      tags:
+        - Exams
+      operationId: saveStudentExamDraft
+      summary: 保存作业草稿
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含 submission_id、saved。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/statistics:
+    get:
+      tags:
+        - Exams
+      operationId: getStudentExamStatistics
+      summary: 获取学生视角作业统计
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 包含 my_score、average_score、total_submissions、my_rank。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/answer-sheet:
+    get:
+      tags:
+        - Exams
+      operationId: getStudentExamAnswerSheet
+      summary: 查看作业标准答案
+      description: 只有已提交该作业后可查看。
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 为题目答案列表。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/retake:
+    post:
+      tags:
+        - Exams
+      operationId: retakeStudentExam
+      summary: 重置作业提交以重新作答
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/exams/{exam_id}/download:
+    get:
+      tags:
+        - Exams
+      operationId: downloadStudentExamResult
+      summary: 下载作业答案报告 CSV
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/classes/{class_id}/members:
+    get:
+      tags:
+        - Courses
+        - Exams
+      operationId: listStudentClassMembers
+      summary: 获取班级成员列表
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/student/classes/{class_id}/ranking:
+    get:
+      tags:
+        - Courses
+        - Exams
+      operationId: getStudentClassRanking
+      summary: 获取班级学习排行榜
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/classes/{class_id}/notifications:
+    get:
+      tags:
+        - Courses
+        - Exams
+      operationId: listStudentClassNotifications
+      summary: 获取班级通知公告简表
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/classes/{class_id}/assignments:
+    get:
+      tags:
+        - Courses
+        - Exams
+      operationId: listStudentClassAssignments
+      summary: 获取班级作业列表
+      parameters:
+        - $ref: '#/components/parameters/ClassIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/feedback/generate:
+    post:
+      tags:
+        - Exams
+        - AI
+      operationId: generateStudentFeedbackReport
+      summary: 生成或重新排队 AI 反馈报告
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - exam_id
+              properties:
+                exam_id:
+                  type: integer
+                force:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: data 为反馈报告结构。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/feedback/{exam_id}:
+    get:
+      tags:
+        - Exams
+        - AI
+      operationId: getStudentFeedbackReport
+      summary: 获取作业反馈报告
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/assessments/initial/start:
+    post:
+      tags:
+        - Assessments
+        - Exams
+      operationId: startLegacyInitialAssessment
+      summary: 开始旧版课程初始评测随机抽题
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 course_id、questions[]、count。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/assessments/initial/submit:
+    post:
+      tags:
+        - Assessments
+        - Exams
+      operationId: submitLegacyInitialAssessment
+      summary: 提交旧版课程初始评测
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - answers
+              properties:
+                course_id:
+                  type: integer
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含 score、correct_count、total_count、knowledge_mastery。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/exams:
+    get:
+      tags:
+        - Exams
+      operationId: listTeacherExams
+      summary: 教师获取课程作业列表
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: data 包含 total、exams[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/teacher/exams/create:
+    post:
+      tags:
+        - Exams
+      operationId: createTeacherExam
+      summary: 教师创建作业
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - title
+                - questions
+              properties:
+                course_id:
+                  type: integer
+                title:
+                  type: string
+                description:
+                  type: string
+                exam_type:
+                  type: string
+                  default: chapter
+                duration:
+                  type: integer
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+                target_class:
+                  type: integer
+                questions:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data 包含 exam_id、title。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/teacher/exams/{exam_id}:
+    get:
+      tags:
+        - Exams
+      operationId: getTeacherExamDetail
+      summary: 教师获取作业详情
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 包含作业信息、题目标准答案和 statistics。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/update:
+    put:
+      tags:
+        - Exams
+      operationId: updateTeacherExam
+      summary: 教师更新作业
+      description: 已发布作业仅允许更新 end_time；未发布作业可更新题目、目标班级和基础信息。
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                exam_type:
+                  type: string
+                duration:
+                  type: integer
+                total_score:
+                  type: number
+                pass_score:
+                  type: number
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+                target_class:
+                  type: integer
+                  nullable: true
+                questions:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data 包含 exam_id、updated_fields。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/delete:
+    delete:
+      tags:
+        - Exams
+      operationId: deleteTeacherExam
+      summary: 教师删除作业
+      description: 已发布或已有提交记录的作业不能删除。
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/publish:
+    post:
+      tags:
+        - Exams
+      operationId: publishTeacherExam
+      summary: 发布作业
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                class_id:
+                  type: integer
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: data 包含 exam_id、status。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/unpublish:
+    post:
+      tags:
+        - Exams
+      operationId: unpublishTeacherExam
+      summary: 取消发布作业
+      description: 已有提交记录时不能取消发布。
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/results:
+    get:
+      tags:
+        - Exams
+      operationId: listTeacherExamResults
+      summary: 获取作业成绩列表
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 exam_id、exam_title、total、page、size、results[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/export:
+    get:
+      tags:
+        - Exams
+      operationId: exportTeacherExamResults
+      summary: 导出作业成绩 CSV
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/questions/add:
+    post:
+      tags:
+        - Exams
+      operationId: addTeacherExamQuestions
+      summary: 向作业追加题目
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question_ids
+              properties:
+                question_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data.added_count 为新增题目数量。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/questions/remove:
+    post:
+      tags:
+        - Exams
+      operationId: removeTeacherExamQuestions
+      summary: 从作业移除题目
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question_ids
+              properties:
+                question_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data.removed_count 为移除题目数量。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/students/{student_id}:
+    get:
+      tags:
+        - Exams
+      operationId: getTeacherExamStudentDetail
+      summary: 获取某学生作业详情
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含 student、score、questions[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/teacher/exams/{exam_id}/analysis:
+    get:
+      tags:
+        - Exams
+      operationId: getTeacherExamAnalysis
+      summary: 获取作业统计分析
+      parameters:
+        - $ref: '#/components/parameters/ExamIdPath'
+      responses:
+        '200':
+          description: data 包含 statistics、score_distribution、question_analysis。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/ai/profile-analysis:
+    post:
+      tags:
+        - AI
+        - Profile
+      operationId: aiProfileAnalysis
+      summary: 生成或刷新课程学习者画像分析
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                refresh:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/student/ai/path-planning:
+    post:
+      tags:
+        - AI
+        - Learning
+      operationId: aiPathPlanning
+      summary: 基于掌握度与 RAG 证据生成路径规划建议
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                target:
+                  type: string
+                constraints:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: data 包含路径规划建议、证据和约束。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/ai/resource-reason:
+    post:
+      tags:
+        - AI
+      operationId: aiResourceReason
+      summary: 生成推荐资源理由
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - resource_id
+              properties:
+                resource_id:
+                  type: integer
+                course_id:
+                  type: integer
+                point_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 reason、learning_tips。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/ai/feedback-report:
+    post:
+      tags:
+        - AI
+        - Exams
+      operationId: aiFeedbackReport
+      summary: 获取或生成作业 AI 反馈摘要
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - exam_id
+              properties:
+                exam_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/ai/learning-advice:
+    post:
+      tags:
+        - AI
+      operationId: aiLearningAdvice
+      summary: 生成当前课程学习建议
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 summary、weakness、strength、suggestion。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/ai/refresh-profile:
+    post:
+      tags:
+        - AI
+        - Profile
+      operationId: aiRefreshProfile
+      summary: 强制刷新课程画像
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/ai/refresh-learning-path:
+    post:
+      tags:
+        - AI
+        - Learning
+      operationId: aiRefreshLearningPath
+      summary: 重建当前学生课程学习路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 包含 path_id、nodes、ai_reason、preserved_count、new_count、change_summary。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/ai/key-points-reminder:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: aiKeyPointsReminder
+      summary: 获取薄弱知识点复习提醒
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data.reminders[] 包含 knowledge_point_id、name、mastery_rate、suggestion。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/ai/time-scheduling:
+    post:
+      tags:
+        - AI
+      operationId: aiTimeScheduling
+      summary: 根据薄弱点分配可用学习时间
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                available_hours:
+                  type: number
+                  format: float
+                  default: 2
+      responses:
+        '200':
+          description: data 包含 total_hours、schedule[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+  /api/student/ai/analysis-compare:
+    get:
+      tags:
+        - AI
+        - Profile
+      operationId: aiAnalysisCompare
+      summary: 对比两个日期前的画像快照
+      parameters:
+        - name: date1
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: date2
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/student/ai/chat:
+    post:
+      tags:
+        - AI
+      operationId: aiChat
+      summary: 学生 AI 问答
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+                  maxLength: 1000
+                message:
+                  type: string
+                  maxLength: 1000
+                course_id:
+                  type: integer
+                point_id:
+                  type: integer
+                knowledge_point:
+                  type: string
+                course_name:
+                  type: string
+      responses:
+        '200':
+          description: data 包含 reply、sources、mode。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/ai/node-intro:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: aiNodeIntro
+      summary: 生成知识点介绍
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                point_id:
+                  type: integer
+                point_name:
+                  type: string
+                course_name:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/ai/knowledge-query:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: aiKnowledgeGraphQuery
+      summary: 图谱问答兼容路径
+      description: 行为与 `/api/student/ai/chat` 相同。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/ai/graph-rag/search:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: aiGraphRagSearch
+      summary: 在课程图谱中检索知识点
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                query:
+                  type: string
+                keyword:
+                  type: string
+                limit:
+                  type: integer
+                  default: 8
+                  maximum: 20
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/student/ai/graph-rag/ask:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: aiGraphRagAsk
+      summary: 基于课程图谱回答问题
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                question:
+                  type: string
+                message:
+                  type: string
+                point_id:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/ai/kt/predict:
+    post:
+      tags:
+        - AI
+      operationId: ktPredict
+      summary: 单学生知识追踪预测
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                answer_history:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                knowledge_points:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/ai/kt/model-info:
+    get:
+      tags:
+        - AI
+      operationId: ktModelInfo
+      summary: 获取当前 KT 模型信息
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/ai/kt/batch-predict:
+    post:
+      tags:
+        - AI
+      operationId: ktBatchPredict
+      summary: 教师批量知识追踪预测
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_histories
+              properties:
+                user_histories:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+      responses:
+        '200':
+          description: data.results 为批量预测结果。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/kt/recommendations:
+    post:
+      tags:
+        - AI
+      operationId: ktRecommendations
+      summary: 根据 KT 预测生成学习建议
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - predictions
+              properties:
+                course_id:
+                  type: integer
+                predictions:
+                  type: object
+                  additionalProperties: true
+                threshold:
+                  type: number
+                  format: float
+                  default: 0.6
+      responses:
+        '200':
+          description: data.recommendations 为学习建议。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/admin/logs:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: listOperationLogs
+      summary: 管理员查询操作日志
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: module
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: status_code
+          in: query
+          schema:
+            type: integer
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: data 包含 total、page、page_size、logs[]。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/logs/{log_id}:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: getOperationLogDetail
+      summary: 获取操作日志详情
+      parameters:
+        - name: log_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/admin/logs/statistics:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: getLogStatistics
+      summary: 获取日志统计
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/logs/options:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: getLogFilterOptions
+      summary: 获取日志筛选选项
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/logs/modules:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: getLogModules
+      summary: 获取日志模块列表
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/logs/actions:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: getLogActions
+      summary: 获取日志操作类型列表
+      responses:
+        '200':
+          $ref: '#/components/responses/Success'
+  /api/admin/logs/export:
+    get:
+      tags:
+        - Logs
+        - Admin
+      operationId: exportOperationLogs
+      summary: 导出操作日志 CSV
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/CsvDownload'
+  /api/admin/logs/clean:
+    delete:
+      tags:
+        - Logs
+        - Admin
+      operationId: cleanExpiredLogs
+      summary: 清理过期日志
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                days:
+                  type: integer
+                  description: 保留最近多少天日志，删除更早数据。
+      responses:
+        '200':
+          description: data.deleted_count 为清理数量。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/common/menu:
+    get:
+      tags:
+        - Common
+      operationId: getMenu
+      summary: 获取当前用户菜单树
+      responses:
+        '200':
+          description: data 为按角色过滤后的菜单树。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: '使用登录或刷新接口返回的 `token`，请求头格式为 `Authorization: Bearer <token>`。'
+  schemas:
+    ApiEnvelope:
+      type: object
+      required:
+        - code
+        - msg
+        - data
+      properties:
+        code:
+          type: integer
+          description: 业务状态码，成功通常为 200，创建成功为 201。
+          example: 200
+        msg:
+          type: string
+          description: 用户可读消息。
+          example: 操作成功
+        data:
+          description: 业务数据。不同接口返回结构不同，详见各接口说明。
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - msg
+        - data
+      properties:
+        code:
+          type: integer
+          example: 400
+        msg:
+          type: string
+          example: 缺少必要参数
+        data:
+          description: 错误响应通常为 null，部分接口可能附带调试或校验上下文。
+        error:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              example: validation_error
+            details:
+              description: DRF 校验错误或后端补充的错误详情。
+    FileDownload:
+      type: string
+      format: binary
+      description: 文件下载响应，实际 Content-Type 由接口决定。
+    IdListRequest:
+      type: object
+      required:
+        - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        size:
+          type: integer
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+          enum:
+            - student
+            - teacher
+            - admin
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        real_name:
+          type: string
+          nullable: true
+        student_id:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    Course:
+      type: object
+      properties:
+        course_id:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        course_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        cover:
+          type: string
+          nullable: true
+        teacher:
+          type: string
+          nullable: true
+        teacher_id:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+        is_published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    Class:
+      type: object
+      properties:
+        class_id:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        class_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        semester:
+          type: string
+          nullable: true
+        teacher_id:
+          type: integer
+          nullable: true
+        teacher_name:
+          type: string
+          nullable: true
+        student_count:
+          type: integer
+        courses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+    KnowledgePoint:
+      type: object
+      properties:
+        point_id:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        point_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        chapter:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        order:
+          type: integer
+          nullable: true
+        is_published:
+          type: boolean
+        mastery_rate:
+          type: number
+          format: float
+          nullable: true
+    KnowledgeRelation:
+      type: object
+      properties:
+        relation_id:
+          type: integer
+        id:
+          type: integer
+        from_point_id:
+          type: integer
+        from_point_name:
+          type: string
+        to_point_id:
+          type: integer
+        to_point_name:
+          type: string
+        relation_type:
+          type: string
+          enum:
+            - prerequisite
+            - related
+            - contains
+            - advanced
+            - same_level
+    Resource:
+      type: object
+      properties:
+        resource_id:
+          type: integer
+        id:
+          type: integer
+        title:
+          type: string
+        resource_type:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        file:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+          nullable: true
+        knowledge_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/KnowledgePoint'
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    ResourceWriteRequest:
+      type: object
+      required:
+        - course_id
+        - title
+      properties:
+        course_id:
+          type: integer
+        title:
+          type: string
+        resource_type:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        file:
+          type: string
+          format: binary
+        knowledge_point_ids:
+          type: array
+          items:
+            type: integer
+        knowledge_points:
+          type: array
+          items:
+            type: integer
+        chapter_number:
+          type: string
+        duration:
+          type: integer
+    Question:
+      type: object
+      properties:
+        question_id:
+          type: integer
+        id:
+          type: integer
+        content:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum:
+            - single_choice
+            - multiple_choice
+            - true_false
+            - fill_blank
+            - short_answer
+        question_type:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        answer:
+          description: 标准答案，结构随题型变化。
+        correct_answer:
+          description: 展示用标准答案，结构随题型变化。
+        score:
+          type: number
+          format: float
+        difficulty:
+          type: string
+          nullable: true
+        analysis:
+          type: string
+          nullable: true
+        knowledge_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/KnowledgePoint'
+    QuestionWriteRequest:
+      type: object
+      required:
+        - course_id
+        - content
+        - question_type
+      properties:
+        course_id:
+          type: integer
+        content:
+          type: string
+        question_type:
+          type: string
+          enum:
+            - single_choice
+            - multiple_choice
+            - true_false
+            - fill_blank
+            - short_answer
+        type:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        answer:
+          description: 标准答案，结构随题型变化。
+        correct_answer:
+          description: 兼容字段，结构随题型变化。
+        score:
+          type: number
+          format: float
+        difficulty:
+          type: string
+        analysis:
+          type: string
+        knowledge_point_ids:
+          type: array
+          items:
+            type: integer
+        for_initial_assessment:
+          type: boolean
+        is_visible:
+          type: boolean
+    Assessment:
+      type: object
+      properties:
+        assessment_id:
+          type: integer
+        survey_id:
+          type: integer
+        title:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+        completed:
+          type: boolean
+        score:
+          type: number
+          format: float
+          nullable: true
+    LearningPath:
+      type: object
+      properties:
+        path_id:
+          type: integer
+          nullable: true
+        dynamic:
+          type: boolean
+        generating:
+          type: boolean
+        need_assessment:
+          type: boolean
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              node_id:
+                type: integer
+              title:
+                type: string
+              node_type:
+                type: string
+              status:
+                type: string
+                enum:
+                  - locked
+                  - active
+                  - completed
+                  - skipped
+                  - failed
+              knowledge_point_id:
+                type: integer
+                nullable: true
+              suggestion:
+                type: string
+                nullable: true
+    Exam:
+      type: object
+      properties:
+        exam_id:
+          type: integer
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          type: string
+        exam_type:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - published
+            - archived
+        total_score:
+          type: number
+          format: float
+        pass_score:
+          type: number
+          format: float
+        duration:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+    FeedbackReport:
+      type: object
+      properties:
+        status:
+          type: string
+        overview:
+          type: object
+          additionalProperties: true
+        analysis:
+          description: 分析内容，可能是字符串、对象或数组。
+        recommendations:
+          type: array
+          items:
+            type: string
+        next_tasks:
+          type: array
+          items:
+            type: string
+        conclusion:
+          type: string
+          nullable: true
+        question_details:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    AIResult:
+      type: object
+      additionalProperties: true
+      description: AI/RAG/KT 接口返回结构随调用类型变化，字段在各接口 data 描述中进一步列出。
+      properties:
+        reply:
+          type: string
+        sources:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        mode:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    OperationLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        module:
+          type: string
+        action:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        status_code:
+          type: integer
+        ip_address:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+  parameters:
+    CourseId:
+      name: course_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: 课程 ID。
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 页码。
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: 每页数量。部分旧接口使用 `size`，对应接口会单独声明。
+    UserIdPath:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 用户 ID。
+    ClassIdPath:
+      name: class_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 班级 ID。
+    PointIdPath:
+      name: point_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 知识点 ID。
+    ResourceIdPath:
+      name: resource_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 资源 ID。学习路径资源接口允许外部资源 ID 字符串。
+    QuestionIdPath:
+      name: question_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 题目 ID。
+    NodeIdPath:
+      name: node_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 学习路径节点 ID。
+    ExamIdPath:
+      name: exam_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 作业/考试 ID。
+  responses:
+    Success:
+      description: 成功响应。实际 `data` 结构以接口说明为准。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiEnvelope'
+    Created:
+      description: 创建成功。
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiEnvelope'
+              - type: object
+                properties:
+                  code:
+                    example: 201
+    BadRequest:
+      description: 请求参数错误或业务校验失败。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 未认证或 Token 无效。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    JsonDownload:
+      description: JSON 文件下载。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileDownload'
+    Forbidden:
+      description: 已认证但无权限访问。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CsvDownload:
+      description: CSV 文件下载。
+      content:
+        text/csv:
+          schema:
+            $ref: '#/components/schemas/FileDownload'
+    NotFound:
+      description: 资源不存在。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServerError:
+      description: 服务端处理失败。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: 资源状态冲突。
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

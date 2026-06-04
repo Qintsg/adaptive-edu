@@ -1,0 +1,335 @@
+.profile-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading-container {
+  padding: 20px;
+}
+
+.assessment-empty-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 108, 189, 0.16);
+  border-radius: 18px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-light);
+}
+
+.empty-eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary-color);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.assessment-empty-card h3 {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.assessment-empty-card p:not(.empty-eyebrow) {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.profile-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 108, 189, 0.12);
+  border-radius: 18px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-light);
+}
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+  background:
+    linear-gradient(135deg, rgba(15, 108, 189, 0.95), rgba(16, 124, 16, 0.85));
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(15, 108, 189, 0.2);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-info h2 {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.user-info p {
+  margin: 0 0 10px;
+  max-width: 680px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.hero-eyebrow {
+  margin: 0 0 4px !important;
+  color: var(--primary-color) !important;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.refresh-btn {
+  flex-shrink: 0;
+}
+
+.hero-side {
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+}
+
+.profile-score-card {
+  padding: 14px;
+  border: 1px solid rgba(15, 108, 189, 0.1);
+  border-radius: 14px;
+  background: var(--bg-elevated);
+}
+
+.profile-score-card span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.profile-score-card strong {
+  display: block;
+  margin: 4px 0 10px;
+  color: var(--text-primary);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-light);
+}
+
+.metric-card.accent {
+  border-color: rgba(16, 124, 16, 0.18);
+}
+
+.metric-card.warning {
+  border-color: rgba(241, 161, 10, 0.24);
+}
+
+.metric-card span,
+.metric-card em {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.metric-card strong {
+  display: block;
+  margin: 6px 0 4px;
+  color: var(--text-primary);
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.profile-analysis-grid {
+  --profile-feature-card-height: 520px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ability-card,
+.mastery-card,
+.summary-card,
+.ai-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.ability-card,
+.mastery-card {
+  display: flex;
+  flex-direction: column;
+  height: var(--profile-feature-card-height);
+  min-height: var(--profile-feature-card-height);
+  overflow: hidden;
+}
+
+.summary-card,
+.ai-card {
+  min-height: 260px;
+}
+
+.ability-card :deep(.el-card__body),
+.mastery-card :deep(.el-card__body),
+.summary-card :deep(.el-card__body),
+.ai-card :deep(.el-card__body) {
+  padding: 18px;
+}
+
+.ability-card :deep(.el-card__header),
+.mastery-card :deep(.el-card__header) {
+  flex: 0 0 auto;
+}
+
+.ability-card :deep(.el-card__body),
+.mastery-card :deep(.el-card__body) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ability-chart-wrapper {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ability-chart-wrapper > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ability-card :deep(.radar-chart-wrapper) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ability-card :deep(.chart-container) {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ability-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.insight-pill {
+  min-width: 0;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--bg-soft-alt);
+}
+
+.insight-pill.strong {
+  background: rgba(16, 124, 16, 0.1);
+}
+
+.insight-pill.focus {
+  background: rgba(241, 161, 10, 0.12);
+}
+
+.insight-pill span,
+.insight-pill em {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.insight-pill strong {
+  display: block;
+  margin: 4px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.chart-placeholder {
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.chart-placeholder .el-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1320px) {
+  .metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .profile-hero,
+  .metric-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-side {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+@media (max-width: 1200px) {
+  .ability-card,
+  .mastery-card {
+    height: auto;
+    min-height: 0;
+  }
+
+  .ability-card :deep(.el-card__body),
+  .mastery-card :deep(.el-card__body) {
+    overflow: visible;
+  }
+}

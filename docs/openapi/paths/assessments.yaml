@@ -1,0 +1,239 @@
+getAssessmentStatus:
+  get:
+    tags: [Assessments]
+    operationId: getAssessmentStatus
+    summary: 查询当前用户初始测评完成状态
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        description: data 包含 ability_done、habit_done、knowledge_done、courses[]、next_step 等。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+getKnowledgeAssessment:
+  get:
+    tags: [Assessments]
+    operationId: getKnowledgeAssessment
+    summary: 获取课程知识测评题目
+    parameters:
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: data 包含 assessment_id、title、questions[]。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+submitKnowledgeAssessment:
+  post:
+    tags: [Assessments]
+    operationId: submitKnowledgeAssessment
+    summary: 提交课程知识测评
+    description: 提交后会保存本次测评掌握度快照；题目级 MEFKT 会接收所有作答题目，未绑定知识点的题目以 question_id 参与历史序列。
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id, answers]
+            properties:
+              course_id:
+                type: integer
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [question_id, answer]
+                  properties:
+                    question_id:
+                      type: integer
+                    answer:
+                      description: 学生答案，结构随题型变化。
+    responses:
+      "200":
+        description: data 包含 score、total_score、mastery、question_details、generating、completed。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+getKnowledgeAssessmentResult:
+  get:
+    tags: [Assessments]
+    operationId: getKnowledgeAssessmentResult
+    summary: 获取课程知识测评结果和异步生成状态
+    description: mastery 返回本次知识测评结果快照，不混入异步路径或画像刷新写入的课程全量掌握度基线。
+    parameters:
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: data 包含 score、mastery、question_details、feedback_report、generating、generation_error、completed。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+getAbilityAssessment:
+  get:
+    tags: [Assessments]
+    operationId: getAbilityAssessment
+    summary: 获取学习能力评测题目
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        description: data 包含 assessment_id、title、questions[]。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+retakeAbilityAssessment:
+  get:
+    tags: [Assessments]
+    operationId: retakeAbilityAssessment
+    summary: 重新获取学习能力评测题目
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+submitAbilityAssessment:
+  post:
+    tags: [Assessments]
+    operationId: submitAbilityAssessment
+    summary: 提交学习能力评测
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers]
+            properties:
+              course_id:
+                type: integer
+              answers:
+                oneOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: array
+                    items:
+                      type: object
+                      required: [question_id, answer]
+                      properties:
+                        question_id:
+                          type: integer
+                        answer:
+                          description: 学生答案，结构随题型变化。
+    responses:
+      "200":
+        description: data 包含 score、ability_analysis、completed。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+getHabitSurvey:
+  get:
+    tags: [Assessments]
+    operationId: getHabitSurvey
+    summary: 获取学习习惯问卷
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        description: data 包含 survey_id、title、questions[]。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+submitHabitSurvey:
+  post:
+    tags: [Assessments]
+    operationId: submitHabitSurvey
+    summary: 提交学习习惯问卷
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [responses]
+            properties:
+              course_id:
+                type: integer
+              responses:
+                oneOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: array
+                    items:
+                      type: object
+                      required: [question_id, answer]
+                      properties:
+                        question_id:
+                          type: integer
+                        answer:
+                          description: 问卷答案，结构随题型变化。
+    responses:
+      "200":
+        description: data 包含 preferences、completed。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+generateCourseProfile:
+  post:
+    tags: [Assessments, Profile]
+    operationId: generateCourseProfile
+    summary: 根据测评结果生成课程画像
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id]
+            properties:
+              course_id:
+                type: integer
+    responses:
+      "200":
+        description: data 包含 course_id、course_name、summary、weakness、suggestion。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "500":
+        $ref: ../components/responses.yaml#/ServerError
+      "404":
+        $ref: ../components/responses.yaml#/NotFound

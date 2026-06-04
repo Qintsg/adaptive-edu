@@ -1,0 +1,187 @@
+getStudentKnowledgeMap:
+  get:
+    tags: [Knowledge]
+    operationId: getStudentKnowledgeMap
+    summary: 获取学生课程知识图谱
+    parameters:
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: data 包含 nodes、edges、course_id 等图谱数据。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+
+getStudentKnowledgePointDetail:
+  get:
+    tags: [Knowledge]
+    operationId: getStudentKnowledgePointDetail
+    summary: 获取学生知识点详情
+    parameters:
+      - $ref: ../components/parameters.yaml#/PointIdPath
+      - $ref: ../components/parameters.yaml#/CourseId
+      - name: include_graph_rag
+        in: query
+        description: 是否构造 GraphRAG 证据摘要。
+        schema:
+          type: boolean
+          default: false
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+
+listStudentKnowledgePointResources:
+  get:
+    tags: [Knowledge]
+    operationId: listStudentKnowledgePointResources
+    summary: 获取知识点关联学习资源
+    parameters:
+      - $ref: ../components/parameters.yaml#/PointIdPath
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+listStudentKnowledgePoints:
+  get:
+    tags: [Knowledge]
+    operationId: listStudentKnowledgePoints
+    summary: 获取学生课程知识点列表
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+      - name: chapter
+        in: query
+        schema:
+          type: string
+      - name: type
+        in: query
+        schema:
+          type: string
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+listStudentKnowledgeRelations:
+  get:
+    tags: [Knowledge]
+    operationId: listStudentKnowledgeRelations
+    summary: 获取学生课程知识点关系
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+
+
+getStudentKnowledgeMastery:
+  get:
+    tags: [Knowledge]
+    operationId: getStudentKnowledgeMastery
+    summary: 获取学生知识点掌握度
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        description: data 包含 mastery[]。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
+
+
+updateStudentKnowledgeMastery:
+  put:
+    tags: [Knowledge]
+    operationId: updateStudentKnowledgeMastery
+    summary: 更新学生知识点掌握度
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [knowledge_point_id, mastery_rate]
+            properties:
+              knowledge_point_id:
+                type: integer
+              point_id:
+                type: integer
+                description: 兼容字段。
+              mastery_rate:
+                type: number
+                format: float
+              mastery:
+                type: number
+                format: float
+                description: 兼容字段。
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+
+searchStudentKnowledge:
+  get:
+    tags: [Knowledge]
+    operationId: searchStudentKnowledge
+    summary: 搜索学生可见知识点
+    parameters:
+      - name: keyword
+        in: query
+        required: true
+        schema:
+          type: string
+      - $ref: ../components/parameters.yaml#/CourseId
+    responses:
+      "200":
+        $ref: ../components/responses.yaml#/Success
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+
+
+listStudentResources:
+  get:
+    tags: [Knowledge]
+    operationId: listStudentResources
+    summary: 获取学生课程资源
+    parameters:
+      - $ref: ../components/parameters.yaml#/CourseId
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum: [default, title, type, newest]
+      - name: type
+        in: query
+        schema:
+          type: string
+      - name: keyword
+        in: query
+        schema:
+          type: string
+      - name: point_id
+        in: query
+        schema:
+          type: integer
+      - $ref: ../components/parameters.yaml#/Page
+      - $ref: ../components/parameters.yaml#/PageSize
+    responses:
+      "200":
+        description: data 包含 resources[]、total、page、page_size。
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas/ApiEnvelope.yaml
