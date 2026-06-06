@@ -1,5 +1,5 @@
 """
-URL configuration for wisdom_edu_api project.
+URL configuration for adaptive_edu_api project.
 自适应学习系统 - URL路由配置
 
 API命名规范：

@@ -1,5 +1,5 @@
 """
-WSGI config for wisdom_edu_api project.
+WSGI config for adaptive_edu_api project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wisdom_edu_api.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'adaptive_edu_api.settings')
 
 application = get_wsgi_application()

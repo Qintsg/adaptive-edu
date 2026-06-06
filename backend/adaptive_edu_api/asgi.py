@@ -2,7 +2,7 @@
 
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wisdom_edu_api.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "adaptive_edu_api.settings")
 
 from django.core.asgi import get_asgi_application
 
