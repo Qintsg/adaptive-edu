@@ -1,0 +1,25 @@
+type: object
+required:
+  - agent
+  - status
+  - summary
+properties:
+  agent:
+    type: string
+    description: 智能体角色标识。
+    example: profile_agent
+  status:
+    type: string
+    description: 阶段状态。
+    example: completed
+  summary:
+    type: string
+    description: 阶段摘要。
+  duration_ms:
+    type: integer
+    description: 阶段耗时，毫秒。
+  detail:
+    type: object
+    additionalProperties: true
+  error:
+    type: string

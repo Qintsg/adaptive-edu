@@ -1,0 +1,28 @@
+type: object
+required:
+  - run_id
+  - profile
+  - missing_slots
+  - confidence
+properties:
+  run_id:
+    type: integer
+  profile:
+    type: object
+    additionalProperties: true
+    description: 抽取出的画像字段。
+  missing_slots:
+    type: array
+    items:
+      type: string
+    description: 仍需追问的画像字段。
+  next_question:
+    type: string
+    description: 下一轮建议追问。
+  confidence:
+    type: number
+    format: float
+  agent_trace:
+    type: array
+    items:
+      $ref: ./AgentTraceItem.yaml

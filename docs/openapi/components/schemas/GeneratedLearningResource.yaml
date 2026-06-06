@@ -1,0 +1,43 @@
+type: object
+required:
+  - resource_id
+  - resource_type
+  - title
+  - content
+properties:
+  resource_id:
+    type: integer
+  resource_type:
+    type: string
+    enum: [explanation, mindmap, quiz, reading, coding_case, video_script]
+  title:
+    type: string
+  content:
+    type: string
+    description: 序列化后的资源正文，Markdown 或 JSON 字符串。
+  content_payload:
+    type: object
+    additionalProperties: true
+    description: 前端可直接消费的结构化资源内容。
+  evidence:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  profile_snapshot:
+    type: object
+    additionalProperties: true
+  metadata:
+    type: object
+    additionalProperties: true
+  knowledge_point_id:
+    type: integer
+    nullable: true
+  knowledge_point_name:
+    type: string
+  status:
+    type: string
+  created_at:
+    type: string
+    format: date-time
+    nullable: true

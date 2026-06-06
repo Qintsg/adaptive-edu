@@ -1,0 +1,31 @@
+type: object
+required:
+  - run_id
+  - status
+  - agent_trace
+properties:
+  run_id:
+    type: integer
+  status:
+    type: string
+    enum: [pending, running, completed, failed, cancelled]
+  input_text:
+    type: string
+  profile_snapshot:
+    type: object
+    additionalProperties: true
+  agent_trace:
+    type: array
+    items:
+      $ref: ./AgentTraceItem.yaml
+  result_payload:
+    type: object
+    additionalProperties: true
+  error_message:
+    type: string
+  started_at:
+    type: string
+    format: date-time
+  finished_at:
+    type: string
+    format: date-time

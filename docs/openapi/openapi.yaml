@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: WisdomEdu API
+  title: AdaptiveEdu API
   version: 2026.05.12
   description: 知识图谱驱动的个性化自适应学习系统后端接口契约。本文档依据后端路由、视图、support 与 serializer 逐项人工整理。
 servers:
@@ -27,6 +27,8 @@ tags:
     description: 作业考试、提交、反馈报告、成绩和分析。
   - name: AI
     description: LLM、GraphRAG、学习建议、路径规划和 KT 兼容接口。
+  - name: Agent
+    description: A3 多智能体画像抽取与个性化资源生成接口。
   - name: Admin
     description: 管理端用户、课程、班级、激活码和统计接口。
   - name: Logs
@@ -408,6 +410,10 @@ paths:
     $ref: ./paths/teacher_exams.yaml#/getTeacherExamAnalysis
   /api/student/ai/profile-analysis:
     $ref: ./paths/ai.yaml#/aiProfileAnalysis
+  /api/student/agent/profile-dialog:
+    $ref: ./paths/student_agent.yaml#/studentAgentProfileDialog
+  /api/student/agent/generate-resources:
+    $ref: ./paths/student_agent.yaml#/studentAgentGenerateResources
   /api/student/ai/path-planning:
     $ref: ./paths/ai.yaml#/aiPathPlanning
   /api/student/ai/resource-reason:
@@ -504,6 +510,14 @@ components:
       $ref: ./components/schemas/FeedbackReport.yaml
     AIResult:
       $ref: ./components/schemas/AIResult.yaml
+    AgentRun:
+      $ref: ./components/schemas/AgentRun.yaml
+    AgentTraceItem:
+      $ref: ./components/schemas/AgentTraceItem.yaml
+    ProfileDialogResult:
+      $ref: ./components/schemas/ProfileDialogResult.yaml
+    GeneratedLearningResource:
+      $ref: ./components/schemas/GeneratedLearningResource.yaml
     OperationLog:
       $ref: ./components/schemas/OperationLog.yaml
   parameters:

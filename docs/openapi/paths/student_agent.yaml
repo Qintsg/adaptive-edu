@@ -1,0 +1,110 @@
+studentAgentProfileDialog:
+  post:
+    tags: [AI, Profile]
+    operationId: studentAgentProfileDialog
+    summary: A3 对话式学习画像抽取
+    description: 学生通过自然语言描述学习目标、短板和偏好，系统抽取画像字段并返回下一轮追问建议。
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id, message]
+            properties:
+              course_id:
+                type: integer
+              message:
+                type: string
+                maxLength: 2000
+              history_limit:
+                type: integer
+                default: 8
+    responses:
+      "200":
+        description: data 包含画像字段、缺失字段、下一轮追问、置信度和 Agent trace。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/ProfileDialogResult.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentGenerateResources:
+  post:
+    tags: [AI, Knowledge]
+    operationId: studentAgentGenerateResources
+    summary: A3 个性化学习资源生成
+    description: 基于学生画像、课程知识点和课程证据，生成至少 5 类个性化学习资源并保存运行记录。
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id]
+            properties:
+              course_id:
+                type: integer
+              knowledge_point_id:
+                type: integer
+              target:
+                type: string
+                maxLength: 1000
+              profile:
+                type: object
+                additionalProperties: true
+              resource_types:
+                type: array
+                items:
+                  type: string
+                  enum: [explanation, mindmap, quiz, reading, coding_case, video_script]
+    responses:
+      "200":
+        description: data 包含运行记录、Agent trace、生成资源列表和 warnings。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        run_id:
+                          type: integer
+                        status:
+                          type: string
+                        target:
+                          type: string
+                        profile:
+                          type: object
+                          additionalProperties: true
+                        agent_trace:
+                          type: array
+                          items:
+                            $ref: ../components/schemas/AgentTraceItem.yaml
+                        resources:
+                          type: array
+                          items:
+                            $ref: ../components/schemas/GeneratedLearningResource.yaml
+                        warnings:
+                          type: array
+                          items:
+                            type: string
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound

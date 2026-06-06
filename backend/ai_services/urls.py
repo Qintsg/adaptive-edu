@@ -31,11 +31,23 @@ from ai_services.api.student.profile import (
     ai_resource_reason,
     ai_time_scheduling,
 )
+from ai_services.api.student.agent import generate_resources, profile_dialog
 from ai_services.api.student.rag import ai_node_intro, ai_path_planning
 
 app_name = "ai"
 
 urlpatterns = [
+    # ============ A3 多智能体个性化资源生成 ============
+    path(
+        "api/student/agent/profile-dialog",
+        profile_dialog,
+        name="student_agent_profile_dialog",
+    ),
+    path(
+        "api/student/agent/generate-resources",
+        generate_resources,
+        name="student_agent_generate_resources",
+    ),
     # ============ 学生端AI服务 ============
     path(
         "api/student/ai/profile-analysis",

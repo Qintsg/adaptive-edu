@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: WisdomEdu API
+  title: AdaptiveEdu API
   version: 2026.05.12
   description: 知识图谱驱动的个性化自适应学习系统后端接口契约。本文档依据后端路由、视图、support 与 serializer 逐项人工整理。
 servers:
@@ -29,6 +29,8 @@ tags:
     description: 作业考试、提交、反馈报告、成绩和分析。
   - name: AI
     description: LLM、GraphRAG、学习建议、路径规划和 KT 兼容接口。
+  - name: Agent
+    description: A3 多智能体画像抽取与个性化资源生成接口。
   - name: Admin
     description: 管理端用户、课程、班级、激活码和统计接口。
   - name: Logs
@@ -4219,6 +4221,128 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/student/agent/profile-dialog:
+    post:
+      tags:
+        - AI
+        - Profile
+      operationId: studentAgentProfileDialog
+      summary: A3 对话式学习画像抽取
+      description: 学生通过自然语言描述学习目标、短板和偏好，系统抽取画像字段并返回下一轮追问建议。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - message
+              properties:
+                course_id:
+                  type: integer
+                message:
+                  type: string
+                  maxLength: 2000
+                history_limit:
+                  type: integer
+                  default: 8
+      responses:
+        '200':
+          description: data 包含画像字段、缺失字段、下一轮追问、置信度和 Agent trace。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfileDialogResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/generate-resources:
+    post:
+      tags:
+        - AI
+        - Knowledge
+      operationId: studentAgentGenerateResources
+      summary: A3 个性化学习资源生成
+      description: 基于学生画像、课程知识点和课程证据，生成至少 5 类个性化学习资源并保存运行记录。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                knowledge_point_id:
+                  type: integer
+                target:
+                  type: string
+                  maxLength: 1000
+                profile:
+                  type: object
+                  additionalProperties: true
+                resource_types:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - explanation
+                      - mindmap
+                      - quiz
+                      - reading
+                      - coding_case
+                      - video_script
+      responses:
+        '200':
+          description: data 包含运行记录、Agent trace、生成资源列表和 warnings。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          run_id:
+                            type: integer
+                          status:
+                            type: string
+                          target:
+                            type: string
+                          profile:
+                            type: object
+                            additionalProperties: true
+                          agent_trace:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AgentTraceItem'
+                          resources:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/GeneratedLearningResource'
+                          warnings:
+                            type: array
+                            items:
+                              type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/student/ai/path-planning:
     post:
       tags:
@@ -5401,6 +5525,148 @@ components:
           items:
             type: object
             additionalProperties: true
+    AgentRun:
+      type: object
+      required:
+        - run_id
+        - status
+        - agent_trace
+      properties:
+        run_id:
+          type: integer
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+            - cancelled
+        input_text:
+          type: string
+        profile_snapshot:
+          type: object
+          additionalProperties: true
+        agent_trace:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentTraceItem'
+        result_payload:
+          type: object
+          additionalProperties: true
+        error_message:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+    AgentTraceItem:
+      type: object
+      required:
+        - agent
+        - status
+        - summary
+      properties:
+        agent:
+          type: string
+          description: 智能体角色标识。
+          example: profile_agent
+        status:
+          type: string
+          description: 阶段状态。
+          example: completed
+        summary:
+          type: string
+          description: 阶段摘要。
+        duration_ms:
+          type: integer
+          description: 阶段耗时，毫秒。
+        detail:
+          type: object
+          additionalProperties: true
+        error:
+          type: string
+    ProfileDialogResult:
+      type: object
+      required:
+        - run_id
+        - profile
+        - missing_slots
+        - confidence
+      properties:
+        run_id:
+          type: integer
+        profile:
+          type: object
+          additionalProperties: true
+          description: 抽取出的画像字段。
+        missing_slots:
+          type: array
+          items:
+            type: string
+          description: 仍需追问的画像字段。
+        next_question:
+          type: string
+          description: 下一轮建议追问。
+        confidence:
+          type: number
+          format: float
+        agent_trace:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentTraceItem'
+    GeneratedLearningResource:
+      type: object
+      required:
+        - resource_id
+        - resource_type
+        - title
+        - content
+      properties:
+        resource_id:
+          type: integer
+        resource_type:
+          type: string
+          enum:
+            - explanation
+            - mindmap
+            - quiz
+            - reading
+            - coding_case
+            - video_script
+        title:
+          type: string
+        content:
+          type: string
+          description: 序列化后的资源正文，Markdown 或 JSON 字符串。
+        content_payload:
+          type: object
+          additionalProperties: true
+          description: 前端可直接消费的结构化资源内容。
+        evidence:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        profile_snapshot:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+        knowledge_point_id:
+          type: integer
+          nullable: true
+        knowledge_point_name:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
     OperationLog:
       type: object
       properties:
