@@ -31,7 +31,17 @@ from ai_services.api.student.profile import (
     ai_resource_reason,
     ai_time_scheduling,
 )
-from ai_services.api.student.agent import generate_resources, profile_dialog
+from ai_services.api.student.agent import (
+    apply_resources_to_path,
+    complete_agent_run,
+    generate_learning_package,
+    generate_resources,
+    get_agent_run,
+    get_effect_summary,
+    list_generated_resources,
+    profile_dialog,
+    submit_resource_feedback,
+)
 from ai_services.api.student.rag import ai_node_intro, ai_path_planning
 
 app_name = "ai"
@@ -47,6 +57,41 @@ urlpatterns = [
         "api/student/agent/generate-resources",
         generate_resources,
         name="student_agent_generate_resources",
+    ),
+    path(
+        "api/student/agent/learning-package",
+        generate_learning_package,
+        name="student_agent_learning_package",
+    ),
+    path(
+        "api/student/agent/apply-to-path",
+        apply_resources_to_path,
+        name="student_agent_apply_to_path",
+    ),
+    path(
+        "api/student/agent/runs/<int:run_id>",
+        get_agent_run,
+        name="student_agent_run_detail",
+    ),
+    path(
+        "api/student/agent/runs/<int:run_id>/complete",
+        complete_agent_run,
+        name="student_agent_run_complete",
+    ),
+    path(
+        "api/student/agent/resources",
+        list_generated_resources,
+        name="student_agent_resources",
+    ),
+    path(
+        "api/student/agent/resources/<int:resource_id>/feedback",
+        submit_resource_feedback,
+        name="student_agent_resource_feedback",
+    ),
+    path(
+        "api/student/agent/effect-summary",
+        get_effect_summary,
+        name="student_agent_effect_summary",
     ),
     # ============ 学生端AI服务 ============
     path(

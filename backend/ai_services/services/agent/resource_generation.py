@@ -18,6 +18,7 @@ from django.utils import timezone
 
 from ai_services.models import AgentRun, GeneratedLearningResource
 from ai_services.services.agent.profile_dialog import ProfileDialogService
+from ai_services.services.agent.quality_guard import AgentQualityGuard
 from ai_services.services.agent.schemas import (
     DEFAULT_RESOURCE_TYPES,
     RESOURCE_TYPE_LABELS,
@@ -48,6 +49,7 @@ class ResourceGenerationService:
         knowledge_point_id: object | None = None,
         profile: dict[str, Any] | None = None,
         resource_types: list[str] | None = None,
+        run_type: str = "resource_generation",
     ) -> dict[str, Any]:
         """
         生成并保存个性化学习资源。
@@ -56,6 +58,7 @@ class ResourceGenerationService:
         :param knowledge_point_id: 可选知识点 ID。
         :param profile: 调用方提供的画像快照。
         :param resource_types: 期望生成的资源类型列表。
+        :param run_type: AgentRun 运行类型。
         :return: 资源生成结果。
         """
         normalized_target = str(target or "").strip()
@@ -63,13 +66,14 @@ class ResourceGenerationService:
         knowledge_point = self._resolve_knowledge_point(knowledge_point_id)
         profile_snapshot = self._build_profile_snapshot(profile)
         evidence, warnings = self._collect_evidence(knowledge_point, normalized_target)
+        normalized_run_type = run_type if run_type in {"resource_generation", "learning_package"} else "resource_generation"
 
         started_at = timezone.now()
         with transaction.atomic():
             run = AgentRun.objects.create(
                 user=self.user,
                 course=self.course,
-                run_type="resource_generation",
+                run_type=normalized_run_type,
                 status="running",
                 input_text=normalized_target,
                 profile_snapshot=profile_snapshot,
@@ -102,11 +106,13 @@ class ResourceGenerationService:
                 for payload in payloads
             ]
             serialized_resources = [serialize_generated_resource(resource) for resource in resources]
+            quality_report = AgentQualityGuard().validate_resources(resources, required_types=selected_types)
+            merged_warnings = list(dict.fromkeys(warnings + quality_report.get("warnings", [])))
             agent_trace = build_default_agent_trace(
                 profile_complete=len([value for value in profile_snapshot.values() if value]) >= 6,
                 evidence_count=len(evidence),
                 resource_count=len(resources),
-                warnings=warnings,
+                warnings=merged_warnings,
             )
             run.status = "completed"
             run.agent_trace = agent_trace
@@ -114,7 +120,9 @@ class ResourceGenerationService:
                 "target": normalized_target,
                 "profile": profile_snapshot,
                 "resources": serialized_resources,
-                "warnings": warnings,
+                "resource_types": selected_types,
+                "quality_report": quality_report,
+                "warnings": merged_warnings,
             }
             run.finished_at = timezone.now()
             run.save(
@@ -134,7 +142,9 @@ class ResourceGenerationService:
             "profile": profile_snapshot,
             "agent_trace": agent_trace,
             "resources": serialized_resources,
-            "warnings": warnings,
+            "resource_types": selected_types,
+            "quality_report": quality_report,
+            "warnings": merged_warnings,
         }
 
     def _normalize_resource_types(self, resource_types: list[str] | None) -> list[str]:

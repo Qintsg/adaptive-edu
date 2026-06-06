@@ -20,6 +20,7 @@ from ai_services.models import (
 )
 from courses.models import Class, Course, Enrollment
 from knowledge.models import KnowledgeMastery, KnowledgePoint, Resource
+from learning.models import LearningPath, NodeProgress, PathNode
 from users.models import HabitPreference, User
 
 
@@ -292,3 +293,170 @@ class StudentAgentApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data["msg"], "仅学生可以访问个性化智能体接口")
+
+    def test_learning_package_should_return_quality_progress_and_path_suggestion(self) -> None:
+        """
+        学习包接口应返回质量报告、进度事件和路径绑定建议。
+
+        :return: None。
+        """
+        path = LearningPath.objects.create(user=self.student, course=self.course)
+        PathNode.objects.create(
+            path=path,
+            knowledge_point=self.point,
+            title="Spark SQL 基础",
+            goal="掌握 Spark SQL 基础查询",
+            status="active",
+            order_index=0,
+        )
+
+        response = self.client.post(
+            "/api/student/agent/learning-package",
+            {
+                "course_id": self.course.id,
+                "knowledge_point_id": self.point.id,
+                "target": "补齐 Spark SQL 查询和 DataFrame 操作",
+                "profile": {"course_goal": "完成项目作业"},
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.data["data"]
+        self.assertEqual(payload["status"], "completed")
+        self.assertGreaterEqual(len(payload["resources"]), 5)
+        self.assertIn("quality_report", payload)
+        self.assertGreaterEqual(payload["quality_report"]["score"], 0.8)
+        self.assertEqual(payload["progress_events"][-1]["percent"], 100)
+        self.assertEqual(payload["path_suggestion"]["suggested_bindings"][0]["suggested_node_id"], path.nodes.first().id)
+        self.assertTrue(AgentRun.objects.filter(id=payload["run_id"], run_type="learning_package").exists())
+
+    def test_apply_resources_to_path_should_bind_metadata_and_node_progress(self) -> None:
+        """
+        应用到路径接口应写入资源 metadata 和节点进度扩展数据。
+
+        :return: None。
+        """
+        path = LearningPath.objects.create(user=self.student, course=self.course)
+        node = PathNode.objects.create(
+            path=path,
+            knowledge_point=self.point,
+            title="Spark SQL 基础",
+            goal="掌握 Spark SQL 基础查询",
+            status="active",
+            order_index=0,
+        )
+        package_response = self.client.post(
+            "/api/student/agent/learning-package",
+            {
+                "course_id": self.course.id,
+                "knowledge_point_id": self.point.id,
+                "target": "补齐 Spark SQL 查询",
+            },
+            format="json",
+        )
+        run_id = package_response.data["data"]["run_id"]
+
+        response = self.client.post(
+            "/api/student/agent/apply-to-path",
+            {"course_id": self.course.id, "run_id": run_id},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.data["data"]
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["path_id"], path.id)
+        self.assertGreaterEqual(len(payload["bindings"]), 5)
+        bound_resource = GeneratedLearningResource.objects.filter(agent_run_id=run_id).first()
+        self.assertEqual(bound_resource.metadata["path_binding"]["node_id"], node.id)
+        progress = NodeProgress.objects.get(node=node, user=self.student)
+        self.assertGreaterEqual(len(progress.extra_data["generated_resources"]), 5)
+
+    def test_run_resources_feedback_and_effect_summary_should_enforce_student_scope(self) -> None:
+        """
+        运行查询、资源列表、反馈和效果摘要应限定当前学生课程。
+
+        :return: None。
+        """
+        package_response = self.client.post(
+            "/api/student/agent/learning-package",
+            {
+                "course_id": self.course.id,
+                "knowledge_point_id": self.point.id,
+                "target": "补齐 Spark SQL 查询",
+            },
+            format="json",
+        )
+        run_id = package_response.data["data"]["run_id"]
+        resource_id = package_response.data["data"]["resources"][0]["resource_id"]
+
+        run_response = self.client.get(
+            f"/api/student/agent/runs/{run_id}",
+            {"course_id": self.course.id},
+        )
+        list_response = self.client.get(
+            "/api/student/agent/resources",
+            {"course_id": self.course.id, "limit": 3},
+        )
+        feedback_response = self.client.post(
+            f"/api/student/agent/resources/{resource_id}/feedback",
+            {
+                "course_id": self.course.id,
+                "completed": True,
+                "rating": 5,
+                "usefulness": "useful",
+                "difficulty": "moderate",
+                "feedback": "讲解和练习很有帮助",
+                "time_spent_seconds": 600,
+            },
+            format="json",
+        )
+        summary_response = self.client.get(
+            "/api/student/agent/effect-summary",
+            {"course_id": self.course.id},
+        )
+
+        self.assertEqual(run_response.status_code, 200)
+        self.assertEqual(len(run_response.data["data"]["resources"]), 5)
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(list_response.data["data"]["count"], 3)
+        self.assertEqual(feedback_response.status_code, 200)
+        self.assertEqual(feedback_response.data["data"]["feedback"]["rating"], 5)
+        self.assertTrue(GeneratedResourceFeedback.objects.filter(resource_id=resource_id, user=self.student).exists())
+        self.assertEqual(summary_response.status_code, 200)
+        self.assertEqual(summary_response.data["data"]["feedback_count"], 1)
+
+        self.client.force_authenticate(user=self.other_student)
+        forbidden_response = self.client.get(
+            f"/api/student/agent/runs/{run_id}",
+            {"course_id": self.course.id},
+        )
+        self.assertEqual(forbidden_response.status_code, 403)
+
+    def test_complete_agent_run_should_mark_student_completion(self) -> None:
+        """
+        完成运行接口应记录学生侧完成时间。
+
+        :return: None。
+        """
+        package_response = self.client.post(
+            "/api/student/agent/learning-package",
+            {
+                "course_id": self.course.id,
+                "knowledge_point_id": self.point.id,
+                "target": "补齐 Spark SQL 查询",
+            },
+            format="json",
+        )
+        run_id = package_response.data["data"]["run_id"]
+
+        response = self.client.post(
+            f"/api/student/agent/runs/{run_id}/complete",
+            {"course_id": self.course.id},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["data"]["status"], "completed")
+        self.assertIn("student_completed_at", response.data["data"]["result_payload"])
