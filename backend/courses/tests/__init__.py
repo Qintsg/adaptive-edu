@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 课程模块测试包。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : __init__.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 MEFKT 模型包。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : __init__.py
 @Author : Qintsg
 @Date : 2026-04-04

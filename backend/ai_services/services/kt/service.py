@@ -9,7 +9,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from common.core.logging_utils import build_log_message
 
@@ -67,7 +67,7 @@ class KnowledgeTracingService(KTModelRuntimeMixin, KTPredictionModeMixin):
         fusion_weights: Dict[str, float] = None,
         use_gpu: bool = False,
         prediction_mode: str = None,
-        enabled_models: List[str] = None,
+        enabled_models: Optional[List[str]] = None,
     ):
         """初始化知识追踪服务和预测模式配置。"""
         default_mefkt_model_root = BACKEND_ROOT / "models" / "MEFKT"
@@ -122,28 +122,28 @@ class KnowledgeTracingService(KTModelRuntimeMixin, KTPredictionModeMixin):
             )
         )
 
-    def _resolve_enabled_models(self, enabled_models: List[str] = None) -> List[str]:
-        """解析启用模型列表，并保证至少返回一个有效模型。"""
+    def _resolve_enabled_models(
+        self, enabled_models: Optional[List[str]] = None
+    ) -> List[str]:
+        """解析启用模型列表；显式传入空列表表示禁用外部模型。"""
         if enabled_models is not None:
-            configured_models = [
+            return [
                 model.lower()
                 for model in enabled_models
                 if model.lower() in self.MODEL_CONFIGS
             ]
-        else:
-            env_models = os.getenv("KT_ENABLED_MODELS", "")
-            if env_models:
-                configured_models = [
-                    model.strip().lower()
-                    for model in env_models.split(",")
-                    if model.strip().lower() in self.MODEL_CONFIGS
-                ]
-            else:
-                configured_models = ["mefkt"]
 
-        if not configured_models:
-            configured_models = ["mefkt"]
-        return configured_models
+        env_models = os.getenv("KT_ENABLED_MODELS", "")
+        if env_models:
+            configured_models = [
+                model.strip().lower()
+                for model in env_models.split(",")
+                if model.strip().lower() in self.MODEL_CONFIGS
+            ]
+            if configured_models:
+                return configured_models
+
+        return ["mefkt"]
 
     def _load_fusion_weights(self) -> Dict[str, float]:
         """从环境变量加载融合权重，配置无效时使用默认权重。"""

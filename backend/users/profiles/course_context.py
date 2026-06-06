@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 学习者画像课程上下文校验工具。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : course_context.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

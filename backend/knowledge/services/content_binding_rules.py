@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 课程内容绑定规则。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : content_binding_rules.py
 @Author : Qintsg
 @Date : 2026-05-13 11:25

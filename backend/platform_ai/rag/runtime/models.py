@@ -231,7 +231,7 @@ def _qdrant_point_id(external_id: str) -> str:
     normalized_external_id = _coerce_string(external_id)
     if not normalized_external_id:
         normalized_external_id = "empty-document"
-    return str(uuid5(NAMESPACE_URL, f"wisdom-edu:{normalized_external_id}"))
+    return str(uuid5(NAMESPACE_URL, f"adaptive-edu:{normalized_external_id}"))
 
 
 class TokenHashEmbedder(Embedder):

@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 知识测评掌握度融合回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_knowledge_mastery_blending.py
 @Author : Qintsg
 @Date : 2026-05-13 11:55

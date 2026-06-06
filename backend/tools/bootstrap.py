@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 课程资源一键导入模块。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : bootstrap.py
 @Author : Qintsg
 @Date : 2026-03-23

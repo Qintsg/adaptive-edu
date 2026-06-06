@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 课程题目、资源与知识点绑定命令。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : bind_course_content.py
 @Author : Qintsg
 @Date : 2026-05-13 10:35

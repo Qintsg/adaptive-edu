@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 LLM 异常详情格式化工具。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : error_details.py
 @Author : Qintsg
 @Date : 2026-05-14

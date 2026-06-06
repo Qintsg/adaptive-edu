@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 初始知识测评掌握度融合工具。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : initial_mastery.py
 @Author : Qintsg
 @Date : 2026-05-13 12:15

@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 学生端 AI 聊天 HTTP 接口回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_chat_api.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

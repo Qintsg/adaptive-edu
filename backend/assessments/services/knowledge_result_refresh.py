@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 知识测评结果快照刷新服务。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : knowledge_result_refresh.py
 @Author : Qintsg
 @Date : 2026-05-13 11:40

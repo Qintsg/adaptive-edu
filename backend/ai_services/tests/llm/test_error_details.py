@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 LLM 异常详情测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_error_details.py
 @Author : Qintsg
 @Date : 2026-05-14

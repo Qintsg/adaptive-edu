@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 student1 大数据学习状态内置预置数据。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : demo_student1_snapshot_parse.py
 @Author : Qintsg
 @Date : 2026-05-13 13:36

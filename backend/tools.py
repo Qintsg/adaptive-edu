@@ -18,7 +18,7 @@ from importlib import import_module
 import os
 from typing import Callable, cast
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wisdom_edu_api.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'adaptive_edu_api.settings')
 
 import django
 django.setup()

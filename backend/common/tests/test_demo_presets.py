@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 student1 大数据学习状态预置数据回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_demo_presets.py
 @Author : Qintsg
 @Date : 2026-05-13 19:50

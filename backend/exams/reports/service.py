@@ -3,7 +3,7 @@
 """
 考试反馈报告生成服务。
 复用现有 FeedbackReport.status 字段，将 LLM 报告生成放到进程内后台线程，避免阻塞考试提交主链路。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : report_service.py
 @Author : Qintsg
 @Date : 2026-03-23

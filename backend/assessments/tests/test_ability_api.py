@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 能力评测接口回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_ability_api.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

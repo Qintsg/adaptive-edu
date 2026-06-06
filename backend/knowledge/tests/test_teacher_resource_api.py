@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 教师端资源接口回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_teacher_resource_api.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

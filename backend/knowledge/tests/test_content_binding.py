@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 课程内容绑定服务回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_content_binding.py
 @Author : Qintsg
 @Date : 2026-05-13 10:40

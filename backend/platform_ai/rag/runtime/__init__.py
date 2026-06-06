@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """GraphRAG 运行时公共入口。
 
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : runtime.py
 @Author : Qintsg
 @Date : 2026-04-04
@@ -49,7 +49,7 @@ class FacadeGraphRAGLLM(LLMInterfaceV2):
 
     def __init__(self) -> None:
         super().__init__(
-            model_name=getattr(llm_facade.service, "model_name", "wisdom-edu-graph-router"),
+            model_name=getattr(llm_facade.service, "model_name", "adaptive-edu-graph-router"),
             model_params={"temperature": 0},
         )
 

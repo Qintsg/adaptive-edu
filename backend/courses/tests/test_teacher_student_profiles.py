@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 '''
 教师端班级学生画像接口回归测试。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : test_teacher_student_profiles.py
 @Author : Qintsg
 @Date : 2026-05-29 00:00

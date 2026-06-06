@@ -2325,7 +2325,7 @@ wheels = [
 ]
 
 [[package]]
-name = "wisdom-edu-backend"
+name = "adaptive-edu-backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

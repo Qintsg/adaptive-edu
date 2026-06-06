@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 套题导入工具。
-@Project : wisdom-edu
+@Project : adaptive-edu
 @File : exam_sets.py
 @Author : Qintsg
 @Date : 2026-03-23
