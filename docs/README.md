@@ -1,6 +1,6 @@
 # 知识图谱驱动的个性化自适应学习系统文档总览
 
-> 最后更新：2026-06-03
+> 最后更新：2026-06-05
 
 本文档目录面向开发、验收、接口契约维护和项目材料归档。文档内容以当前仓库真实实现为准，API 契约源文件统一维护在 `docs/openapi/openapi.yaml`，`docs/api.yaml` 为 Redocly CLI 打包后的单文件产物。
 
@@ -41,6 +41,7 @@
 - GraphRAG 课程索引默认位于 `backend/runtime_logs/rag/course_{course_id}.json`。
 - GraphRAG 本地向量库默认位于 `backend/runtime_logs/rag/qdrant/`。
 - KT 当前只保留 `MEFKT`，默认 `single` 模式；`fusion / ensemble` 响应结构保留用于后续扩展。
+- A3 Agent 后端已提供学生端画像对话和个性化资源生成最小闭环，入口为 `/api/student/agent/profile-dialog` 与 `/api/student/agent/generate-resources`；学生端专题页面仍待后续 Issue 接线。
 
 ## 常用命令
 
@@ -73,8 +74,8 @@ uv run python tools.py api-regression --all --json
 ### API 契约校验和打包
 
 ```bash
-npx @redocly/cli lint wisdomedu@v1
-npx @redocly/cli bundle wisdomedu@v1
+npx @redocly/cli lint adaptiveedu@v1
+npx @redocly/cli bundle adaptiveedu@v1
 ```
 
 ### 前端验证

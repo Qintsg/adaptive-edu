@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-05
+
+### Backend / API — A3 Agent 最小后端闭环
+
+- `ai_services` 新增 A3 Agent 数据底座：`AgentRun`、`ProfileDialogTurn`、`GeneratedLearningResource` 与 `GeneratedResourceFeedback`，用于记录画像对话、智能体轨迹、生成资源、证据来源和后续反馈。
+- 新增学生端 `/api/student/agent/profile-dialog` 与 `/api/student/agent/generate-resources`，分别支持对话式画像抽取和至少 5 类个性化学习资源生成；无 LLM Key 时使用规则与模板兜底，并保留 evidence / warnings。
+- OpenAPI 源文件新增 Agent 路径与 `AgentRun`、`AgentTraceItem`、`ProfileDialogResult`、`GeneratedLearningResource` schema；`docs/使用说明.md` 与 `docs/README.md` 同步新增入口说明。
+
+### Frontend / UI — Naive UI + Fluent 2 迁移收尾
+
+- 前端 UI 依赖已从 Element Plus 迁移到 Naive UI + `@vicons/fluent`，`main.ts` 改为注册 Naive 兼容适配层、Fluent 图标兼容名和全局反馈桥。
+- `naive-element-adapter` 补齐过渡期 `v-loading`、旧布局标签、表格列、分页、表单和日期选择兼容，减少批量迁移后的浏览器运行时告警。
+- 本地三端浏览器巡检覆盖学生、教师、管理员核心页面；学生任务页的 `networkidle` 等待会受慢 AI 节点介绍请求影响，但页面主体可渲染。
+
 ## 2026-05-28
 
 ### Backend / Frontend / Docs — OpenAPI 5xx 巡检修复
@@ -247,10 +261,10 @@
 
 ### Deploy — 双域名生产部署与同源反代收口
 
-- 后端已部署到 `47.103.44.104`，使用 `wisdom-edu.service` 运行 Daphne ASGI，后端本机 Nginx 代理到 `127.0.0.1:8000` 并托管 `/media/`、`/static/`。
+- 后端已部署到 `47.103.44.104`，使用 `adaptive-edu.service` 运行 Daphne ASGI，后端本机 Nginx 代理到 `127.0.0.1:8000` 并托管 `/media/`、`/static/`。
 - 前端已重新部署到 `106.14.209.7` 的 1Panel OpenResty 站点，`edu.qintsg.xyz` 与 `edu.qintsg.cn` 均通过同源 `/api/`、`/ws/`、`/media/`、`/static/`、`/health/` 访问后端。
 - `frontend/src/api/backend.ts` 改为生产默认同源，避免 `edu.qintsg.cn` 访问时仍固定请求 `edu.qintsg.xyz`。
-- `backend/wisdom_edu_api/asgi.py` 调整 Django 初始化顺序，修复 Daphne 启动时 settings/apps 尚未加载导致的失败。
+- `backend/adaptive_edu_api/asgi.py` 调整 Django 初始化顺序，修复 Daphne 启动时 settings/apps 尚未加载导致的失败。
 - `backend/.env.example` 与 `docs/服务器部署说明.md` 已补齐 `edu.qintsg.cn`、`47.103.44.104` 和当前生产拓扑说明。
 
 ## 2026-04-24
@@ -275,7 +289,7 @@
 
 ### Backend / AI — LLM 代理配置与聊天链路快失败
 
-- `backend/wisdom_edu_api/settings.py` 与 `backend/.env.example` 新增 `HTTP_PROXY`、`HTTPS_PROXY`、`LLM_HTTP_PROXY`、`LLM_HTTPS_PROXY` 配置入口，支持将通义千问 / DeepSeek / 豆包 / 智谱 / Kimi 等兼容网关调用统一走代理。
+- `backend/adaptive_edu_api/settings.py` 与 `backend/.env.example` 新增 `HTTP_PROXY`、`HTTPS_PROXY`、`LLM_HTTP_PROXY`、`LLM_HTTPS_PROXY` 配置入口，支持将通义千问 / DeepSeek / 豆包 / 智谱 / Kimi 等兼容网关调用统一走代理。
 - `LLMService` 现会基于网关协议自动解析合适的代理地址，并在初始化 `ChatOpenAI` 时通过 `openai_proxy` 透传；`LangChainAgentService` 复用同一套代理解析结果。
 - `call_type="chat"` 已纳入快失败策略，聊天回退链路不再沿用 120 秒超时 + 默认重试预算，避免无课程上下文问答卡住整条请求。
 - `backend/ai_services/tests.py` 新增代理透传与 `chat` 延迟预算回归测试，锁定代理优先级和快失败策略。
@@ -294,7 +308,7 @@
 
 ### Backend / Deploy — frps 域名接入所需主机、跨域与代理信任配置
 
-- `backend/wisdom_edu_api/settings.py` 新增逗号列表解析工具，并为 `ALLOWED_HOSTS`、`CORS_ALLOWED_ORIGINS`、`CSRF_TRUSTED_ORIGINS` 统一做空白清洗。
+- `backend/adaptive_edu_api/settings.py` 新增逗号列表解析工具，并为 `ALLOWED_HOSTS`、`CORS_ALLOWED_ORIGINS`、`CSRF_TRUSTED_ORIGINS` 统一做空白清洗。
 - 后端默认开启 `USE_X_FORWARDED_HOST` 与 `SECURE_PROXY_SSL_HEADER`，以适配 `edu.qintsg.xyz` 经 Nginx / frps 转发后的 HTTPS 与主机头识别。
 - `backend/.env.example` 与本地 `backend/.env` 已同步补齐 `edu.qintsg.xyz`、`106.14.209.7`、`CSRF_TRUSTED_ORIGINS` 与生产跨域白名单示例，便于直接部署。
 
@@ -384,7 +398,7 @@
 
 ### Frontend / Backend — 依赖升级与安全收敛
 
-- 前端直接依赖升级到最新稳定版本：`vite 8.0.3`、`vue-router 5.0.4`、`typescript 6.0.2`、`vue-tsc 3.2.6`、`vue 3.5.32`、`element-plus 2.13.6`、`axios 1.14.0`、`playwright 1.59.1` 等均已落地。
+- 前端直接依赖升级到最新稳定版本：`vite 8.0.3`、`vue-router 5.0.4`、`typescript 6.0.2`、`vue-tsc 3.2.6`、`vue 3.5.32`、`naive-ui 2.44.1`、`@vicons/fluent 0.13.0`、`axios 1.14.0`、`playwright 1.59.1` 等均已落地。
 - `frontend/vite.config.ts` 的 `manualChunks` 调整为函数式写法，以适配 Vite 8 / Rolldown 的类型约束；升级后前端 `npm run build` 继续通过。
 - 前端新增 `overrides`，将 `lodash` 与 `lodash-es` 强制提升到 `4.18.1`，`npm audit` 已清零为 `0 vulnerabilities`。
 - 后端直接依赖 `torch` 升级到 `2.11.0`，并通过 `manage.py check`、`pip check` 与 `ai_services.tests.DKTSyntheticDataRealismTests` 回归验证；其余仍显示过时的 Python 包属于上游显式约束的传递依赖，未做破坏性强升。
