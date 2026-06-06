@@ -1,27 +1,27 @@
 <template>
   <div class="ai-assistant-view">
     <div class="assistant-layout">
-      <el-card class="search-panel" shadow="hover">
+      <n-card class="search-panel" shadow="hover">
         <template #header>
           <div class="panel-header">
             <span>知识图谱检索</span>
             <div class="panel-header-tags">
-              <el-tag size="small" type="info">GraphRAG</el-tag>
+              <n-tag size="small" type="info">GraphRAG</n-tag>
             </div>
           </div>
         </template>
 
         <div class="search-box">
-          <el-input
+          <n-input
             v-model="searchKeyword"
             placeholder="输入知识点名称、概念或问题关键词"
             clearable
             @keyup.enter="runSearch"
           >
             <template #append>
-              <el-button :loading="searchLoading" @click="runSearch">检索</el-button>
+              <n-button :loading="searchLoading" @click="runSearch">检索</n-button>
             </template>
-          </el-input>
+          </n-input>
         </div>
 
         <div v-if="searchResults.length" class="search-results">
@@ -37,57 +37,57 @@
               <span>{{ pointItem.chapter || '未分章' }}</span>
             </span>
             <span class="search-result-meta">
-              <el-tag size="small" type="success">掌握度 {{ Math.round((pointItem.mastery_rate || 0) * 100) }}%</el-tag>
+              <n-tag size="small" type="success">掌握度 {{ Math.round((pointItem.mastery_rate || 0) * 100) }}%</n-tag>
             </span>
             <span class="search-result-summary">{{ pointItem.description || '暂无摘要' }}</span>
           </button>
         </div>
-        <el-empty v-else description="输入关键词后检索课程知识图谱" />
+        <n-empty v-else description="输入关键词后检索课程知识图谱" />
 
         <div v-if="selectedPointDetail" class="point-detail-card">
           <div class="detail-header">
             <h3>{{ selectedPointDetail.point_name }}</h3>
-            <el-button link type="primary" @click="goToKnowledgeMap">查看图谱</el-button>
+            <n-button link type="primary" @click="goToKnowledgeMap">查看图谱</n-button>
           </div>
           <p class="point-description">{{ selectedPointDetail.description || '暂无描述' }}</p>
           <div class="point-mastery">
             <span>当前掌握度</span>
-            <el-progress :percentage="Math.round((selectedPointDetail.mastery_rate || 0) * 100)" :stroke-width="10" />
+            <n-progress :percentage="Math.round((selectedPointDetail.mastery_rate || 0) * 100)" :stroke-width="10" />
           </div>
           <div class="relation-groups">
             <div>
               <span class="relation-label">前置知识</span>
               <div class="relation-tags">
-                <el-tag
+                <n-tag
                   v-for="item in selectedPointDetail.prerequisites || []"
                   :key="item.point_id || item"
                   size="small"
                   type="info"
                 >
                   {{ item.point_name || item }}
-                </el-tag>
+                </n-tag>
                 <span v-if="!(selectedPointDetail.prerequisites || []).length" class="empty-text">暂无</span>
               </div>
             </div>
             <div>
               <span class="relation-label">后续知识</span>
               <div class="relation-tags">
-                <el-tag
+                <n-tag
                   v-for="item in selectedPointDetail.postrequisites || []"
                   :key="item.point_id || item"
                   size="small"
                   type="warning"
                 >
                   {{ item.point_name || item }}
-                </el-tag>
+                </n-tag>
                 <span v-if="!(selectedPointDetail.postrequisites || []).length" class="empty-text">暂无</span>
               </div>
             </div>
           </div>
         </div>
-      </el-card>
+      </n-card>
 
-      <el-card class="chat-panel" shadow="hover">
+      <n-card class="chat-panel" shadow="hover">
         <template #header>
           <div class="panel-header">
             <span>图谱增强问答</span>
@@ -114,7 +114,7 @@
         </div>
 
         <div class="chat-composer">
-          <el-input
+          <n-input
             v-model="questionInput"
             type="textarea"
             :rows="3"
@@ -125,14 +125,14 @@
           />
           <div class="composer-actions">
             <div class="composer-context">
-              <el-tag v-if="selectedPoint" size="small" type="info">当前知识点：{{ selectedPoint.point_name }}</el-tag>
+              <n-tag v-if="selectedPoint" size="small" type="info">当前知识点：{{ selectedPoint.point_name }}</n-tag>
               <span v-else>当前未指定知识点，将按课程上下文检索。</span>
               <span class="composer-shortcut">Enter 发送 · Shift + Enter 换行</span>
             </div>
-            <el-button type="primary" :loading="chatLoading" @click="askQuestion">发送问题</el-button>
+            <n-button type="primary" :loading="chatLoading" @click="askQuestion">发送问题</n-button>
           </div>
         </div>
-      </el-card>
+      </n-card>
     </div>
   </div>
 </template>
@@ -140,7 +140,7 @@
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 
 import { extractApiErrorMessage, isApiErrorHandled } from '@/api'
 import { askGraphRAG, searchGraphRAG } from '@/api/student/ai'
@@ -171,7 +171,7 @@ const chatMessages = ref([
 
 const ensureCourseSelected = () => {
   if (!courseStore.courseId) {
-    ElMessage.warning('请先选择课程后再使用 AI助手')
+    appMessage.warning('请先选择课程后再使用 AI助手')
     router.push('/student/course-select')
     return false
   }
@@ -217,7 +217,7 @@ const runSearch = async () => {
   if (!ensureCourseSelected()) return
   const keyword = searchKeyword.value.trim()
   if (!keyword) {
-    ElMessage.warning('请输入检索关键词')
+    appMessage.warning('请输入检索关键词')
     return
   }
   searchLoading.value = true
@@ -237,7 +237,7 @@ const runSearch = async () => {
   } catch (error) {
     console.error('GraphRAG检索失败:', error)
     if (!isApiErrorHandled(error)) {
-      ElMessage.error(extractApiErrorMessage(error, '知识图谱检索失败'))
+      appMessage.error(extractApiErrorMessage(error, '知识图谱检索失败'))
     }
   } finally {
     searchLoading.value = false

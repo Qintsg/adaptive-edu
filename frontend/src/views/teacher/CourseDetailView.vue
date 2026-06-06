@@ -1,179 +1,179 @@
 <template>
     <div class="course-detail-view">
-        <el-card class="course-header" shadow="never">
+        <n-card class="course-header" shadow="never">
             <div class="header-row">
                 <div class="header-info">
-                    <el-button text :icon="ArrowLeft" @click="$router.push('/teacher/courses')">返回课程列表</el-button>
+                    <n-button text :icon="ArrowLeft" @click="$router.push('/teacher/courses')">返回课程列表</n-button>
                     <h2>{{ courseInfo.name || '课程详情' }}</h2>
-                    <el-tag v-if="courseInfo.isPublic" type="success">已发布</el-tag>
-                    <el-tag v-else type="info">草稿</el-tag>
+                    <n-tag v-if="courseInfo.isPublic" type="success">已发布</n-tag>
+                    <n-tag v-else type="info">草稿</n-tag>
                 </div>
                 <div class="header-actions">
-                    <el-button type="primary" @click="editCourse">编辑课程</el-button>
+                    <n-button type="primary" @click="editCourse">编辑课程</n-button>
                 </div>
             </div>
             <p class="course-desc" v-if="courseInfo.description">{{ courseInfo.description }}</p>
-        </el-card>
+        </n-card>
 
-        <el-row :gutter="16" class="stat-row">
-            <el-col :xs="12" :sm="6">
-                <el-card shadow="hover" class="stat-card">
-                    <el-statistic title="班级数" :value="stats.classCount" />
-                </el-card>
-            </el-col>
-            <el-col :xs="12" :sm="6">
-                <el-card shadow="hover" class="stat-card">
-                    <el-statistic title="知识点" :value="stats.knowledgeCount" />
-                </el-card>
-            </el-col>
-            <el-col :xs="12" :sm="6">
-                <el-card shadow="hover" class="stat-card">
-                    <el-statistic title="题目数" :value="stats.questionCount" />
-                </el-card>
-            </el-col>
-            <el-col :xs="12" :sm="6">
-                <el-card shadow="hover" class="stat-card">
-                    <el-statistic title="作业数" :value="stats.examCount" />
-                </el-card>
-            </el-col>
-        </el-row>
+        <n-row :gutter="16" class="stat-row">
+            <n-col :xs="12" :sm="6">
+                <n-card shadow="hover" class="stat-card">
+                    <n-statistic title="班级数" :value="stats.classCount" />
+                </n-card>
+            </n-col>
+            <n-col :xs="12" :sm="6">
+                <n-card shadow="hover" class="stat-card">
+                    <n-statistic title="知识点" :value="stats.knowledgeCount" />
+                </n-card>
+            </n-col>
+            <n-col :xs="12" :sm="6">
+                <n-card shadow="hover" class="stat-card">
+                    <n-statistic title="题目数" :value="stats.questionCount" />
+                </n-card>
+            </n-col>
+            <n-col :xs="12" :sm="6">
+                <n-card shadow="hover" class="stat-card">
+                    <n-statistic title="作业数" :value="stats.examCount" />
+                </n-card>
+            </n-col>
+        </n-row>
 
-        <el-card shadow="hover">
-            <el-tabs v-model="activeTab" type="border-card">
-                <el-tab-pane label="班级管理" name="classes">
+        <n-card shadow="hover">
+            <n-tabs v-model="activeTab" type="border-card">
+                <n-tab-pane label="班级管理" name="classes">
                     <div class="tab-toolbar">
-                        <el-button type="primary" size="small" @click="showCreateClassDialog = true">
-                            <el-icon>
+                        <n-button type="primary" size="small" @click="showCreateClassDialog = true">
+                            <n-icon>
                                 <Plus />
-                            </el-icon> 创建班级
-                        </el-button>
+                            </n-icon> 创建班级
+                        </n-button>
                     </div>
-                    <el-table :data="classes" v-loading="classLoading" style="width: 100%">
-                        <el-table-column prop="name" label="班级名称" />
-                        <el-table-column prop="studentCount" label="学生数" width="100" />
-                        <el-table-column prop="semester" label="学期" width="120" />
-                        <el-table-column label="操作" width="200">
+                    <n-table :data="classes" v-loading="classLoading" style="width: 100%">
+                        <n-table-column prop="name" label="班级名称" />
+                        <n-table-column prop="studentCount" label="学生数" width="100" />
+                        <n-table-column prop="semester" label="学期" width="120" />
+                        <n-table-column label="操作" width="200">
                             <template #default="{ row }">
-                                <el-button type="primary" link @click="viewClass(row)">查看详情</el-button>
-                                <el-button type="danger" link @click="deleteClass(row)">删除</el-button>
+                                <n-button type="primary" link @click="viewClass(row)">查看详情</n-button>
+                                <n-button type="danger" link @click="deleteClass(row)">删除</n-button>
                             </template>
-                        </el-table-column>
+                        </n-table-column>
                         <template #empty>
-                            <el-empty description="暂无班级" :image-size="60" />
+                            <n-empty description="暂无班级" :image-size="60" />
                         </template>
-                    </el-table>
-                </el-tab-pane>
+                    </n-table>
+                </n-tab-pane>
 
-                <el-tab-pane label="知识图谱" name="knowledge">
+                <n-tab-pane label="知识图谱" name="knowledge">
                     <div class="tab-toolbar">
-                        <el-button-group>
-                            <el-button :type="knowledgeViewMode === 'graph' ? 'primary' : ''" size="small"
-                                @click="knowledgeViewMode = 'graph'">图谱视图</el-button>
-                            <el-button :type="knowledgeViewMode === 'list' ? 'primary' : ''" size="small"
-                                @click="knowledgeViewMode = 'list'">列表视图</el-button>
-                        </el-button-group>
+                        <n-button-group>
+                            <n-button :type="knowledgeViewMode === 'graph' ? 'primary' : ''" size="small"
+                                @click="knowledgeViewMode = 'graph'">图谱视图</n-button>
+                            <n-button :type="knowledgeViewMode === 'list' ? 'primary' : ''" size="small"
+                                @click="knowledgeViewMode = 'list'">列表视图</n-button>
+                        </n-button-group>
                     </div>
                     <div v-if="knowledgeViewMode === 'graph'" class="graph-container" style="height: 500px;">
                         <KnowledgeGraphECharts v-if="knowledgePoints.length" :data="graphData" mode="edit" :height="500"
                             :courseId="courseId" @save="handleSaveGraph" />
-                        <el-empty v-else description="暂无知识图谱数据" />
+                        <n-empty v-else description="暂无知识图谱数据" />
                     </div>
                     <div v-else>
-                        <el-table :data="knowledgePoints" v-loading="knowledgeLoading">
-                            <el-table-column prop="name" label="知识点名称" />
-                            <el-table-column prop="chapter" label="章节" width="150" />
-                            <el-table-column prop="difficulty" label="难度" width="80" />
-                            <el-table-column prop="description" label="描述" show-overflow-tooltip />
-                        </el-table>
+                        <n-table :data="knowledgePoints" v-loading="knowledgeLoading">
+                            <n-table-column prop="name" label="知识点名称" />
+                            <n-table-column prop="chapter" label="章节" width="150" />
+                            <n-table-column prop="difficulty" label="难度" width="80" />
+                            <n-table-column prop="description" label="描述" show-overflow-tooltip />
+                        </n-table>
                     </div>
-                </el-tab-pane>
+                </n-tab-pane>
 
-                <el-tab-pane label="题库管理" name="questions">
+                <n-tab-pane label="题库管理" name="questions">
                     <div class="tab-toolbar">
-                        <el-select v-model="questionFilter.type" placeholder="题目类型" clearable size="small"
+                        <n-select v-model="questionFilter.type" placeholder="题目类型" clearable size="small"
                             style="width: 120px;" @change="loadQuestions">
-                            <el-option label="单选题" value="single_choice" />
-                            <el-option label="多选题" value="multiple_choice" />
-                            <el-option label="判断题" value="true_false" />
-                            <el-option label="填空题" value="fill_blank" />
-                        </el-select>
-                        <el-input v-model="questionFilter.keyword" placeholder="搜索题目" clearable size="small"
+                            <n-option label="单选题" value="single_choice" />
+                            <n-option label="多选题" value="multiple_choice" />
+                            <n-option label="判断题" value="true_false" />
+                            <n-option label="填空题" value="fill_blank" />
+                        </n-select>
+                        <n-input v-model="questionFilter.keyword" placeholder="搜索题目" clearable size="small"
                             style="width: 200px;" @keyup.enter="loadQuestions" />
-                        <el-button size="small" @click="loadQuestions">搜索</el-button>
-                        <el-button type="primary" size="small"
-                            @click="$router.push(`/teacher/courses/${courseId}/workspace/questions`)">前往完整题库</el-button>
+                        <n-button size="small" @click="loadQuestions">搜索</n-button>
+                        <n-button type="primary" size="small"
+                            @click="$router.push(`/teacher/courses/${courseId}/workspace/questions`)">前往完整题库</n-button>
                     </div>
-                    <el-table :data="questions" v-loading="questionLoading">
-                        <el-table-column type="index" label="序号" width="60" />
-                        <el-table-column label="题目内容" show-overflow-tooltip>
+                    <n-table :data="questions" v-loading="questionLoading">
+                        <n-table-column type="index" label="序号" width="60" />
+                        <n-table-column label="题目内容" show-overflow-tooltip>
                             <template #default="{ row }">
                                 {{ stripHtml(row.content) }}
                             </template>
-                        </el-table-column>
-                        <el-table-column prop="typeName" label="类型" width="100" />
-                        <el-table-column prop="difficultyText" label="难度" width="80" />
-                        <el-table-column prop="knowledgePointName" label="知识点" width="150" />
+                        </n-table-column>
+                        <n-table-column prop="typeName" label="类型" width="100" />
+                        <n-table-column prop="difficultyText" label="难度" width="80" />
+                        <n-table-column prop="knowledgePointName" label="知识点" width="150" />
                         <template #empty>
-                            <el-empty description="暂无题目" :image-size="60" />
+                            <n-empty description="暂无题目" :image-size="60" />
                         </template>
-                    </el-table>
-                    <el-pagination v-if="questionTotal > 0" class="pagination" layout="total, prev, pager, next"
+                    </n-table>
+                    <n-pagination v-if="questionTotal > 0" class="pagination" layout="total, prev, pager, next"
                         :total="questionTotal" :page-size="10" v-model:current-page="questionFilter.page"
                         @current-change="loadQuestions" />
-                </el-tab-pane>
+                </n-tab-pane>
 
-                <el-tab-pane label="作业管理" name="exams">
+                <n-tab-pane label="作业管理" name="exams">
                     <div class="tab-toolbar">
-                        <el-button type="primary" size="small"
-                            @click="$router.push('/teacher/exams')">前往完整作业管理</el-button>
+                        <n-button type="primary" size="small"
+                            @click="$router.push('/teacher/exams')">前往完整作业管理</n-button>
                     </div>
-                    <el-table :data="exams" v-loading="examLoading">
-                        <el-table-column prop="title" label="作业名称" />
-                        <el-table-column prop="examType" label="类型" width="120" />
-                        <el-table-column prop="totalScore" label="总分" width="80" />
-                        <el-table-column prop="statusText" label="状态" width="100">
+                    <n-table :data="exams" v-loading="examLoading">
+                        <n-table-column prop="title" label="作业名称" />
+                        <n-table-column prop="examType" label="类型" width="120" />
+                        <n-table-column prop="totalScore" label="总分" width="80" />
+                        <n-table-column prop="statusText" label="状态" width="100">
                             <template #default="{ row }">
-                                <el-tag :type="row.statusTagType" size="small">
+                                <n-tag :type="row.statusTagType" size="small">
                                     {{ row.statusText }}
-                                </el-tag>
+                                </n-tag>
                             </template>
-                        </el-table-column>
-                        <el-table-column label="操作" width="150">
+                        </n-table-column>
+                        <n-table-column label="操作" width="150">
                             <template #default="{ row }">
-                                <el-button type="primary" link size="small"
-                                    @click="$router.push('/teacher/exams')">管理</el-button>
+                                <n-button type="primary" link size="small"
+                                    @click="$router.push('/teacher/exams')">管理</n-button>
                             </template>
-                        </el-table-column>
+                        </n-table-column>
                         <template #empty>
-                            <el-empty description="暂无作业" :image-size="60" />
+                            <n-empty description="暂无作业" :image-size="60" />
                         </template>
-                    </el-table>
-                </el-tab-pane>
-            </el-tabs>
-        </el-card>
+                    </n-table>
+                </n-tab-pane>
+            </n-tabs>
+        </n-card>
 
-        <el-dialog v-model="showCreateClassDialog" title="创建班级" width="400px">
-            <el-form :model="classForm" label-width="80px">
-                <el-form-item label="班级名称" required>
-                    <el-input v-model="classForm.name" placeholder="请输入班级名称" />
-                </el-form-item>
-                <el-form-item label="学期">
-                    <el-input v-model="classForm.semester" placeholder="如：2025-2026第一学期" />
-                </el-form-item>
-            </el-form>
+        <n-dialog v-model="showCreateClassDialog" title="创建班级" width="400px">
+            <n-form :model="classForm" label-width="80px">
+                <n-form-item label="班级名称" required>
+                    <n-input v-model="classForm.name" placeholder="请输入班级名称" />
+                </n-form-item>
+                <n-form-item label="学期">
+                    <n-input v-model="classForm.semester" placeholder="如：2025-2026第一学期" />
+                </n-form-item>
+            </n-form>
             <template #footer>
-                <el-button @click="showCreateClassDialog = false">取消</el-button>
-                <el-button type="primary" @click="createClass">确定</el-button>
+                <n-button @click="showCreateClassDialog = false">取消</n-button>
+                <n-button type="primary" @click="createClass">确定</n-button>
             </template>
-        </el-dialog>
+        </n-dialog>
     </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, ArrowLeft } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus, ArrowLeft } from '@/theme/element-icons'
 import { getCourseDetail } from '@/api/teacher/course'
 import { getMyClasses, createClass as apiCreateClass, deleteClass as apiDeleteClass } from '@/api/teacher/class'
 import { getKnowledgePoints, getKnowledgeRelations } from '@/api/teacher/knowledge'
@@ -449,7 +449,7 @@ const viewClass = (cls) => {
 const createClass = async () => {
     const className = normalizeText(classForm.name)
     if (!className) {
-        ElMessage.warning('请输入班级名称')
+        appMessage.warning('请输入班级名称')
         return
     }
     try {
@@ -458,30 +458,30 @@ const createClass = async () => {
             semester: normalizeText(classForm.semester),
             course_id: courseId.value
         })
-        ElMessage.success('班级创建成功')
+        appMessage.success('班级创建成功')
         showCreateClassDialog.value = false
         classForm.name = ''
         classForm.semester = ''
         await loadClasses()
     } catch (e) {
         console.error('创建班级失败:', e)
-        ElMessage.error('创建班级失败')
+        appMessage.error('创建班级失败')
     }
 }
 
 const deleteClass = async (cls) => {
     try {
-        await ElMessageBox.confirm(`确定删除班级"${cls.name}"吗？`, '删除确认', { type: 'warning' })
+        await appDialog.confirm(`确定删除班级"${cls.name}"吗？`, '删除确认', { type: 'warning' })
         await apiDeleteClass(cls.id)
-        ElMessage.success('删除成功')
+        appMessage.success('删除成功')
         await loadClasses()
     } catch (e) {
-        if (e !== 'cancel') ElMessage.error('删除失败')
+        if (e !== 'cancel') appMessage.error('删除失败')
     }
 }
 
 const handleSaveGraph = () => {
-    ElMessage.success('图谱数据已保存')
+    appMessage.success('图谱数据已保存')
 }
 
 onMounted(() => {

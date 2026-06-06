@@ -1,41 +1,41 @@
 <template>
   <div class="assessment-habit-view">
-    <el-card v-loading="loading" class="question-card" shadow="hover">
+    <n-card v-loading="loading" class="question-card" shadow="hover">
       <template #header>
         <div class="card-header">
           <span>学习习惯问卷</span>
-          <el-tag type="primary">{{ currentIndex + 1 }} / {{ questions.length || 1 }}</el-tag>
+          <n-tag type="primary">{{ currentIndex + 1 }} / {{ questions.length || 1 }}</n-tag>
         </div>
       </template>
 
       <div v-if="questions.length > 0" class="question-content">
         <h3 class="question-title">{{ currentQuestion?.text || currentQuestion?.title || currentQuestion?.content }}
         </h3>
-        <el-radio-group v-model="currentAnswer" class="options-group">
-          <el-radio v-for="option in currentQuestion?.options" :key="option.id" :value="option.id" class="option-item">
+        <n-radio-group v-model="currentAnswer" class="options-group">
+          <n-radio v-for="option in currentQuestion?.options" :key="option.id" :value="option.id" class="option-item">
             {{ option.label }}
-          </el-radio>
-        </el-radio-group>
+          </n-radio>
+        </n-radio-group>
       </div>
 
       <div v-else class="empty-state">
-        <el-empty description="暂无题目" />
+        <n-empty description="暂无题目" />
       </div>
 
       <div class="question-footer">
         <div class="footer-actions">
-          <el-button :disabled="currentIndex === 0" @click="prevQuestion">
+          <n-button :disabled="currentIndex === 0" @click="prevQuestion">
             上一题
-          </el-button>
+          </n-button>
 
         </div>
-        <el-button type="primary" :disabled="!currentAnswer" :loading="submitting" @click="nextQuestion">
+        <n-button type="primary" :disabled="!currentAnswer" :loading="submitting" @click="nextQuestion">
           {{ isLastQuestion ? '提交' : '下一题' }}
-        </el-button>
+        </n-button>
       </div>
 
-      <el-progress :percentage="progressPercent" :stroke-width="8" class="progress-bar" />
-    </el-card>
+      <n-progress :percentage="progressPercent" :stroke-width="8" class="progress-bar" />
+    </n-card>
   </div>
 </template>
 
@@ -47,7 +47,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getHabitSurvey, submitHabitSurvey, getAssessmentStatus } from '@/api/student/assessment'
 import { useCourseStore } from '@/stores/course'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -81,7 +81,7 @@ const loadQuestions = async () => {
   try {
     const courseId = courseStore.courseId
     if (!courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       await router.push('/student/course-select')
       return
     }
@@ -90,7 +90,7 @@ const loadQuestions = async () => {
     try {
       const status = await getAssessmentStatus(courseId)
       if (status?.['habit_done'] || status?.['habit_completed']) {
-        await ElMessageBox.confirm(
+        await appDialog.confirm(
           '您已经完成过习惯问卷。重新填写将覆盖之前的结果，是否继续？',
           '提示',
           { confirmButtonText: '重新填写', cancelButtonText: '返回', type: 'warning' }
@@ -114,7 +114,7 @@ const loadQuestions = async () => {
     questions.value = rawQuestions.map(normalizeHabitQuestion)
   } catch (error) {
     console.error('获取习惯问卷题目失败:', error)
-    ElMessage.error('获取题目失败，请刷新重试')
+    appMessage.error('获取题目失败，请刷新重试')
   } finally {
     loading.value = false
   }
@@ -159,11 +159,11 @@ const submitAnswers = async () => {
       }))
     }
     await submitHabitSurvey(submissionData)
-    ElMessage.success('习惯问卷完成！')
+    appMessage.success('习惯问卷完成！')
     await router.push('/student/assessment')
   } catch (error) {
     console.error('提交习惯问卷失败:', error)
-    ElMessage.error('提交失败，请重试')
+    appMessage.error('提交失败，请重试')
   } finally {
     submitting.value = false
   }

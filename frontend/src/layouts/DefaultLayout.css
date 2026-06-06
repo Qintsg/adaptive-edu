@@ -1,6 +1,7 @@
 .default-layout {
   height: 100vh;
   overflow: hidden;
+  display: flex;
 }
 
 .layout-sidebar {
@@ -10,6 +11,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   border-right: 1px solid var(--sidebar-border);
   box-shadow: 16px 0 34px rgba(37, 59, 49, 0.06);
 }
@@ -55,41 +57,10 @@
   letter-spacing: 0.04em;
 }
 
-.menu-scrollbar {
-  flex: 1;
-  overflow: hidden;
-}
-
-.sidebar-menu {
-  border-right: none;
-  padding: 12px 8px;
-}
-
-.sidebar-menu:not(.el-menu--collapse) {
-  width: 252px;
-}
-
-:deep(.el-menu-item),
-:deep(.el-sub-menu__title) {
-  margin: 2px 0;
-  border-radius: 8px;
-  transition: all 0.3s;
-  font-size: 14px;
-}
-
-:deep(.el-menu-item:hover),
-:deep(.el-sub-menu__title:hover) {
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-:deep(.el-menu-item.is-active) {
-  background: var(--sidebar-active-bg) !important;
-  color: var(--sidebar-active-text) !important;
-  box-shadow: 0 8px 18px rgba(109, 146, 125, 0.18);
-}
-
 .layout-main-container {
   position: relative;
+  flex: 1;
+  display: flex;
   flex-direction: column;
   overflow: hidden;
 }
@@ -146,7 +117,6 @@
 }
 
 .collapse-trigger {
-  font-size: 20px;
   cursor: pointer;
   color: var(--text-primary);
   display: inline-flex;
@@ -158,6 +128,7 @@
   border-radius: 14px;
   transition: all 0.3s;
   background: rgba(15, 108, 189, 0.08);
+  border: 0;
 }
 
 .collapse-trigger:hover {
@@ -166,23 +137,33 @@
 }
 
 .breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
 }
 
-.breadcrumb :deep(.el-breadcrumb__item) {
-  .el-breadcrumb__inner {
-    color: #606266;
-    font-weight: 500;
-  }
-
-  &:last-child .el-breadcrumb__inner {
-    color: #303133;
-    font-weight: 600;
-  }
+.breadcrumb-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
 }
 
-.breadcrumb :deep(.el-breadcrumb__separator) {
-  color: #909399;
+.breadcrumb-link:hover {
+  color: var(--primary-color);
+}
+
+.breadcrumb-separator {
+  color: var(--text-placeholder);
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .header-right {
@@ -193,6 +174,7 @@
 
 .layout-main {
   position: relative;
+  flex: 1;
   background: var(--bg-page);
   padding: calc(var(--page-padding, 24px) - 4px) var(--page-padding, 24px) var(--page-padding, 24px);
   overflow-y: auto;
@@ -231,9 +213,4 @@
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-:deep(.el-dropdown-menu__item.is-active) {
-  color: var(--primary-color);
-  background: rgba(109, 146, 125, 0.08);
 }

@@ -1,44 +1,44 @@
 <template>
   <div class="task-learning-view fade-in-up" v-loading="loading">
-    <el-page-header @back="goBack" class="page-header">
+    <n-page-header @back="goBack" class="page-header">
       <template #content>
         <span>{{ currentTask.titleText || '任务学习' }}</span>
       </template>
       <template #extra>
-        <el-button :icon="ChatDotRound" type="primary" plain @click="chatDrawerVisible = true">
+        <n-button :icon="ChatDotRound" type="primary" plain @click="chatDrawerVisible = true">
           AI助手
-        </el-button>
+        </n-button>
       </template>
-    </el-page-header>
+    </n-page-header>
 
     <!-- AI 知识点介绍 -->
-    <el-card v-if="hasNodeIntro && !isTestNode" class="intro-card" shadow="hover">
+    <n-card v-if="hasNodeIntro && !isTestNode" class="intro-card" shadow="hover">
       <template #header>
         <div class="card-header">
-          <span><el-icon>
+          <span><n-icon>
               <MagicStick />
-            </el-icon> 知识点介绍</span>
-          <el-tag :type="difficultyTagType" size="small">{{ difficultyLabel }}</el-tag>
+            </n-icon> 知识点介绍</span>
+          <n-tag :type="difficultyTagType" size="small">{{ difficultyLabel }}</n-tag>
         </div>
       </template>
       <div class="intro-text markdown-body" v-html="renderMarkdown(nodeIntro.introductionText)"></div>
       <div v-if="nodeIntro.keyConceptList.length" class="key-concepts">
-        <el-tag v-for="concept in nodeIntro.keyConceptList" :key="concept" type="info" effect="plain"
+        <n-tag v-for="concept in nodeIntro.keyConceptList" :key="concept" type="info" effect="plain"
           class="concept-tag">{{
-            concept }}</el-tag>
+            concept }}</n-tag>
       </div>
       <p v-if="nodeIntro.learningTipsText" class="learning-tip">
-        <el-icon>
+        <n-icon>
           <InfoFilled />
-        </el-icon> {{ nodeIntro.learningTipsText }}
+        </n-icon> {{ nodeIntro.learningTipsText }}
       </p>
-    </el-card>
-    <el-skeleton v-else-if="introLoading && !isTestNode" :rows="2" animated style="margin-bottom: 20px;" />
+    </n-card>
+    <n-skeleton v-else-if="introLoading && !isTestNode" :rows="2" animated style="margin-bottom: 20px;" />
 
-    <el-row :gutter="20" class="content-row">
+    <n-row :gutter="20" class="content-row">
       <!-- 学习资源列表 -->
-      <el-col v-if="!isTestNode" :xs="24" :lg="16">
-        <el-card class="resources-card" shadow="hover">
+      <n-col v-if="!isTestNode" :xs="24" :lg="16">
+        <n-card class="resources-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>学习资源</span>
@@ -49,62 +49,62 @@
           </template>
 
           <div v-if="loading" class="loading-container">
-            <el-skeleton :rows="5" animated />
+            <n-skeleton :rows="5" animated />
           </div>
-          <el-empty v-else-if="!resourceRecords.length" description="暂无学习资源">
+          <n-empty v-else-if="!resourceRecords.length" description="暂无学习资源">
             <template #description>
               <div class="empty-ai-searching">
-                <el-icon :class="{ 'is-loading': aiResourcesLoading }">
+                <n-icon :class="{ 'is-loading': aiResourcesLoading }">
                   <MagicStick />
-                </el-icon>
+                </n-icon>
                 <span>{{ aiResourcesLoading ? 'AI 正在联网查找适合你的学习资源，请稍候…' : 'AI 暂未找到合适资源，稍后会继续补充推荐。' }}</span>
               </div>
             </template>
-          </el-empty>
+          </n-empty>
 
           <div v-else class="resources-list">
             <div v-for="resourceRecord in resourceRecords" :key="resourceRecord.resourceId" class="resource-item"
               :class="{ completed: resourceRecord.isCompleted, active: currentResourceRecord.resourceId === resourceRecord.resourceId }"
               @click="selectResource(resourceRecord)">
               <div class="resource-icon">
-                <el-icon v-if="resourceRecord.isCompleted">
+                <n-icon v-if="resourceRecord.isCompleted">
                   <CircleCheck />
-                </el-icon>
-                <el-icon v-else-if="resourceRecord.resourceType === 'video'">
+                </n-icon>
+                <n-icon v-else-if="resourceRecord.resourceType === 'video'">
                   <VideoPlay />
-                </el-icon>
-                <el-icon v-else-if="resourceRecord.resourceType === 'document'">
+                </n-icon>
+                <n-icon v-else-if="resourceRecord.resourceType === 'document'">
                   <Document />
-                </el-icon>
-                <el-icon v-else>
+                </n-icon>
+                <n-icon v-else>
                   <Reading />
-                </el-icon>
+                </n-icon>
               </div>
               <div class="resource-info">
                 <h4>{{ resourceRecord.titleText }}</h4>
               </div>
-              <el-tag v-if="!resourceRecord.isRequired" size="small" type="warning" effect="plain">选修</el-tag>
-              <el-tag v-if="resourceRecord.isServerHosted" size="small" type="success" effect="plain">本地</el-tag>
-              <el-tag v-else size="small" type="info" effect="plain">外部</el-tag>
-              <el-tag v-if="resourceRecord.sourceText" size="small" type="info" effect="plain">
+              <n-tag v-if="!resourceRecord.isRequired" size="small" type="warning" effect="plain">选修</n-tag>
+              <n-tag v-if="resourceRecord.isServerHosted" size="small" type="success" effect="plain">本地</n-tag>
+              <n-tag v-else size="small" type="info" effect="plain">外部</n-tag>
+              <n-tag v-if="resourceRecord.sourceText" size="small" type="info" effect="plain">
                 {{ resourceRecord.sourceText }}
-              </el-tag>
-              <el-icon class="resource-arrow">
+              </n-tag>
+              <n-icon class="resource-arrow">
                 <ArrowRight />
-              </el-icon>
+              </n-icon>
             </div>
             <!-- AI资源加载中提示 -->
             <div v-if="aiResourcesLoading" class="ai-loading-hint">
-              <el-icon class="is-loading">
+              <n-icon class="is-loading">
                 <MagicStick />
-              </el-icon>
+              </n-icon>
               <span>AI 正在联网查找并筛选适合你的学习资源...</span>
             </div>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- 节点目标 -->
-        <el-card v-if="currentTask.descriptionText && !isTestNode" class="goal-card" shadow="hover"
+        <n-card v-if="currentTask.descriptionText && !isTestNode" class="goal-card" shadow="hover"
           style="margin-top: 20px;">
           <template #header><span>学习目标</span></template>
           <div class="goal-content">
@@ -123,36 +123,36 @@
               </div>
             </div>
           </div>
-        </el-card>
-      </el-col>
+        </n-card>
+      </n-col>
 
       <!-- 右侧面板 / 测试节点全宽面板 -->
-      <el-col :xs="24" :lg="isTestNode ? 24 : 8">
+      <n-col :xs="24" :lg="isTestNode ? 24 : 8">
         <!-- 学习进度 -->
-        <el-card v-if="!isTestNode" class="progress-card" shadow="hover">
+        <n-card v-if="!isTestNode" class="progress-card" shadow="hover">
           <template #header><span>学习进度</span></template>
           <div class="progress-content">
-            <el-progress type="circle" :percentage="progressPercent" :width="150" :stroke-width="12" />
+            <n-progress type="circle" :percentage="progressPercent" :width="150" :stroke-width="12" />
             <div class="progress-stats">
               <p>已完成 <strong>{{ completedResourceCount }}</strong> / {{ resourceRecords.length }} 个资源</p>
             </div>
           </div>
-          <el-divider />
+          <n-divider />
           <div class="action-buttons">
-            <el-button type="success" size="large" @click="completeTask">
+            <n-button type="success" size="large" @click="completeTask">
               完成学习
-            </el-button>
+            </n-button>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- 节点练习测验 -->
-        <el-card v-if="hasNodeExam && !isTestNode" class="quiz-card" shadow="hover" style="margin-top: 20px;">
+        <n-card v-if="hasNodeExam && !isTestNode" class="quiz-card" shadow="hover" style="margin-top: 20px;">
           <template #header>
             <div class="card-header">
               <span>节点作业</span>
-              <el-tag v-if="hasNodeQuizResult" :type="nodeQuizResult.isPassed ? 'success' : 'danger'" size="small">
+              <n-tag v-if="hasNodeQuizResult" :type="nodeQuizResult.isPassed ? 'success' : 'danger'" size="small">
                 {{ nodeQuizResult.isPassed ? '已通过' : '未通过' }}
-              </el-tag>
+              </n-tag>
             </div>
           </template>
           <div v-if="hasNodeQuizResult" class="quiz-result">
@@ -161,34 +161,34 @@
             }}分</strong>
             </p>
             <p v-if="!nodeQuizResult.isPassed" style="color: #909399; font-size: 13px;">未达到及格线，建议复习后重新作答</p>
-            <el-button v-if="!nodeQuizResult.isPassed" type="warning" size="small"
-              @click="resetNodeQuizResult">重新作答</el-button>
+            <n-button v-if="!nodeQuizResult.isPassed" type="warning" size="small"
+              @click="resetNodeQuizResult">重新作答</n-button>
           </div>
           <div v-else>
             <p style="color: #606266; margin: 0 0 12px;">{{ currentNodeExam.titleText }} · 及格线 {{
               currentNodeExam.passScore
             }}分</p>
-            <el-button type="primary" size="small" @click="startQuiz" :disabled="!allCompleted">
+            <n-button type="primary" size="small" @click="startQuiz" :disabled="!allCompleted">
               {{ allCompleted ? '开始作业' : '完成所有资源后可作答' }}
-            </el-button>
+            </n-button>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- 嵌入式阶段测试 -->
-        <el-card v-if="isTestNode" ref="stageTestCardRef" class="stage-test-card" shadow="hover"
+        <n-card v-if="isTestNode" ref="stageTestCardRef" class="stage-test-card" shadow="hover"
           style="margin-top: 20px;">
           <template #header>
             <div class="card-header">
               <span>{{ stageTestTitle }}</span>
-              <el-tag v-if="hasStageTestResult" :type="stageTestResult.isPassed ? 'success' : 'danger'" size="small">
+              <n-tag v-if="hasStageTestResult" :type="stageTestResult.isPassed ? 'success' : 'danger'" size="small">
                 {{ stageTestResult.isPassed ? '已通过' : '未通过' }}
-              </el-tag>
-              <el-tag v-else type="warning" size="small">{{ stageTestQuestions.length }} 题</el-tag>
+              </n-tag>
+              <n-tag v-else type="warning" size="small">{{ stageTestQuestions.length }} 题</n-tag>
             </div>
           </template>
 
           <div v-if="stageTestLoading" style="padding: 20px; text-align: center;">
-            <el-skeleton :rows="5" animated />
+            <n-skeleton :rows="5" animated />
           </div>
 
           <!-- 测试结果展示 -->
@@ -224,10 +224,10 @@
               <div v-if="stageTestResult.feedbackReport.knowledgeGapList.length" class="stage-report-section">
                 <h5>薄弱知识点</h5>
                 <div class="stage-gap-tags">
-                  <el-tag v-for="(item, idx) in stageTestResult.feedbackReport.knowledgeGapList" :key="`gap-${idx}`"
+                  <n-tag v-for="(item, idx) in stageTestResult.feedbackReport.knowledgeGapList" :key="`gap-${idx}`"
                     type="warning" effect="plain">
                     {{ item }}
-                  </el-tag>
+                  </n-tag>
                 </div>
               </div>
               <div v-if="stageTestResult.feedbackReport.recommendationList.length" class="stage-report-section">
@@ -270,13 +270,13 @@
                 <p v-if="mistake.analysisText"><span class="mistake-label">解析：</span>{{ mistake.analysisText }}</p>
               </div>
             </div>
-            <el-button v-if="!stageTestResult.isPassed" type="warning" @click="retryStageTest"
+            <n-button v-if="!stageTestResult.isPassed" type="warning" @click="retryStageTest"
               style="margin-top: 12px;">
               重新作答
-            </el-button>
-            <el-button v-else type="success" @click="goBack" style="margin-top: 12px;">
+            </n-button>
+            <n-button v-else type="success" @click="goBack" style="margin-top: 12px;">
               返回学习路径
-            </el-button>
+            </n-button>
           </div>
 
           <!-- 做题界面 -->
@@ -287,8 +287,8 @@
                 <p>按作业方式完成本轮诊断，题目统一计分，提交后将生成 AI 分析报告。</p>
               </div>
               <div class="stage-test-intro-meta">
-                <el-tag type="warning" effect="plain">共 {{ stageTestQuestions.length }} 题</el-tag>
-                <el-tag type="success" effect="plain">总分 100</el-tag>
+                <n-tag type="warning" effect="plain">共 {{ stageTestQuestions.length }} 题</n-tag>
+                <n-tag type="success" effect="plain">总分 100</n-tag>
               </div>
             </div>
             <div v-for="(question, idx) in stageTestQuestions" :key="question.questionId" class="question-item">
@@ -297,39 +297,39 @@
                 <span class="question-score">{{ question.scoreValue }} 分</span>
               </div>
               <p class="question-title">{{ question.contentText }}</p>
-              <el-checkbox-group v-if="question.questionType === 'multiple_choice'"
+              <n-checkbox-group v-if="question.questionType === 'multiple_choice'"
                 v-model="stageTestAnswers[question.questionId]" class="question-options">
-                <el-checkbox v-for="option in question.optionList" :key="option.optionKey" :value="option.answerValue"
+                <n-checkbox v-for="option in question.optionList" :key="option.optionKey" :value="option.answerValue"
                   class="question-option">
                   {{ option.optionKey }}. {{ option.optionLabel }}
-                </el-checkbox>
-              </el-checkbox-group>
-              <el-radio-group v-else v-model="stageTestAnswers[question.questionId]" class="question-options">
-                <el-radio v-for="option in question.optionList" :key="option.optionKey" :value="option.answerValue"
+                </n-checkbox>
+              </n-checkbox-group>
+              <n-radio-group v-else v-model="stageTestAnswers[question.questionId]" class="question-options">
+                <n-radio v-for="option in question.optionList" :key="option.optionKey" :value="option.answerValue"
                   class="question-option">
                   {{ option.optionKey }}. {{ option.optionLabel }}
-                </el-radio>
-              </el-radio-group>
+                </n-radio>
+              </n-radio-group>
             </div>
-            <el-button type="primary" @click="submitStageTestAnswers" :loading="stageTestLoading"
+            <n-button type="primary" @click="submitStageTestAnswers" :loading="stageTestLoading"
               style="width: 100%; margin-top: 16px;">
               提交答案
-            </el-button>
+            </n-button>
           </div>
 
-          <el-empty v-else description="暂无测试题目">
+          <n-empty v-else description="暂无测试题目">
             <template #description>
               <p>当前暂无匹配的测试题目</p>
               <p style="font-size: 12px; color: #909399;">请联系教师补充题库或稍后重试</p>
             </template>
-            <el-button type="primary" size="small" @click="loadStageTest">重新加载</el-button>
-          </el-empty>
-        </el-card>
-      </el-col>
-    </el-row>
+            <n-button type="primary" size="small" @click="loadStageTest">重新加载</n-button>
+          </n-empty>
+        </n-card>
+      </n-col>
+    </n-row>
 
     <!-- AI 聊天抽屉 -->
-    <el-drawer
+    <n-drawer
       v-model="chatDrawerVisible"
       title="AI 学习助手"
       direction="rtl"
@@ -339,26 +339,26 @@
       <template #header>
         <div class="assistant-drawer-header">
           <span>AI 学习助手</span>
-          <el-button link type="primary" @click="openFullAssistant">打开完整 AI助手</el-button>
+          <n-button link type="primary" @click="openFullAssistant">打开完整 AI助手</n-button>
         </div>
       </template>
       <div class="chat-container">
         <div ref="chatMessagesRef" class="chat-messages">
           <div class="chat-welcome">
-            <el-icon>
+            <n-icon>
               <MagicStick />
-            </el-icon>
+            </n-icon>
             <p>我是你的AI学习助手，有关于 <strong>{{ currentTask.titleText || '本节' }}</strong> 的问题都可以问我。</p>
           </div>
           <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['chat-msg', msg.role]">
             <div class="msg-bubble" v-html="formatMessage(msg.content)"></div>
             <div v-if="msg.sources?.length || msg.matchedPoint" class="msg-meta">
-              <el-tag v-if="msg.matchedPoint" size="small" type="success" effect="plain">
+              <n-tag v-if="msg.matchedPoint" size="small" type="success" effect="plain">
                 {{ msg.matchedPoint.point_name }}
-              </el-tag>
-              <el-tag v-for="sourceItem in msg.sources" :key="sourceItem.title || sourceItem.kind" size="small" type="info" effect="plain">
+              </n-tag>
+              <n-tag v-for="sourceItem in msg.sources" :key="sourceItem.title || sourceItem.kind" size="small" type="info" effect="plain">
                 {{ sourceItem.title || sourceItem.kind || '来源' }}
-              </el-tag>
+              </n-tag>
             </div>
           </div>
           <div v-if="chatLoading" class="chat-msg assistant">
@@ -369,14 +369,14 @@
           </div>
         </div>
         <div class="chat-input">
-          <el-input v-model="chatInput" placeholder="输入你的问题..." @keyup.enter="sendChat" :disabled="chatLoading">
+          <n-input v-model="chatInput" placeholder="输入你的问题..." @keyup.enter="sendChat" :disabled="chatLoading">
             <template #append>
-              <el-button :icon="Promotion" @click="sendChat" :loading="chatLoading" />
+              <n-button :icon="Promotion" @click="sendChat" :loading="chatLoading" />
             </template>
-          </el-input>
+          </n-input>
         </div>
       </div>
-    </el-drawer>
+    </n-drawer>
   </div>
 </template>
 
@@ -391,7 +391,7 @@ import {
   Promotion,
   Reading,
   VideoPlay
-} from '@element-plus/icons-vue'
+} from '@/theme/element-icons'
 import { useTaskLearning } from './useTaskLearning'
 
 const {

@@ -1,54 +1,54 @@
 <template>
   <div class="class-detail-view">
-    <el-page-header @back="goBack">
+    <n-page-header @back="goBack">
       <template #content>{{ classInfo.name }}</template>
-    </el-page-header>
+    </n-page-header>
 
-    <el-row :gutter="20" class="content-row">
-      <el-col :xs="24" :lg="16">
-        <el-card shadow="hover">
+    <n-row :gutter="20" class="content-row">
+      <n-col :xs="24" :lg="16">
+        <n-card shadow="hover">
           <template #header>
             <div class="card-header">
               <span>学生列表</span>
-              <el-button type="primary" size="small" @click="showInviteDialog">邀请学生</el-button>
+              <n-button type="primary" size="small" @click="showInviteDialog">邀请学生</n-button>
             </div>
           </template>
-          <el-table :data="students" style="width: 100%" v-loading="loading">
-            <el-table-column label="学生" min-width="180">
+          <n-table :data="students" style="width: 100%" v-loading="loading">
+            <n-table-column label="学生" min-width="180">
               <template #default="{ row }">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <el-avatar :size="32"
+                  <n-avatar :size="32"
                     style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-size: 14px;">
                     {{ (row.realName || row.name || '学').charAt(0) }}
-                  </el-avatar>
+                  </n-avatar>
                   <div>
                     <div style="font-weight: 600;">{{ row.realName || row.name }}</div>
                     <div style="font-size: 12px; color: #909399;">{{ row.username }}</div>
                   </div>
                 </div>
               </template>
-            </el-table-column>
-            <el-table-column prop="studentId" label="学号" width="120" />
-            <el-table-column prop="enrolledAt" label="加入时间" width="160" />
+            </n-table-column>
+            <n-table-column prop="studentId" label="学号" width="120" />
+            <n-table-column prop="enrolledAt" label="加入时间" width="160" />
 
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :lg="8">
-        <el-card shadow="hover">
+          </n-table>
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :lg="8">
+        <n-card shadow="hover">
           <template #header>班级统计</template>
           <div class="stats-list">
             <div class="stat-item"><span>学生总数</span><strong>{{ stats.totalStudents }}</strong></div>
             <div class="stat-item"><span>平均进度</span><strong>{{ stats.avgProgress }}%</strong></div>
             <div class="stat-item"><span>本周活跃</span><strong>{{ stats.weeklyActive }}</strong></div>
           </div>
-        </el-card>
+        </n-card>
 
-        <el-card shadow="hover" class="invite-card">
+        <n-card shadow="hover" class="invite-card">
           <template #header>
             <div class="card-header">
               <span>邀请学生</span>
-              <el-button type="primary" link size="small" @click="showInviteDialog">生成邀请码</el-button>
+              <n-button type="primary" link size="small" @click="showInviteDialog">生成邀请码</n-button>
             </div>
           </template>
 
@@ -58,105 +58,105 @@
               {{ currentInviteCode }}
             </div>
             <div class="invite-actions">
-              <el-button size="small" @click="copyInviteCode(currentInviteCode)">复制邀请码</el-button>
-              <el-button size="small" @click="copyInviteText(currentInviteCode)">复制邀请说明</el-button>
+              <n-button size="small" @click="copyInviteCode(currentInviteCode)">复制邀请码</n-button>
+              <n-button size="small" @click="copyInviteText(currentInviteCode)">复制邀请说明</n-button>
             </div>
           </div>
-          <el-alert v-else title="生成邀请码后，学生可在课程选择页或我的班级页输入邀请码加入。" type="info" show-icon
+          <n-alert v-else title="生成邀请码后，学生可在课程选择页或我的班级页输入邀请码加入。" type="info" show-icon
             :closable="false" />
 
-          <el-divider content-position="left">邀请码记录</el-divider>
+          <n-divider content-position="left">邀请码记录</n-divider>
 
           <div v-loading="invitationsLoading" class="invite-list">
-            <el-empty v-if="!invitations.length" description="暂无邀请码" :image-size="64" />
+            <n-empty v-if="!invitations.length" description="暂无邀请码" :image-size="64" />
             <template v-else>
               <div v-for="invitation in invitations" :key="invitation.id" class="invite-item">
                 <div class="invite-item-main">
                   <div class="invite-item-code">{{ invitation.code }}</div>
                   <div class="invite-item-meta">
-                    <el-tag size="small" :type="invitation.isValid ? 'success' : 'info'">
+                    <n-tag size="small" :type="invitation.isValid ? 'success' : 'info'">
                       {{ invitation.isValid ? '可用' : '不可用' }}
-                    </el-tag>
+                    </n-tag>
                     <span>{{ invitation.usageText }}</span>
                     <span>到期：{{ invitation.expiresAtText }}</span>
                   </div>
                 </div>
                 <div class="invite-item-actions">
-                  <el-button type="primary" link size="small" @click="copyInviteText(invitation.code)">复制</el-button>
-                  <el-button type="danger" link size="small" @click="handleDeleteInvitation(invitation)">删除</el-button>
+                  <n-button type="primary" link size="small" @click="copyInviteText(invitation.code)">复制</n-button>
+                  <n-button type="danger" link size="small" @click="handleDeleteInvitation(invitation)">删除</n-button>
                 </div>
               </div>
             </template>
           </div>
-        </el-card>
+        </n-card>
 
-        <el-card shadow="hover" style="margin-top: 16px;">
+        <n-card shadow="hover" style="margin-top: 16px;">
           <template #header>
             <div class="card-header">
               <span>班级公告</span>
-              <el-button type="primary" size="small" @click="showAnnouncementDialog()">发布公告</el-button>
+              <n-button type="primary" size="small" @click="showAnnouncementDialog()">发布公告</n-button>
             </div>
           </template>
           <div v-if="announcementsLoading" style="padding: 12px;">
-            <el-skeleton :rows="2" animated />
+            <n-skeleton :rows="2" animated />
           </div>
-          <el-empty v-else-if="!announcements.length" description="暂无公告" :image-size="60" />
+          <n-empty v-else-if="!announcements.length" description="暂无公告" :image-size="60" />
           <div v-else class="announcement-list">
             <div v-for="item in announcements" :key="item.id" class="announcement-item">
               <div class="announcement-header">
                 <strong>{{ item.title }}</strong>
                 <div class="announcement-actions">
-                  <el-button type="primary" link size="small" @click="showAnnouncementDialog(item)">编辑</el-button>
-                  <el-button type="danger" link size="small" @click="handleDeleteAnnouncement(item.id)">删除</el-button>
+                  <n-button type="primary" link size="small" @click="showAnnouncementDialog(item)">编辑</n-button>
+                  <n-button type="danger" link size="small" @click="handleDeleteAnnouncement(item.id)">删除</n-button>
                 </div>
               </div>
               <p class="announcement-content">{{ item.content }}</p>
               <span class="announcement-time">{{ item.createdAt }}</span>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
-    <el-dialog v-model="announcementDialogVisible" :title="editingAnnouncement ? '编辑公告' : '发布公告'" width="500px">
-      <el-form :model="announcementForm" label-width="70px">
-        <el-form-item label="标题">
-          <el-input v-model="announcementForm.title" placeholder="请输入公告标题" maxlength="200" />
-        </el-form-item>
-        <el-form-item label="内容">
-          <el-input v-model="announcementForm.content" type="textarea" :rows="5" placeholder="请输入公告内容" />
-        </el-form-item>
-      </el-form>
+    <n-dialog v-model="announcementDialogVisible" :title="editingAnnouncement ? '编辑公告' : '发布公告'" width="500px">
+      <n-form :model="announcementForm" label-width="70px">
+        <n-form-item label="标题">
+          <n-input v-model="announcementForm.title" placeholder="请输入公告标题" maxlength="200" />
+        </n-form-item>
+        <n-form-item label="内容">
+          <n-input v-model="announcementForm.content" type="textarea" :rows="5" placeholder="请输入公告内容" />
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="announcementDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAnnouncement" :loading="announcementSubmitting">
+        <n-button @click="announcementDialogVisible = false">取消</n-button>
+        <n-button type="primary" @click="submitAnnouncement" :loading="announcementSubmitting">
           {{ editingAnnouncement ? '保存' : '发布' }}
-        </el-button>
+        </n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
 
-    <el-dialog v-model="inviteDialogVisible" title="邀请学生加入班级" width="420px" :close-on-click-modal="!inviteSubmitting">
-      <el-form :model="inviteForm" label-width="100px">
-        <el-form-item label="有效天数">
-          <el-input-number v-model="inviteForm.expiresDays" :min="1" :max="365" :step="1" style="width: 100%;" />
-        </el-form-item>
-        <el-form-item label="使用次数">
-          <el-input-number v-model="inviteForm.maxUses" :min="0" :max="10000" :step="1" style="width: 100%;" />
+    <n-dialog v-model="inviteDialogVisible" title="邀请学生加入班级" width="420px" :close-on-click-modal="!inviteSubmitting">
+      <n-form :model="inviteForm" label-width="100px">
+        <n-form-item label="有效天数">
+          <n-input-number v-model="inviteForm.expiresDays" :min="1" :max="365" :step="1" style="width: 100%;" />
+        </n-form-item>
+        <n-form-item label="使用次数">
+          <n-input-number v-model="inviteForm.maxUses" :min="0" :max="10000" :step="1" style="width: 100%;" />
           <div class="form-tip">填 0 表示不限次数，建议按班级人数设置。</div>
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button :disabled="inviteSubmitting" @click="inviteDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="inviteSubmitting" @click="handleGenerateInvitation">生成邀请码</el-button>
+        <n-button :disabled="inviteSubmitting" @click="inviteDialogVisible = false">取消</n-button>
+        <n-button type="primary" :loading="inviteSubmitting" @click="handleGenerateInvitation">生成邀请码</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   getClassDetail, getClassStudents, generateInvitation,
   getInvitations, deleteInvitation,
@@ -284,7 +284,7 @@ const loadClassDetail = async () => {
     }
   } catch (error) {
     console.error('加载班级详情失败:', error)
-    ElMessage.error('加载班级详情失败')
+    appMessage.error('加载班级详情失败')
   } finally {
     loading.value = false
   }
@@ -321,11 +321,11 @@ const handleGenerateInvitation = async () => {
   const maxUses = Number(inviteForm.maxUses)
   const expiresDays = Number(inviteForm.expiresDays)
   if (!Number.isFinite(maxUses) || maxUses < 0) {
-    ElMessage.warning('使用次数不能小于 0')
+    appMessage.warning('使用次数不能小于 0')
     return
   }
   if (!Number.isFinite(expiresDays) || expiresDays < 1) {
-    ElMessage.warning('有效天数至少为 1 天')
+    appMessage.warning('有效天数至少为 1 天')
     return
   }
 
@@ -339,11 +339,11 @@ const handleGenerateInvitation = async () => {
     currentInviteCode.value = normalizeText(response?.['code'] ?? response?.['invite_code'])
     inviteDialogVisible.value = false
     await loadInvitations()
-    ElMessage.success('邀请码已生成')
+    appMessage.success('邀请码已生成')
   } catch (error) {
     console.error('生成邀请码失败:', error)
     if (!error?.handledByInterceptor) {
-      ElMessage.error(error?.message || '生成邀请码失败')
+      appMessage.error(error?.message || '生成邀请码失败')
     }
   } finally {
     inviteSubmitting.value = false
@@ -354,9 +354,9 @@ const copyInviteCode = (code) => {
   const invitationCode = normalizeText(code)
   if (!invitationCode) return
   navigator.clipboard.writeText(invitationCode).then(() => {
-    ElMessage.success('邀请码已复制到剪贴板')
+    appMessage.success('邀请码已复制到剪贴板')
   }).catch(() => {
-    ElMessage.info(`请手动复制：${invitationCode}`)
+    appMessage.info(`请手动复制：${invitationCode}`)
   })
 }
 
@@ -365,25 +365,25 @@ const copyInviteText = (code) => {
   if (!invitationCode) return
   const inviteText = `请登录学生端，在“课程选择”或“我的班级”页面点击“加入班级”，输入班级「${classInfo.name || '当前班级'}」的邀请码：${invitationCode}`
   navigator.clipboard.writeText(inviteText).then(() => {
-    ElMessage.success('邀请说明已复制')
+    appMessage.success('邀请说明已复制')
   }).catch(() => {
-    ElMessage.info(`请手动发送邀请码：${invitationCode}`)
+    appMessage.info(`请手动发送邀请码：${invitationCode}`)
   })
 }
 
 const handleDeleteInvitation = async (invitation) => {
   try {
-    await ElMessageBox.confirm(`确定删除邀请码 ${invitation.code} 吗？`, '删除邀请码', { type: 'warning' })
+    await appDialog.confirm(`确定删除邀请码 ${invitation.code} 吗？`, '删除邀请码', { type: 'warning' })
     await deleteInvitation(invitation.id)
     if (currentInviteCode.value === invitation.code) {
       currentInviteCode.value = ''
     }
-    ElMessage.success('邀请码已删除')
+    appMessage.success('邀请码已删除')
     await loadInvitations()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除邀请码失败:', error)
-      ElMessage.error('删除邀请码失败')
+      appMessage.error('删除邀请码失败')
     }
   }
 }
@@ -440,12 +440,12 @@ const showAnnouncementDialog = (item = null) => {
 const submitAnnouncement = async () => {
   const normalizedTitle = normalizeText(announcementForm.title)
   if (!normalizedTitle) {
-    ElMessage.warning('请输入公告标题')
+    appMessage.warning('请输入公告标题')
     return
   }
   const normalizedContent = normalizeText(announcementForm.content)
   if (!normalizedContent) {
-    ElMessage.warning('请输入公告内容')
+    appMessage.warning('请输入公告内容')
     return
   }
   announcementSubmitting.value = true
@@ -455,19 +455,19 @@ const submitAnnouncement = async () => {
         title: normalizedTitle,
         content: normalizedContent
       })
-      ElMessage.success('公告已更新')
+      appMessage.success('公告已更新')
     } else {
       await createAnnouncement(classInfo.id, {
         title: normalizedTitle,
         content: normalizedContent
       })
-      ElMessage.success('公告已发布')
+      appMessage.success('公告已发布')
     }
     announcementDialogVisible.value = false
     await loadAnnouncements()
   } catch (e) {
     console.error('提交公告失败:', e)
-    ElMessage.error('操作失败')
+    appMessage.error('操作失败')
   } finally {
     announcementSubmitting.value = false
   }
@@ -475,14 +475,14 @@ const submitAnnouncement = async () => {
 
 const handleDeleteAnnouncement = async (id) => {
   try {
-    await ElMessageBox.confirm('确定删除该公告？', '提示', { type: 'warning' })
+    await appDialog.confirm('确定删除该公告？', '提示', { type: 'warning' })
     await deleteAnnouncement(id)
-    ElMessage.success('公告已删除')
+    appMessage.success('公告已删除')
     await loadAnnouncements()
   } catch (e) {
     if (e !== 'cancel') {
       console.error('删除公告失败:', e)
-      ElMessage.error('删除失败')
+      appMessage.error('删除失败')
     }
   }
 }

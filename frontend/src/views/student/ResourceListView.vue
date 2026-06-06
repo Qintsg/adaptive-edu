@@ -1,70 +1,70 @@
 <template>
   <div class="resource-list-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <h2>课程资源</h2>
       </div>
-    </el-card>
+    </n-card>
 
-    <el-card shadow="hover">
+    <n-card shadow="hover">
       <div class="filter-bar">
-        <el-select v-model="resourceFilter.resourceType" placeholder="资源类型" clearable style="width: 130px;"
+        <n-select v-model="resourceFilter.resourceType" placeholder="资源类型" clearable style="width: 130px;"
           @change="handleResourceSearch">
-          <el-option v-for="resourceTypeOption in resourceTypeOptions" :key="resourceTypeOption.optionValue"
+          <n-option v-for="resourceTypeOption in resourceTypeOptions" :key="resourceTypeOption.optionValue"
             :label="resourceTypeOption.optionLabel" :value="resourceTypeOption.optionValue" />
-        </el-select>
-        <el-select v-model="resourceFilter.pointId" placeholder="按知识点筛选" clearable filterable style="width: 180px;"
+        </n-select>
+        <n-select v-model="resourceFilter.pointId" placeholder="按知识点筛选" clearable filterable style="width: 180px;"
           @change="handleResourceSearch">
-          <el-option v-for="knowledgePoint in knowledgePointOptions" :key="knowledgePoint.pointId"
+          <n-option v-for="knowledgePoint in knowledgePointOptions" :key="knowledgePoint.pointId"
             :label="knowledgePoint.pointName" :value="knowledgePoint.pointId" />
-        </el-select>
-        <el-input v-model="resourceFilter.keyword" placeholder="搜索资源" clearable style="width: 200px;"
+        </n-select>
+        <n-input v-model="resourceFilter.keyword" placeholder="搜索资源" clearable style="width: 200px;"
           @keyup.enter="handleResourceSearch" />
-        <el-select v-model="resourceFilter.sortType" placeholder="排序方式" style="width: 140px;"
+        <n-select v-model="resourceFilter.sortType" placeholder="排序方式" style="width: 140px;"
           @change="handleResourceSearch">
-          <el-option label="默认排序" value="default" />
-          <el-option label="按名称" value="title" />
-          <el-option label="按类型" value="type" />
-          <el-option label="最新创建" value="newest" />
-        </el-select>
-        <el-button type="primary" @click="handleResourceSearch">搜索</el-button>
+          <n-option label="默认排序" value="default" />
+          <n-option label="按名称" value="title" />
+          <n-option label="按类型" value="type" />
+          <n-option label="最新创建" value="newest" />
+        </n-select>
+        <n-button type="primary" @click="handleResourceSearch">搜索</n-button>
       </div>
 
       <div v-loading="loading" class="resource-grid">
         <div v-for="resourceRecord in resourceRecords" :key="resourceRecord.resourceId" class="resource-card"
           @click="openResource(resourceRecord)">
           <div class="resource-icon">
-            <el-icon :size="32">
+            <n-icon :size="32">
               <VideoPlay v-if="resourceRecord.resourceTypeText === 'video'" />
               <Document v-else-if="resourceRecord.resourceTypeText === 'document'" />
               <Link v-else-if="resourceRecord.resourceTypeText === 'link'" />
               <EditPen v-else />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="resource-info">
             <div class="resource-title">{{ resourceRecord.titleText }}</div>
             <div class="resource-meta">
-              <el-tag size="small" :type="resourceRecord.typeTagType">{{ resourceRecord.typeLabel }}</el-tag>
-              <el-tag v-if="resourceRecord.isServerHosted" size="small" type="success">本地资源</el-tag>
-              <el-tag v-else-if="resourceRecord.hasExternalUrl" size="small" type="warning">外部链接</el-tag>
+              <n-tag size="small" :type="resourceRecord.typeTagType">{{ resourceRecord.typeLabel }}</n-tag>
+              <n-tag v-if="resourceRecord.isServerHosted" size="small" type="success">本地资源</n-tag>
+              <n-tag v-else-if="resourceRecord.hasExternalUrl" size="small" type="warning">外部链接</n-tag>
               <span v-if="resourceRecord.chapterLabel" class="chapter">{{ resourceRecord.chapterLabel }}</span>
               <span v-if="resourceRecord.durationSeconds" class="duration">{{
                 formatDuration(resourceRecord.durationSeconds) }}</span>
             </div>
             <div v-if="resourceRecord.descriptionText" class="resource-desc">{{ resourceRecord.descriptionText }}</div>
             <div v-if="resourceRecord.knowledgePointList.length" class="resource-kps">
-              <el-tag v-for="knowledgePoint in resourceRecord.knowledgePointList" :key="knowledgePoint.pointId"
-                size="small" type="info" class="knowledge-point-tag">{{ knowledgePoint.pointName }}</el-tag>
+              <n-tag v-for="knowledgePoint in resourceRecord.knowledgePointList" :key="knowledgePoint.pointId"
+                size="small" type="info" class="knowledge-point-tag">{{ knowledgePoint.pointName }}</n-tag>
             </div>
           </div>
         </div>
-        <el-empty v-if="!loading && !resourceRecords.length" description="暂无学习资源" />
+        <n-empty v-if="!loading && !resourceRecords.length" description="暂无学习资源" />
       </div>
 
-      <el-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="totalResourceCount"
+      <n-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="totalResourceCount"
         :page-sizes="[12, 24, 48]" v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
         @size-change="handleResourcePageSizeChange" @current-change="handleResourcePageChange" />
-    </el-card>
+    </n-card>
   </div>
 </template>
 
@@ -74,8 +74,8 @@
  * 对资源列表与知识点筛选做内部模型收敛，避免模板直接消费后端 snake_case 字段。
  */
 import { ref, reactive, onMounted, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { VideoPlay, Document, Link, EditPen } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { VideoPlay, Document, Link, EditPen } from '@/theme/element-icons'
 import { getStudentResources, getKnowledgePoints } from '@/api/student/knowledge'
 import { toBackendAbsoluteUrl } from '@/api/backend'
 import { useCourseStore } from '@/stores/course'
@@ -347,7 +347,7 @@ const handleResourcePageChange = (pageNumber) => {
 
 const loadResources = async () => {
   if (!courseId.value) {
-    ElMessage.warning('请先选择课程')
+    appMessage.warning('请先选择课程')
     resourceRecords.value = []
     totalResourceCount.value = 0
     return
@@ -370,7 +370,7 @@ const loadResources = async () => {
     totalResourceCount.value = resourceListPayload.totalCount
   } catch (e) {
     console.error('加载资源失败:', e)
-    ElMessage.error('加载资源失败')
+    appMessage.error('加载资源失败')
   } finally {
     loading.value = false
   }
@@ -395,7 +395,7 @@ const openResource = (resourceRecord) => {
   if (target) {
     window.open(target, '_blank')
   } else {
-    ElMessage.info('该资源暂无可打开的链接')
+    appMessage.info('该资源暂无可打开的链接')
   }
 }
 

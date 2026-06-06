@@ -3,22 +3,21 @@
     <!-- Toolbar keeps filtering, search, zoom, and edit actions in one stable control band. -->
     <div class="graph-toolbar glass-panel">
       <template v-if="mode === 'edit'">
-        <el-button-group>
-          <el-button type="primary" size="small" @click="addNode">添加节点</el-button>
-          <el-button type="warning" size="small" @click="saveGraph">保存图谱</el-button>
-        </el-button-group>
+        <n-button-group>
+          <n-button type="primary" size="small" @click="addNode">添加节点</n-button>
+          <n-button type="warning" size="small" @click="saveGraph">保存图谱</n-button>
+        </n-button-group>
         <div class="toolbar-divider"></div>
       </template>
 
-      <el-select v-model="chapterFilter" placeholder="全部章节" clearable size="small" style="width: 150px">
-        <el-option v-for="chapter in chapterList" :key="chapter" :label="chapter" :value="chapter" />
-      </el-select>
-      <el-input v-model="searchText" placeholder="搜索知识点..." size="small" style="width: 180px" clearable />
-      <el-button-group>
-        <el-button size="small" @click="zoomIn" title="放大">+</el-button>
-        <el-button size="small" @click="zoomOut" title="缩小">-</el-button>
-        <el-button size="small" @click="fitView" title="适配">⊡</el-button>
-      </el-button-group>
+      <n-select v-model:value="chapterFilter" placeholder="全部章节" clearable size="small" :options="chapterOptions"
+        style="width: 150px" />
+      <n-input v-model:value="searchText" placeholder="搜索知识点..." size="small" style="width: 180px" clearable />
+      <n-button-group>
+        <n-button size="small" title="放大" @click="zoomIn">+</n-button>
+        <n-button size="small" title="缩小" @click="zoomOut">-</n-button>
+        <n-button size="small" title="适配" @click="fitView">⊡</n-button>
+      </n-button-group>
     </div>
 
     <!-- Legend swaps node meaning between learner view and graph editing view. -->
@@ -44,24 +43,26 @@
     </div>
 
     <!-- Drawer shows either readonly detail or inline edit controls for the selected node. -->
-    <el-drawer v-model="drawerVisible" :title="drawerTitle" size="30%" :destroy-on-close="true">
-      <div v-if="selectedNode" class="node-drawer">
+    <n-drawer v-model:show="drawerVisible" width="30%" display-directive="if">
+      <n-drawer-content :title="drawerTitle" closable>
+        <div v-if="selectedNode" class="node-drawer">
         <!-- Base node fields are always shown so selection has a predictable detail layout. -->
-        <el-form label-position="top">
-          <el-form-item label="名称">
-            <el-input v-model="selectedNode.nodeName" :disabled="mode === 'view'" />
-          </el-form-item>
-          <el-form-item label="章节">
-            <el-input v-model="selectedNode.chapterText" :disabled="mode === 'view'" />
-          </el-form-item>
-          <el-form-item label="描述">
-            <el-input v-model="selectedNode.nodeDescription" type="textarea" :rows="3" :disabled="mode === 'view'" />
-          </el-form-item>
-          <el-form-item v-if="mode === 'view' && selectedNode.masteryRate !== null" label="掌握度">
-            <el-progress :percentage="Math.round((selectedNode.masteryRate || 0) * 100)"
+        <n-form label-placement="top">
+          <n-form-item label="名称">
+            <n-input v-model:value="selectedNode.nodeName" :disabled="mode === 'view'" />
+          </n-form-item>
+          <n-form-item label="章节">
+            <n-input v-model:value="selectedNode.chapterText" :disabled="mode === 'view'" />
+          </n-form-item>
+          <n-form-item label="描述">
+            <n-input v-model:value="selectedNode.nodeDescription" type="textarea" :autosize="{ minRows: 3 }"
+              :disabled="mode === 'view'" />
+          </n-form-item>
+          <n-form-item v-if="mode === 'view' && selectedNode.masteryRate !== null" label="掌握度">
+            <n-progress :percentage="Math.round((selectedNode.masteryRate || 0) * 100)"
               :color="getMasteryColor(selectedNode.masteryRate)" />
-          </el-form-item>
-        </el-form>
+          </n-form-item>
+        </n-form>
 
         <!-- Resource links are loaded lazily only for the active node in student view. -->
         <div v-if="nodeResources.length" class="resources-section">
@@ -69,21 +70,23 @@
           <div class="drawer-resource-list">
             <div v-for="resource in nodeResources" :key="resource.resourceId" class="drawer-resource-item">
               <span>{{ resource.resourceTitle }}</span>
-              <el-link :href="resource.resourceUrl" target="_blank" type="primary">打开</el-link>
+              <a :href="resource.resourceUrl" target="_blank" rel="noopener noreferrer" class="resource-link">打开</a>
             </div>
           </div>
         </div>
 
         <div class="drawer-actions" v-if="mode === 'edit'">
-          <el-button type="primary" @click="updateNodeData">更新节点</el-button>
-          <el-button type="danger" @click="deleteNode">删除节点</el-button>
+          <n-button type="primary" @click="updateNodeData">更新节点</n-button>
+          <n-button type="error" @click="deleteNode">删除节点</n-button>
         </div>
       </div>
-    </el-drawer>
+      </n-drawer-content>
+    </n-drawer>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useKnowledgeGraphD3 } from './useKnowledgeGraphD3'
 
 const props = defineProps({
@@ -132,6 +135,11 @@ const {
   zoomIn,
   zoomOut
 } = useKnowledgeGraphD3(props, emit)
+
+const chapterOptions = computed(() => chapterList.value.map(chapter => ({
+  label: chapter,
+  value: chapter
+})))
 </script>
 
 <style scoped src="./KnowledgeGraphECharts.css"></style>

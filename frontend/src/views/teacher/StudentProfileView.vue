@@ -1,40 +1,40 @@
 <template>
   <div class="student-profile-view" v-loading="loading" element-loading-text="加载学生画像中...">
-    <el-page-header @back="goBack">
+    <n-page-header @back="goBack">
       <template #content>
         <span>学生画像 - {{ studentInfo.displayName || '加载中...' }}</span>
       </template>
       <template #extra>
-        <el-button type="primary" :icon="Refresh" :loading="refreshing" @click="handleRefreshProfile">
+        <n-button type="primary" :icon="Refresh" :loading="refreshing" @click="handleRefreshProfile">
           刷新画像
-        </el-button>
+        </n-button>
       </template>
-    </el-page-header>
+    </n-page-header>
 
     <template v-if="!loading">
       <!-- 学生基本信息 -->
-      <el-card class="info-card" shadow="hover">
+      <n-card class="info-card" shadow="hover">
         <div class="student-info-row">
-          <el-avatar :size="64" class="student-avatar">
+          <n-avatar :size="64" class="student-avatar">
             {{ (studentInfo.displayName || '学').charAt(0).toUpperCase() }}
-          </el-avatar>
+          </n-avatar>
           <div class="student-meta">
             <h3>{{ studentInfo.displayName || studentInfo.username || '未知学生' }}</h3>
             <div class="meta-tags">
-              <el-tag v-if="studentInfo.studentCode" size="small">学号: {{ studentInfo.studentCode }}</el-tag>
-              <el-tag type="info" size="small">答题数: {{ answerStats.totalCount || 0 }}</el-tag>
-              <el-tag :type="answerStats.accuracyPercentage >= 60 ? 'success' : 'warning'" size="small">
+              <n-tag v-if="studentInfo.studentCode" size="small">学号: {{ studentInfo.studentCode }}</n-tag>
+              <n-tag type="info" size="small">答题数: {{ answerStats.totalCount || 0 }}</n-tag>
+              <n-tag :type="answerStats.accuracyPercentage >= 60 ? 'success' : 'warning'" size="small">
                 正确率: {{ answerStats.accuracyPercentage || 0 }}%
-              </el-tag>
+              </n-tag>
             </div>
           </div>
         </div>
-      </el-card>
+      </n-card>
 
-      <el-row :gutter="20" class="content-row">
+      <n-row :gutter="20" class="content-row">
         <!-- 能力雷达图 -->
-        <el-col :xs="24" :lg="12">
-          <el-card shadow="hover" class="chart-card">
+        <n-col :xs="24" :lg="12">
+          <n-card shadow="hover" class="chart-card">
             <template #header>
               <div class="card-header">
                 <span>能力雷达图</span>
@@ -43,17 +43,17 @@
             <div v-if="abilityData.length">
               <RadarChart :data="abilityData" :max="100" height="280px" color="#667eea" :show-value="true" />
             </div>
-            <el-empty v-else description="该学生暂无能力评测数据" :image-size="80" />
-          </el-card>
-        </el-col>
+            <n-empty v-else description="该学生暂无能力评测数据" :image-size="80" />
+          </n-card>
+        </n-col>
 
         <!-- 知识掌握度 -->
-        <el-col :xs="24" :lg="12">
-          <el-card shadow="hover" class="chart-card">
+        <n-col :xs="24" :lg="12">
+          <n-card shadow="hover" class="chart-card">
             <template #header>
               <div class="card-header">
                 <span>知识掌握度</span>
-                <el-tag size="small" type="info">{{ masteryData.length }} 个知识点</el-tag>
+                <n-tag size="small" type="info">{{ masteryData.length }} 个知识点</n-tag>
               </div>
             </template>
             <div v-if="masteryData.length" class="mastery-list">
@@ -62,32 +62,32 @@
                   <span>{{ item.name }}</span>
                   <span>{{ item.value }}%</span>
                 </div>
-                <el-progress :percentage="item.value" :stroke-width="10" :color="getProgressColor(item.value)" />
+                <n-progress :percentage="item.value" :stroke-width="10" :color="getProgressColor(item.value)" />
               </div>
             </div>
-            <el-empty v-else description="该学生暂无知识掌握度数据" :image-size="80" />
-          </el-card>
-        </el-col>
-      </el-row>
+            <n-empty v-else description="该学生暂无知识掌握度数据" :image-size="80" />
+          </n-card>
+        </n-col>
+      </n-row>
 
       <!-- 画像变化历史 -->
-      <el-card shadow="hover" class="learning-card">
+      <n-card shadow="hover" class="learning-card">
         <template #header>
           <div class="card-header">
             <span>画像变化历史</span>
           </div>
         </template>
-        <el-timeline v-if="historyRecords.length">
-          <el-timeline-item v-for="record in historyRecords" :key="record.recordId" :timestamp="record.timeText"
+        <n-timeline v-if="historyRecords.length">
+          <n-timeline-item v-for="record in historyRecords" :key="record.recordId" :timestamp="record.timeText"
             placement="top">
-            <el-card shadow="never" class="timeline-card">
+            <n-card shadow="never" class="timeline-card">
               <p>{{ record.contentText }}</p>
-              <el-tag size="small" type="info">平均掌握度: {{ record.avgMasteryPercent }}%</el-tag>
-            </el-card>
-          </el-timeline-item>
-        </el-timeline>
-        <el-empty v-else description="暂无画像历史记录" :image-size="60" />
-      </el-card>
+              <n-tag size="small" type="info">平均掌握度: {{ record.avgMasteryPercent }}%</n-tag>
+            </n-card>
+          </n-timeline-item>
+        </n-timeline>
+        <n-empty v-else description="暂无画像历史记录" :image-size="60" />
+      </n-card>
     </template>
   </div>
 </template>
@@ -95,8 +95,8 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Refresh } from '@/theme/element-icons'
 import { getStudentProfileDetail } from '@/api/teacher/class'
 import RadarChart from '@/components/charts/RadarChart.vue'
 import request from '@/api/index'
@@ -230,7 +230,7 @@ const loadStudentProfile = async () => {
   loading.value = true
   try {
     if (!currentStudentId.value) {
-      ElMessage.warning('缺少学生ID参数')
+      appMessage.warning('缺少学生ID参数')
       return
     }
 
@@ -238,7 +238,7 @@ const loadStudentProfile = async () => {
       await getStudentProfileDetail(currentClassId.value, currentStudentId.value, currentCourseId.value)
     )
     if (!Object.keys(studentProfilePayload).length) {
-      ElMessage.warning('未能获取到学生画像数据')
+      appMessage.warning('未能获取到学生画像数据')
       return
     }
 
@@ -258,7 +258,7 @@ const loadStudentProfile = async () => {
     historyRecords.value = normalizeHistoryRecords(studentProfilePayload.profile_history)
   } catch (error) {
     console.error('加载学生画像失败:', error)
-    ElMessage.error('加载学生画像失败: ' + (error?.message || '未知错误'))
+    appMessage.error('加载学生画像失败: ' + (error?.message || '未知错误'))
   } finally {
     loading.value = false
   }
@@ -266,19 +266,19 @@ const loadStudentProfile = async () => {
 
 const handleRefreshProfile = async () => {
   if (!currentCourseId.value) {
-    ElMessage.warning('缺少课程ID，无法刷新画像')
+    appMessage.warning('缺少课程ID，无法刷新画像')
     return
   }
   try {
-    await ElMessageBox.confirm('将为该学生重新生成学习画像，可能需要一些时间', '确认刷新', { type: 'info' })
+    await appDialog.confirm('将为该学生重新生成学习画像，可能需要一些时间', '确认刷新', { type: 'info' })
     refreshing.value = true
     await request.post(`/api/teacher/students/${currentStudentId.value}/refresh-profile`, { course_id: currentCourseId.value })
-    ElMessage.success('画像刷新成功')
+    appMessage.success('画像刷新成功')
     await loadStudentProfile()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('刷新画像失败:', error)
-      ElMessage.error('刷新画像失败: ' + (error?.message || '服务暂不可用'))
+      appMessage.error('刷新画像失败: ' + (error?.message || '服务暂不可用'))
     }
   } finally {
     refreshing.value = false

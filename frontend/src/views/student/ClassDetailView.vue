@@ -1,12 +1,12 @@
 <template>
   <div class="class-detail-view">
-    <el-page-header @back="goBack">
+    <n-page-header @back="goBack">
       <template #content>
         <span class="page-title">{{ classInfo.name || '班级详情' }}</span>
       </template>
-    </el-page-header>
+    </n-page-header>
 
-    <el-card v-loading="loading" class="class-info-card" shadow="hover">
+    <n-card v-loading="loading" class="class-info-card" shadow="hover">
       <div class="class-header">
         <div class="class-avatar">{{ (classInfo.name || '班').charAt(0) }}</div>
         <div class="class-info">
@@ -15,23 +15,23 @@
         </div>
       </div>
 
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="教师">{{ classInfo.teacherName }}</el-descriptions-item>
-        <el-descriptions-item label="学生人数">{{ classInfo.studentCount }} 人</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ classInfo.createdAt }}</el-descriptions-item>
-        <el-descriptions-item label="班级状态">
-          <el-tag :type="classInfo.status === 'active' ? 'success' : 'info'">
+      <n-descriptions :column="2" border>
+        <n-descriptions-item label="教师">{{ classInfo.teacherName }}</n-descriptions-item>
+        <n-descriptions-item label="学生人数">{{ classInfo.studentCount }} 人</n-descriptions-item>
+        <n-descriptions-item label="创建时间">{{ classInfo.createdAt }}</n-descriptions-item>
+        <n-descriptions-item label="班级状态">
+          <n-tag :type="classInfo.status === 'active' ? 'success' : 'info'">
             {{ classInfo.status === 'active' ? '进行中' : '已结束' }}
-          </el-tag>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+          </n-tag>
+        </n-descriptions-item>
+      </n-descriptions>
+    </n-card>
 
-    <el-card class="announcements-card" shadow="hover">
+    <n-card class="announcements-card" shadow="hover">
       <template #header>
         <span>班级公告</span>
       </template>
-      <el-empty v-if="announcements.length === 0" description="暂无公告" />
+      <n-empty v-if="announcements.length === 0" description="暂无公告" />
       <div v-else class="announcement-list">
         <div v-for="item in announcements" :key="item.id" class="announcement-item">
           <div class="announcement-title">{{ item.title }}</div>
@@ -39,7 +39,7 @@
           <div class="announcement-time">{{ item.createdAt }}</div>
         </div>
       </div>
-    </el-card>
+    </n-card>
   </div>
 </template>
 
@@ -49,7 +49,7 @@
  */
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { getClassDetail } from '@/api/student/class'
 
 const router = useRouter()
@@ -134,7 +134,7 @@ const goBack = () => {
 const loadClassDetail = async () => {
   const id = props.classId || route.params['classId']
   if (!id) {
-    ElMessage.error('班级ID不存在')
+    appMessage.error('班级ID不存在')
     goBack()
     return
   }
@@ -146,7 +146,7 @@ const loadClassDetail = async () => {
     announcements.value = detail.announcements
   } catch (error) {
     console.error('获取班级详情失败:', error)
-    ElMessage.error('获取班级详情失败')
+    appMessage.error('获取班级详情失败')
   } finally {
     loading.value = false
   }
@@ -223,7 +223,7 @@ onMounted(() => {
 
 .announcement-item:hover {
   background: #ecf5ff;
-  border-left-color: var(--el-color-primary, #409eff);
+  border-left-color: var(--primary-color);
   transform: translateX(4px);
 }
 

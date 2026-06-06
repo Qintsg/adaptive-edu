@@ -1,21 +1,25 @@
 <template>
   <div class="forbidden-view">
-    <div class="forbidden-content">
-      <div class="error-icon">
-        <el-icon><Lock /></el-icon>
+      <div class="forbidden-content">
+        <div class="error-icon">
+        <AppIcon name="Lock" :size="80" />
       </div>
       <div class="error-code">403</div>
       <h1 class="error-title">访问被拒绝</h1>
       <p class="error-desc">抱歉，您没有权限访问此页面</p>
       <div class="error-actions">
-        <el-button type="primary" size="large" @click="goHome">
-          <el-icon><House /></el-icon>
+        <n-button type="primary" size="large" class="error-button" @click="goHome">
+          <template #icon>
+            <AppIcon name="House" />
+          </template>
           返回首页
-        </el-button>
-        <el-button size="large" @click="goBack">
-          <el-icon><Back /></el-icon>
+        </n-button>
+        <n-button size="large" class="error-button" @click="goBack">
+          <template #icon>
+            <AppIcon name="Back" />
+          </template>
           返回上页
-        </el-button>
+        </n-button>
       </div>
     </div>
     
@@ -33,7 +37,7 @@
  */
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { House, Back, Lock } from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -117,7 +121,7 @@ const goBack = () => {
   justify-content: center;
 }
 
-.error-actions .el-button {
+.error-button {
   padding: 12px 32px;
   border-radius: 8px;
 }

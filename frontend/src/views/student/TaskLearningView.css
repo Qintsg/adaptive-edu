@@ -11,7 +11,7 @@
   align-items: stretch;
 }
 
-.content-row>.el-col {
+.content-row>.n-col {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -33,10 +33,10 @@
   margin-top: 0 !important;
 }
 
-.resources-card :deep(.el-card__body),
-.goal-card :deep(.el-card__body),
-.progress-card :deep(.el-card__body),
-.quiz-card :deep(.el-card__body) {
+.resources-card :deep(.n-card__body),
+.goal-card :deep(.n-card__body),
+.progress-card :deep(.n-card__body),
+.quiz-card :deep(.n-card__body) {
   height: 100%;
 }
 
@@ -208,7 +208,7 @@
   justify-content: center;
 }
 
-.action-buttons .el-button {
+.action-buttons .n-button {
   width: 100%;
 }
 
@@ -262,7 +262,7 @@
   color: #909399;
 }
 
-.chat-welcome .el-icon {
+.chat-welcome .n-icon {
   font-size: 32px;
   color: var(--primary-color);
   margin-bottom: 8px;

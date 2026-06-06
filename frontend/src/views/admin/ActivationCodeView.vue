@@ -1,87 +1,87 @@
 <template>
   <div class="activation-code-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <h2>激活码管理</h2>
-        <el-button type="primary" @click="showGenerateDialog = true">
-          <el-icon>
+        <n-button type="primary" @click="showGenerateDialog = true">
+          <n-icon>
             <Plus />
-          </el-icon> 批量生成
-        </el-button>
+          </n-icon> 批量生成
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
 
-    <el-card shadow="hover">
+    <n-card shadow="hover">
       <div class="filter-bar">
-        <el-select v-model="filter.role" placeholder="适用角色" clearable style="width: 120px;" @change="loadCodes">
-          <el-option label="教师" value="teacher" />
-          <el-option label="管理员" value="admin" />
-        </el-select>
-        <el-select v-model="filter.status" placeholder="使用状态" clearable style="width: 120px;" @change="loadCodes">
-          <el-option label="未使用" value="unused" />
-          <el-option label="已使用" value="used" />
-          <el-option label="已过期" value="expired" />
-        </el-select>
+        <n-select v-model="filter.role" placeholder="适用角色" clearable style="width: 120px;" @change="loadCodes">
+          <n-option label="教师" value="teacher" />
+          <n-option label="管理员" value="admin" />
+        </n-select>
+        <n-select v-model="filter.status" placeholder="使用状态" clearable style="width: 120px;" @change="loadCodes">
+          <n-option label="未使用" value="unused" />
+          <n-option label="已使用" value="used" />
+          <n-option label="已过期" value="expired" />
+        </n-select>
       </div>
 
-      <el-table :data="codes" v-loading="loading" style="width: 100%;">
-        <el-table-column prop="code" label="激活码" width="280">
+      <n-table :data="codes" v-loading="loading" style="width: 100%;">
+        <n-table-column prop="code" label="激活码" width="280">
           <template #default="{ row }">
             <code>{{ row.code }}</code>
-            <el-button type="primary" link size="small" @click="copyCode(row.code)">复制</el-button>
+            <n-button type="primary" link size="small" @click="copyCode(row.code)">复制</n-button>
           </template>
-        </el-table-column>
-        <el-table-column prop="role" label="适用角色" width="100">
+        </n-table-column>
+        <n-table-column prop="role" label="适用角色" width="100">
           <template #default="{ row }">
-            <el-tag>{{ row.role === 'teacher' ? '教师' : '管理员' }}</el-tag>
+            <n-tag>{{ row.role === 'teacher' ? '教师' : '管理员' }}</n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
+        </n-table-column>
+        <n-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+            <n-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="usedBy" label="使用者" width="120" />
-        <el-table-column prop="expiresAt" label="过期时间" width="180" />
-        <el-table-column label="操作" width="100">
+        </n-table-column>
+        <n-table-column prop="usedBy" label="使用者" width="120" />
+        <n-table-column prop="expiresAt" label="过期时间" width="180" />
+        <n-table-column label="操作" width="100">
           <template #default="{ row }">
-            <el-button type="danger" link :disabled="row.status === 'used'" @click="deleteCode(row)">删除</el-button>
+            <n-button type="danger" link :disabled="row.status === 'used'" @click="deleteCode(row)">删除</n-button>
           </template>
-        </el-table-column>
+        </n-table-column>
         <template #empty>
-          <el-empty description="暂无激活码" />
+          <n-empty description="暂无激活码" />
         </template>
-      </el-table>
+      </n-table>
 
-      <el-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="total"
+      <n-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="total"
         :page-sizes="[10, 20, 50]" v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize"
         @size-change="loadCodes" @current-change="loadCodes" />
-    </el-card>
+    </n-card>
 
     <!-- 批量生成对话框 -->
-    <el-dialog v-model="showGenerateDialog" title="批量生成激活码" width="400px">
-      <el-form :model="generateForm" label-width="100px">
-        <el-form-item label="适用角色" required>
-          <el-select v-model="generateForm.role" placeholder="请选择角色" style="width: 100%;">
-            <el-option label="教师" value="teacher" />
-            <el-option label="管理员" value="admin" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="生成数量" required>
-          <el-input-number v-model="generateForm.count" :min="1" :max="100" />
-        </el-form-item>
-        <el-form-item label="过期时间">
-          <el-date-picker v-model="generateForm.expiresAt" type="date" placeholder="选择过期日期" style="width: 100%;" />
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="generateForm.remark" placeholder="可选备注" />
-        </el-form-item>
-      </el-form>
+    <n-dialog v-model="showGenerateDialog" title="批量生成激活码" width="400px">
+      <n-form :model="generateForm" label-width="100px">
+        <n-form-item label="适用角色" required>
+          <n-select v-model="generateForm.role" placeholder="请选择角色" style="width: 100%;">
+            <n-option label="教师" value="teacher" />
+            <n-option label="管理员" value="admin" />
+          </n-select>
+        </n-form-item>
+        <n-form-item label="生成数量" required>
+          <n-input-number v-model="generateForm.count" :min="1" :max="100" />
+        </n-form-item>
+        <n-form-item label="过期时间">
+          <n-date-picker v-model="generateForm.expiresAt" type="date" placeholder="选择过期日期" style="width: 100%;" />
+        </n-form-item>
+        <n-form-item label="备注">
+          <n-input v-model="generateForm.remark" placeholder="可选备注" />
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="showGenerateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="generateLoading" @click="generateCodes">生成</el-button>
+        <n-button @click="showGenerateDialog = false">取消</n-button>
+        <n-button type="primary" :loading="generateLoading" @click="generateCodes">生成</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
@@ -91,8 +91,8 @@
  * 管理激活码、批量生成、删除等功能
  */
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus } from '@/theme/element-icons'
 import {
   getActivationCodes,
   generateActivationCodes,
@@ -152,7 +152,7 @@ const loadCodes = async () => {
     total.value = res.total || codes.value.length
   } catch (error) {
     console.error('获取激活码列表失败:', error)
-    ElMessage.error('获取激活码列表失败')
+    appMessage.error('获取激活码列表失败')
   } finally {
     loading.value = false
   }
@@ -191,7 +191,7 @@ const getStatusText = (status) => ({ unused: '未使用', used: '已使用', exp
  */
 const generateCodes = async () => {
   if (!generateForm.role) {
-    ElMessage.warning('请选择适用角色')
+    appMessage.warning('请选择适用角色')
     return
   }
 
@@ -214,13 +214,13 @@ const generateCodes = async () => {
 
     const res = await generateActivationCodes(data)
     // 注意：响应拦截器已自动提取data字段
-    ElMessage.success(`成功生成 ${generateForm.count} 个激活码`)
+    appMessage.success(`成功生成 ${generateForm.count} 个激活码`)
     showGenerateDialog.value = false
     Object.assign(generateForm, { role: 'teacher', count: 10, expiresAt: null, remark: '' })
     await loadCodes()
   } catch (error) {
     console.error('生成激活码失败:', error)
-    ElMessage.error('生成激活码失败')
+    appMessage.error('生成激活码失败')
   } finally {
     generateLoading.value = false
   }
@@ -232,9 +232,9 @@ const generateCodes = async () => {
 const copyCode = async (code) => {
   try {
     await navigator.clipboard.writeText(code)
-    ElMessage.success('激活码已复制')
+    appMessage.success('激活码已复制')
   } catch {
-    ElMessage.warning(`当前环境不支持自动复制，请手动复制激活码：${code}`)
+    appMessage.warning(`当前环境不支持自动复制，请手动复制激活码：${code}`)
   }
 }
 
@@ -243,14 +243,14 @@ const copyCode = async (code) => {
  */
 const deleteCode = async (code) => {
   try {
-    await ElMessageBox.confirm('确定删除该激活码吗？', '删除确认', { type: 'warning' })
+    await appDialog.confirm('确定删除该激活码吗？', '删除确认', { type: 'warning' })
     await deleteActivationCode(code.id)
-    ElMessage.success('删除成功')
+    appMessage.success('删除成功')
     await loadCodes()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除激活码失败:', error)
-      ElMessage.error('删除激活码失败')
+      appMessage.error('删除激活码失败')
     }
   }
 }

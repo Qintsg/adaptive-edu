@@ -1,6 +1,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import * as echarts from 'echarts'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { getAIProfileAnalysis } from '@/api/student/ai'
 import { getProfile, refreshProfileWithAI } from '@/api/student/profile'
 import { useAIProgress } from '@/composables/useAIProgress'
@@ -161,7 +161,7 @@ export function useProfileView() {
       if (!courseStore.courseId) {
         resetProfileState()
         disposeMasteryChart()
-        ElMessage.warning('请先选择课程')
+        appMessage.warning('请先选择课程')
         return
       }
 
@@ -176,7 +176,7 @@ export function useProfileView() {
     } catch (error) {
       console.error('获取画像数据失败:', error)
       const status = error?.response?.status || error?.status
-      if (status && status !== 404) ElMessage.error('获取画像数据失败，请稍后重试')
+      if (status && status !== 404) appMessage.error('获取画像数据失败，请稍后重试')
     } finally {
       loading.value = false
       if (masteryData.value.length) {
@@ -222,7 +222,7 @@ export function useProfileView() {
 
   const refreshAISuggestions = async () => {
     if (!courseStore.courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       return
     }
 
@@ -231,10 +231,10 @@ export function useProfileView() {
     try {
       aiSuggestions.value = normalizeProfileSuggestionList(await getAIProfileAnalysis(courseStore.courseId, true))
       aiLoadFailed.value = false
-      ElMessage.success('AI 建议已刷新')
+      appMessage.success('AI 建议已刷新')
     } catch (error) {
       console.error('刷新 AI 建议失败:', error)
-      ElMessage.error('刷新 AI 建议失败，请稍后重试')
+      appMessage.error('刷新 AI 建议失败，请稍后重试')
     } finally {
       aiProgress.complete()
       aiLoading.value = false
@@ -243,7 +243,7 @@ export function useProfileView() {
 
   const refreshProfile = async () => {
     if (!courseStore.courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       return
     }
 
@@ -252,10 +252,10 @@ export function useProfileView() {
       await refreshProfileWithAI(courseStore.courseId)
       await loadProfileData()
       await refreshAISuggestions()
-      ElMessage.success('学习画像已刷新')
+      appMessage.success('学习画像已刷新')
     } catch (error) {
       console.error('刷新画像失败:', error)
-      ElMessage.error('刷新画像失败，请稍后重试')
+      appMessage.error('刷新画像失败，请稍后重试')
     } finally {
       refreshing.value = false
     }

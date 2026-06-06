@@ -1,92 +1,92 @@
 <template>
   <div class="course-select-view">
-    <el-container class="main-container">
-      <el-header height="auto" class="page-header">
+    <n-container class="main-container">
+      <n-header height="auto" class="page-header">
         <div class="header-content">
-          <el-icon class="header-icon">
+          <n-icon class="header-icon">
             <Collection />
-          </el-icon>
+          </n-icon>
           <h1>选择学习课程</h1>
           <p>请选择您要学习的课程，开启智个性化学习之旅</p>
         </div>
-      </el-header>
+      </n-header>
 
-      <el-main>
+      <n-main>
         <div v-if="loading" class="loading-container">
-          <el-skeleton animated :count="3" class="course-skeleton">
+          <n-skeleton animated :count="3" class="course-skeleton">
             <template #template>
-              <el-skeleton-item variant="rect" style="width: 100%; height: 120px; border-radius: 8px;" />
+              <n-skeleton-item variant="rect" style="width: 100%; height: 120px; border-radius: 8px;" />
             </template>
-          </el-skeleton>
+          </n-skeleton>
         </div>
 
         <div v-else-if="courses.length === 0" class="empty-state">
-          <el-empty description="暂无可选课程" :image-size="200">
+          <n-empty description="暂无可选课程" :image-size="200">
             <template #description>
               <p>暂无可选课程，请先使用老师提供的邀请码加入班级。</p>
             </template>
-            <el-button type="primary" size="large" :loading="joiningClass" @click="showJoinDialog = true">
+            <n-button type="primary" size="large" :loading="joiningClass" @click="showJoinDialog = true">
               加入班级
-            </el-button>
-          </el-empty>
+            </n-button>
+          </n-empty>
         </div>
 
-        <el-row v-else :gutter="24" class="course-grid">
-          <el-col v-for="course in courses" :key="course.selectionKey" :xs="24" :sm="12" :md="8" :lg="6">
+        <n-row v-else :gutter="24" class="course-grid">
+          <n-col v-for="course in courses" :key="course.selectionKey" :xs="24" :sm="12" :md="8" :lg="6">
             <div class="course-card-wrapper" :class="{ 'is-selected': isSelected(course) }"
               @click="handleSelectCourse(course)">
-              <el-card class="course-card" shadow="hover" :body-style="{ padding: '0px' }">
+              <n-card class="course-card" shadow="hover" :body-style="{ padding: '0px' }">
                 <div class="card-cover" :style="getCoverStyle(course)">
                   <div class="course-icon">
-                    <el-icon>
+                    <n-icon>
                       <Reading />
-                    </el-icon>
+                    </n-icon>
                   </div>
                   <div v-if="isSelected(course)" class="check-mark">
-                    <el-icon>
+                    <n-icon>
                       <Check />
-                    </el-icon>
+                    </n-icon>
                   </div>
                 </div>
                 <div class="card-content">
                   <h3 class="course-name">{{ course.name }}</h3>
                   <div class="course-meta">
-                    <el-tag size="small" effect="plain" type="info">ID: {{ course.id }}</el-tag>
-                    <el-tag size="small" effect="plain" v-if="course.classId">班级: {{ course.className }}</el-tag>
+                    <n-tag size="small" effect="plain" type="info">ID: {{ course.id }}</n-tag>
+                    <n-tag size="small" effect="plain" v-if="course.classId">班级: {{ course.className }}</n-tag>
                   </div>
                 </div>
-              </el-card>
+              </n-card>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
+          </n-col>
+        </n-row>
+      </n-main>
 
-      <el-footer height="auto" class="page-footer">
+      <n-footer height="auto" class="page-footer">
         <div class="action-bar">
-          <el-button type="primary" size="large" class="submit-btn" :disabled="!selectedCourseKey" :loading="submitting"
+          <n-button type="primary" size="large" class="submit-btn" :disabled="!selectedCourseKey" :loading="submitting"
             @click="confirmSelect" round>
             确认并进入课程
-            <el-icon class="el-icon--right">
+            <n-icon class="el-icon--right">
               <ArrowRight />
-            </el-icon>
-          </el-button>
+            </n-icon>
+          </n-button>
         </div>
-      </el-footer>
-    </el-container>
+      </n-footer>
+    </n-container>
 
-    <el-dialog v-model="showJoinDialog" title="加入班级" width="400px" :close-on-click-modal="!joiningClass">
-      <el-form :model="joinForm" label-width="80px" @submit.prevent="handleJoinClass">
-        <el-form-item label="邀请码">
-          <el-input v-model="joinForm.invitationCode" placeholder="请输入班级邀请码" clearable maxlength="20"
+    <n-dialog v-model="showJoinDialog" title="加入班级" width="400px" :close-on-click-modal="!joiningClass">
+      <n-form :model="joinForm" label-width="80px" @submit.prevent="handleJoinClass">
+        <n-form-item label="邀请码">
+          <n-input v-model="joinForm.invitationCode" placeholder="请输入班级邀请码" clearable maxlength="20"
             @keyup.enter="handleJoinClass" />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button :disabled="joiningClass" @click="showJoinDialog = false">取消</el-button>
-        <el-button type="primary" :loading="joiningClass" :disabled="!normalizeText(joinForm.invitationCode)"
-          @click="handleJoinClass">加入</el-button>
+        <n-button :disabled="joiningClass" @click="showJoinDialog = false">取消</n-button>
+        <n-button type="primary" :loading="joiningClass" :disabled="!normalizeText(joinForm.invitationCode)"
+          @click="handleJoinClass">加入</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
@@ -101,8 +101,8 @@ import { useCourseStore } from '@/stores/course'
 import { getCourses, selectCourse as selectCourseApi } from '@/api/course'
 import { joinClass as apiJoinClass } from '@/api/student/class'
 import { generateCoverStyle } from '@/utils/courseCover'
-import { ElMessage } from 'element-plus'
-import { Check, Collection, Reading, ArrowRight } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { Check, Collection, Reading, ArrowRight } from '@/theme/element-icons'
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -206,7 +206,7 @@ const loadCourses = async () => {
     selectedCourseKey.value = restoredCourse ? restoredCourse.selectionKey : ''
   } catch (error) {
     console.error('获取课程列表失败:', error)
-    ElMessage.error('获取课程列表失败，请刷新重试')
+    appMessage.error('获取课程列表失败，请刷新重试')
   } finally {
     loading.value = false
   }
@@ -241,7 +241,7 @@ const refreshCoursesAfterJoin = async (joinedClass) => {
 const handleJoinClass = async () => {
   const invitationCode = normalizeText(joinForm.value.invitationCode)
   if (!invitationCode) {
-    ElMessage.warning('请输入班级邀请码')
+    appMessage.warning('请输入班级邀请码')
     return
   }
 
@@ -253,14 +253,14 @@ const handleJoinClass = async () => {
     joinForm.value.invitationCode = ''
 
     if (courses.value.length) {
-      ElMessage.success('已加入班级，请选择课程进入学习')
+      appMessage.success('已加入班级，请选择课程进入学习')
     } else {
-      ElMessage.success('已加入班级，待老师发布课程后即可开始学习')
+      appMessage.success('已加入班级，待老师发布课程后即可开始学习')
     }
   } catch (error) {
     console.error('加入班级失败:', error)
     if (!error?.handledByInterceptor) {
-      ElMessage.error(error?.message || '加入失败，请检查邀请码是否正确')
+      appMessage.error(error?.message || '加入失败，请检查邀请码是否正确')
     }
   } finally {
     joiningClass.value = false
@@ -303,7 +303,7 @@ const confirmSelect = async () => {
       class_name: course.className
     })
 
-    ElMessage.success({
+    appMessage.success({
       message: `欢迎进入 ${course.name}`,
       type: 'success',
       duration: 2000
@@ -314,7 +314,7 @@ const confirmSelect = async () => {
 
   } catch (error) {
     console.error('选择课程失败:', error)
-    ElMessage.error('进入课程失败，请重试')
+    appMessage.error('进入课程失败，请重试')
   } finally {
     submitting.value = false
   }
@@ -485,7 +485,7 @@ onMounted(() => {
   gap: 20px;
 }
 
-.empty-state :deep(.el-empty__description) {
+.empty-state :deep(.n-empty__description) {
   max-width: 420px;
   line-height: 1.7;
 }

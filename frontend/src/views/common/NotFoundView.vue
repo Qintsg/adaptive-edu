@@ -5,14 +5,18 @@
       <h1 class="error-title">页面不存在</h1>
       <p class="error-desc">抱歉，您访问的页面不存在或已被移除</p>
       <div class="error-actions">
-        <el-button type="primary" size="large" @click="goHome">
-          <el-icon><House /></el-icon>
+        <n-button type="primary" size="large" class="error-button" @click="goHome">
+          <template #icon>
+            <AppIcon name="House" />
+          </template>
           返回首页
-        </el-button>
-        <el-button size="large" @click="goBack">
-          <el-icon><Back /></el-icon>
+        </n-button>
+        <n-button size="large" class="error-button" @click="goBack">
+          <template #icon>
+            <AppIcon name="Back" />
+          </template>
           返回上页
-        </el-button>
+        </n-button>
       </div>
     </div>
     
@@ -31,7 +35,7 @@
  */
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { House, Back } from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -110,7 +114,7 @@ const goBack = () => {
   justify-content: center;
 }
 
-.error-actions .el-button {
+.error-button {
   padding: 12px 32px;
   border-radius: 8px;
 }

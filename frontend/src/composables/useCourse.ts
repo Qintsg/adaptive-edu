@@ -4,7 +4,7 @@
  */
 import { computed, watch } from 'vue'
 import { useCourseStore, type NormalizedCourse } from '@/stores/course'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 
 /**
  * 使用课程功能
@@ -48,7 +48,7 @@ export function useCourse() {
     try {
       return await courseStore.fetchCourses()
     } catch (error) {
-      ElMessage.error('获取课程列表失败')
+      appMessage.error('获取课程列表失败')
       return []
     }
   }
@@ -59,11 +59,11 @@ export function useCourse() {
    */
   const selectCourse = (course: NormalizedCourse | null) => {
     if (!course) {
-      ElMessage.warning('请选择有效的课程')
+      appMessage.warning('请选择有效的课程')
       return
     }
     courseStore.selectCourse(course)
-    ElMessage.success(`已切换到课程: ${course.course_name}`)
+    appMessage.success(`已切换到课程: ${course.course_name}`)
   }
 
   /**
@@ -75,7 +75,7 @@ export function useCourse() {
     if (course) {
       selectCourse(course)
     } else {
-      ElMessage.warning('未找到指定课程')
+      appMessage.warning('未找到指定课程')
     }
   }
 
@@ -102,7 +102,7 @@ export function useCourse() {
    */
   const ensureCourse = (): boolean => {
     if (!hasCourse.value) {
-      ElMessage.warning('请先选择一个课程')
+      appMessage.warning('请先选择一个课程')
       return false
     }
     return true

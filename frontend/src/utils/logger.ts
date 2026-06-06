@@ -2,7 +2,7 @@
 const ORIGINAL_CONSOLE: Record<string, (...args: any[]) => void> = {}
 
 // Mark the runtime console once so repeated bootstraps do not stack multiple patches.
-const PATCHED_FLAG = '__wisdomEduPatched'
+const PATCHED_FLAG = '__adaptiveEduPatched'
 const patchedConsole = console as Console & Record<string, any>
 
 function formatTime(date = new Date()) {

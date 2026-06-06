@@ -4,9 +4,7 @@
 
     <!-- 空状态 -->
     <div v-if="!hasData" class="empty-overlay">
-      <el-icon :size="48" color="#c0c4cc">
-        <PieChart />
-      </el-icon>
+      <AppIcon name="DataAnalysis" :size="48" color="#c0c4cc" />
       <p>暂无数据</p>
     </div>
   </div>
@@ -20,7 +18,7 @@
  */
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
-import { PieChart } from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
   data: {

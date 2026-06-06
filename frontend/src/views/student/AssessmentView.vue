@@ -1,103 +1,103 @@
 <template>
   <div class="assessment-view" v-loading="loading">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <h2>初始测评中心</h2>
       <p v-if="!profileGenerated">完成初始测评，帮助系统了解您的学习状况，生成个性化学习路径</p>
       <p v-else>您的学习画像已生成。您可以重新进行能力评测或修改学习偏好。</p>
-    </el-card>
+    </n-card>
 
     <!-- 画像已生成提示 -->
-    <el-alert v-if="profileGenerated" type="success" :closable="false" show-icon title="学习画像已生成"
+    <n-alert v-if="profileGenerated" type="success" :closable="false" show-icon title="学习画像已生成"
       style="margin-bottom: 20px;">
       <template #default>
         <div class="assessment-alert-actions">
           <span>您可以前往「学习画像」页面查看详细分析，也可以重新评测或修改偏好来更新画像。</span>
-          <el-button type="primary" plain size="small" @click="viewAssessmentReport">
+          <n-button type="primary" plain size="small" @click="viewAssessmentReport">
             查看评测报告
-          </el-button>
+          </n-button>
         </div>
       </template>
-    </el-alert>
+    </n-alert>
 
-    <el-row :gutter="20" class="assessment-cards">
+    <n-row :gutter="20" class="assessment-cards">
       <!-- 能力评测卡片 -->
-      <el-col :xs="24" :sm="profileGenerated ? 12 : 8">
-        <el-card class="assessment-card" :class="{ completed: abilityCompleted }" shadow="hover">
+      <n-col :xs="24" :sm="profileGenerated ? 12 : 8">
+        <n-card class="assessment-card" :class="{ completed: abilityCompleted }" shadow="hover">
           <div class="card-icon ability-icon">
-            <el-icon>
+            <n-icon>
               <TrendCharts />
-            </el-icon>
+            </n-icon>
           </div>
           <h3>能力评测</h3>
           <p>评估您的学习能力和认知水平</p>
           <div class="card-status">
-            <el-tag :type="abilityCompleted ? 'success' : 'info'">
+            <n-tag :type="abilityCompleted ? 'success' : 'info'">
               {{ abilityCompleted ? '已完成' : '未完成' }}
-            </el-tag>
+            </n-tag>
           </div>
-          <el-button type="primary" @click="$router.push('/student/assessment/ability')">
+          <n-button type="primary" @click="$router.push('/student/assessment/ability')">
             {{ abilityCompleted ? '重新评测' : '开始评测' }}
-          </el-button>
-        </el-card>
-      </el-col>
+          </n-button>
+        </n-card>
+      </n-col>
 
       <!-- 习惯问卷卡片 -->
-      <el-col :xs="24" :sm="profileGenerated ? 12 : 8">
-        <el-card class="assessment-card" :class="{ completed: habitCompleted }" shadow="hover">
+      <n-col :xs="24" :sm="profileGenerated ? 12 : 8">
+        <n-card class="assessment-card" :class="{ completed: habitCompleted }" shadow="hover">
           <div class="card-icon habit-icon">
-            <el-icon>
+            <n-icon>
               <Document />
-            </el-icon>
+            </n-icon>
           </div>
           <h3>习惯问卷</h3>
           <p>了解您的学习习惯和偏好</p>
           <div class="card-status">
-            <el-tag :type="habitCompleted ? 'success' : 'info'">
+            <n-tag :type="habitCompleted ? 'success' : 'info'">
               {{ habitCompleted ? '已完成' : '未完成' }}
-            </el-tag>
+            </n-tag>
           </div>
-          <el-button type="primary" @click="$router.push('/student/assessment/habit')">
+          <n-button type="primary" @click="$router.push('/student/assessment/habit')">
             {{ habitCompleted ? '修改偏好' : '开始问卷' }}
-          </el-button>
-        </el-card>
-      </el-col>
+          </n-button>
+        </n-card>
+      </n-col>
 
       <!-- 知识测评卡片 - 画像生成后隐藏 -->
-      <el-col v-if="!profileGenerated" :xs="24" :sm="8">
-        <el-card class="assessment-card" :class="{ completed: knowledgeCompleted }" shadow="hover">
+      <n-col v-if="!profileGenerated" :xs="24" :sm="8">
+        <n-card class="assessment-card" :class="{ completed: knowledgeCompleted }" shadow="hover">
           <div class="card-icon knowledge-icon">
-            <el-icon>
+            <n-icon>
               <Reading />
-            </el-icon>
+            </n-icon>
           </div>
           <h3>知识测评</h3>
           <p>测试您当前课程的知识水平（按课程独立）</p>
           <div class="card-status">
-            <el-tag :type="knowledgeCompleted ? 'success' : 'info'">
+            <n-tag :type="knowledgeCompleted ? 'success' : 'info'">
               {{ knowledgeCompleted ? '已完成' : '未完成' }}
-            </el-tag>
+            </n-tag>
           </div>
-          <el-button type="primary" :disabled="knowledgeCompleted"
+          <n-button type="primary" :disabled="knowledgeCompleted"
             @click="$router.push('/student/assessment/knowledge')">
             {{ knowledgeCompleted ? '已完成' : '开始测评' }}
-          </el-button>
-        </el-card>
-      </el-col>
-    </el-row>
+          </n-button>
+        </n-card>
+      </n-col>
+    </n-row>
 
     <!-- 生成画像按钮 - 画像生成后隐藏 -->
-    <el-card v-if="allCompleted && !profileGenerated" class="generate-card" shadow="hover">
+    <n-card v-if="allCompleted && !profileGenerated" class="generate-card" shadow="hover">
       <div class="generate-content">
-        <el-icon class="generate-icon">
+        <n-icon class="generate-icon">
           <Checked />
-        </el-icon>
+        </n-icon>
         <h3>恭喜！您已完成所有初始测评</h3>
         <p>点击下方按钮生成您的专属学习画像</p>
-        <el-button type="primary" size="large" :loading="generating" :disabled="generating" @click="generateProfile">
+        <n-button type="primary" size="large" :loading="generating" :disabled="generating" @click="generateProfile">
           {{ generating ? '正在生成画像...' : '生成学习画像' }}
-        </el-button>
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
   </div>
 </template>
 
@@ -109,8 +109,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
 import { getAssessmentStatus, generateProfile as apiGenerateProfile } from '@/api/student/assessment'
-import { ElMessage, ElLoading } from 'element-plus'
-import { TrendCharts, Document, Reading, Checked } from '@element-plus/icons-vue'
+import { appMessage, appLoading } from '@/utils/feedback'
+import { TrendCharts, Document, Reading, Checked } from '@/theme/element-icons'
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -181,7 +181,7 @@ const loadAssessmentStatus = async () => {
  */
 const generateProfile = async () => {
   generating.value = true
-  const loadingInstance = ElLoading.service({
+  const loadingInstance = appLoading.service({
     lock: true,
     text: '正在基于您的测评数据生成学习画像，请稍候...',
     background: 'rgba(0, 0, 0, 0.7)',
@@ -190,12 +190,12 @@ const generateProfile = async () => {
     const courseId = courseStore.courseId
     await apiGenerateProfile(courseId)
     loadingInstance.close()
-    ElMessage.success('学习画像生成成功！')
+    appMessage.success('学习画像生成成功！')
     await router.push('/student/profile')
   } catch (error) {
     console.error('生成画像失败:', error)
     loadingInstance.close()
-    ElMessage.error('生成失败，请稍后重试')
+    appMessage.error('生成失败，请稍后重试')
   } finally {
     generating.value = false
   }

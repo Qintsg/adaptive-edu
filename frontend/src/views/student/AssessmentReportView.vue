@@ -1,22 +1,22 @@
 <template>
   <div class="assessment-report-view">
-    <el-page-header @back="goBack" class="page-header">
+    <n-page-header @back="goBack" class="page-header">
       <template #content>
         <span>初始评测报告</span>
       </template>
-    </el-page-header>
+    </n-page-header>
 
     <!-- 初始加载中（无评分数据时） -->
     <div v-if="loading && !report" style="text-align: center; padding: 60px;">
-      <el-icon class="is-loading" :size="32">
+      <n-icon class="is-loading" :size="32">
         <Loading />
-      </el-icon>
+      </n-icon>
       <p style="color: #909399; margin-top: 12px;">正在加载评测报告…</p>
     </div>
 
     <template v-else-if="report">
       <!-- 总分概览 -->
-      <el-card class="score-card" shadow="hover">
+      <n-card class="score-card" shadow="hover">
         <div class="score-overview">
           <div class="score-circle" :style="{ borderColor: scoreColor }">
             <span class="score-number">{{ report.score }}</span>
@@ -27,40 +27,40 @@
             <p>正确率 <b>{{ accuracy }}%</b></p>
           </div>
         </div>
-      </el-card>
+      </n-card>
 
       <!-- AI 反馈报告 - 可能还在异步生成中 -->
-      <el-card class="feedback-card" shadow="hover" style="margin-top: 20px;">
+      <n-card class="feedback-card" shadow="hover" style="margin-top: 20px;">
         <template #header>
           <div class="card-header">
-            <span><el-icon>
+            <span><n-icon>
                 <MagicStick />
-              </el-icon> AI 学习建议</span>
-            <el-tag v-if="generating" type="warning" size="small" effect="plain" style="margin-left: 8px;">
-              <el-icon class="is-loading">
+              </n-icon> AI 学习建议</span>
+            <n-tag v-if="generating" type="warning" size="small" effect="plain" style="margin-left: 8px;">
+              <n-icon class="is-loading">
                 <Loading />
-              </el-icon> 生成中…
-            </el-tag>
+              </n-icon> 生成中…
+            </n-tag>
           </div>
         </template>
 
         <!-- 正在生成中 -->
         <div v-if="generating" class="generating-hint">
-          <el-icon class="is-loading" :size="24">
+          <n-icon class="is-loading" :size="24">
             <Loading />
-          </el-icon>
+          </n-icon>
           <div class="generating-text">
             <p class="generating-title">{{ aiProgress.stageText.value }}</p>
             <p class="generating-desc">AI 正在分析你的答题数据，生成学习路径和反馈报告，请稍候（约30~60秒）</p>
-            <el-progress :percentage="aiProgress.progress.value" :show-text="true" :stroke-width="6"
+            <n-progress :percentage="aiProgress.progress.value" :show-text="true" :stroke-width="6"
               style="margin-top: 12px; max-width: 400px;" />
           </div>
         </div>
 
         <!-- 生成出错 -->
         <div v-else-if="generationError" class="generation-error">
-          <el-alert :title="'部分内容生成失败'" type="warning" :description="generationError" show-icon :closable="false" />
-          <el-button type="primary" size="small" style="margin-top: 12px;" @click="retryPoll">重试</el-button>
+          <n-alert :title="'部分内容生成失败'" type="warning" :description="generationError" show-icon :closable="false" />
+          <n-button type="primary" size="small" style="margin-top: 12px;" @click="retryPoll">重试</n-button>
         </div>
 
         <!-- 已生成完成 - 展示反馈 -->
@@ -72,8 +72,8 @@
 
           <div v-if="feedback.knowledgeGaps.length" class="feedback-section">
             <h4>薄弱知识点</h4>
-            <el-tag v-for="(gap, idx) in feedback.knowledgeGaps" :key="idx" type="danger" effect="plain"
-              style="margin: 4px;">{{ gap }}</el-tag>
+            <n-tag v-for="(gap, idx) in feedback.knowledgeGaps" :key="idx" type="danger" effect="plain"
+              style="margin: 4px;">{{ gap }}</n-tag>
           </div>
 
           <div v-if="feedback.recommendations?.length" class="feedback-section">
@@ -99,30 +99,30 @@
         <div v-else class="feedback-section">
           <p style="color: #909399;">暂无 AI 学习建议</p>
         </div>
-      </el-card>
+      </n-card>
 
       <!-- 知识点掌握度 -->
-      <el-card v-if="masteryItems.length" shadow="hover" style="margin-top: 20px;">
+      <n-card v-if="masteryItems.length" shadow="hover" style="margin-top: 20px;">
         <template #header><span>知识点掌握度</span></template>
         <div v-for="m in masteryItems" :key="m.id" class="mastery-item">
           <span class="mastery-name">{{ m.name }}</span>
-          <el-progress :percentage="Math.round(m.masteryRate * 100)"
+          <n-progress :percentage="Math.round(m.masteryRate * 100)"
             :color="m.masteryRate >= 0.8 ? '#67c23a' : m.masteryRate >= 0.6 ? '#e6a23c' : '#f56c6c'" :stroke-width="16"
             style="flex: 1; margin: 0 12px;" />
           <span class="mastery-value">{{ Math.round(m.masteryRate * 100) }}%</span>
         </div>
-      </el-card>
+      </n-card>
 
       <!-- 每题详情 -->
-      <el-card v-if="questionDetails.length" shadow="hover" style="margin-top: 20px;">
+      <n-card v-if="questionDetails.length" shadow="hover" style="margin-top: 20px;">
         <template #header><span>答题详情</span></template>
-        <el-collapse>
-          <el-collapse-item v-for="(q, idx) in questionDetails" :key="q.id" :title="`第 ${idx + 1} 题`" :name="idx">
+        <n-collapse>
+          <n-collapse-item v-for="(q, idx) in questionDetails" :key="q.id" :title="`第 ${idx + 1} 题`" :name="idx">
             <template #title>
               <span>第 {{ idx + 1 }} 题</span>
-              <el-tag :type="q.isCorrect ? 'success' : 'danger'" size="small" style="margin-left: 8px;">
+              <n-tag :type="q.isCorrect ? 'success' : 'danger'" size="small" style="margin-left: 8px;">
                 {{ q.isCorrect ? '正确' : '错误' }}
-              </el-tag>
+              </n-tag>
             </template>
             <p class="question-content">{{ q.content }}</p>
             <div v-if="q.options?.length" class="option-review">
@@ -130,9 +130,9 @@
                 :class="{ correct: option.isCorrect, selected: option.isSelected }">
                 <span class="option-prefix">{{ option.prefix }}</span>
                 <span class="option-text">{{ option.label }}</span>
-                <el-tag v-if="option.isCorrect" size="small" type="success" effect="plain">正确选项</el-tag>
-                <el-tag v-if="option.isSelected" size="small" :type="q.isCorrect ? 'success' : 'warning'"
-                  effect="plain">你的选择</el-tag>
+                <n-tag v-if="option.isCorrect" size="small" type="success" effect="plain">正确选项</n-tag>
+                <n-tag v-if="option.isSelected" size="small" :type="q.isCorrect ? 'success' : 'warning'"
+                  effect="plain">你的选择</n-tag>
               </div>
             </div>
             <p>
@@ -147,20 +147,20 @@
             <p v-if="q.analysis" class="analysis">
               <span class="label">解析：</span>{{ q.analysis }}
             </p>
-          </el-collapse-item>
-        </el-collapse>
-      </el-card>
+          </n-collapse-item>
+        </n-collapse>
+      </n-card>
 
       <!-- 操作按钮 -->
       <div class="action-buttons" style="margin-top: 24px; text-align: center;">
-        <el-button type="primary" @click="goToLearningPath" :disabled="generating">
+        <n-button type="primary" @click="goToLearningPath" :disabled="generating">
           {{ generating ? '学习路径生成中…' : '开始学习' }}
-        </el-button>
-        <el-button @click="goBack">返回评测中心</el-button>
+        </n-button>
+        <n-button @click="goBack">返回评测中心</n-button>
       </div>
     </template>
 
-    <el-empty v-else description="暂无评测数据" />
+    <n-empty v-else description="暂无评测数据" />
   </div>
 </template>
 
@@ -168,8 +168,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
-import { ElMessage } from 'element-plus'
-import { MagicStick, Loading } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { MagicStick, Loading } from '@/theme/element-icons'
 import { getKnowledgeResult } from '@/api/student/assessment'
 import { useAIProgress } from '@/composables/useAIProgress'
 
@@ -349,7 +349,7 @@ const startPolling = (courseId) => {
           aiProgress.complete()
           generationError.value = result?.['generation_error'] || null
           if (!result?.['generation_error']) {
-            ElMessage.success('学习建议已生成')
+            appMessage.success('学习建议已生成')
           }
         }
       }
@@ -407,10 +407,10 @@ onMounted(() => {
       generating.value = true
       startPolling(courseId)
     } else {
-      ElMessage.info('评测数据可能已过期，请重新进行测评')
+      appMessage.info('评测数据可能已过期，请重新进行测评')
     }
   } catch {
-    ElMessage.error('无法加载评测报告')
+    appMessage.error('无法加载评测报告')
   } finally {
     loading.value = false
   }

@@ -1,6 +1,6 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   completePathNode,
   getLearningPath,
@@ -143,7 +143,7 @@ export function useLearningPath() {
       const liveNode = resolveLiveNode(node)
       if (!liveNode) {
         await loadLearningPath()
-        ElMessage.warning('当前节点已刷新，请重新选择后再操作')
+        appMessage.warning('当前节点已刷新，请重新选择后再操作')
         return
       }
       await startLearningNode(liveNode.nodeId, courseStore.courseId)
@@ -153,13 +153,13 @@ export function useLearningPath() {
       })
     } catch (error) {
       console.error('开始学习失败:', error)
-      ElMessage.error('开始学习失败，请稍后重试')
+      appMessage.error('开始学习失败，请稍后重试')
     }
   }
 
   const handleCompleteNode = async (node) => {
     try {
-      await ElMessageBox.confirm('确定要标记此节点为已完成吗？', '完成学习', {
+      await appDialog.confirm('确定要标记此节点为已完成吗？', '完成学习', {
         confirmButtonText: '确认完成',
         cancelButtonText: '取消',
         type: 'success'
@@ -167,7 +167,7 @@ export function useLearningPath() {
       const liveNode = resolveLiveNode(node)
       if (!liveNode) {
         await loadLearningPath()
-        ElMessage.warning('当前节点已刷新，请重新选择后再操作')
+        appMessage.warning('当前节点已刷新，请重新选择后再操作')
         return
       }
       const wasLastVisibleNode = totalNodes.value > 0 && completedNodes.value + 1 >= totalNodes.value
@@ -177,7 +177,7 @@ export function useLearningPath() {
         aiProgress.start()
       }
       await completePathNode(liveNode.nodeId, courseStore.courseId)
-      ElMessage.success('恭喜完成学习！')
+      appMessage.success('恭喜完成学习！')
       await loadLearningPath()
     } catch (error) {
       if (error !== 'cancel') console.error('标记完成失败:', error)
@@ -191,7 +191,7 @@ export function useLearningPath() {
   const reviewNode = (node) => {
     const liveNode = resolveLiveNode(node)
     if (!liveNode) {
-      ElMessage.warning('当前节点已刷新，请重新选择')
+      appMessage.warning('当前节点已刷新，请重新选择')
       return
     }
     void router.push({
@@ -203,7 +203,7 @@ export function useLearningPath() {
   const viewTestReport = (node) => {
     const liveNode = resolveLiveNode(node)
     if (!liveNode) {
-      ElMessage.warning('当前节点已刷新，请重新选择')
+      appMessage.warning('当前节点已刷新，请重新选择')
       return
     }
     void router.push({
@@ -214,7 +214,7 @@ export function useLearningPath() {
 
   const handleSkipNode = async (node) => {
     try {
-      await ElMessageBox.confirm('确定要跳过此学习节点吗？跳过后可以稍后返回学习。', '提示', {
+      await appDialog.confirm('确定要跳过此学习节点吗？跳过后可以稍后返回学习。', '提示', {
         confirmButtonText: '确定跳过',
         cancelButtonText: '取消',
         type: 'warning'
@@ -222,12 +222,12 @@ export function useLearningPath() {
       const liveNode = resolveLiveNode(node)
       if (!liveNode) {
         await loadLearningPath()
-        ElMessage.warning('当前节点已刷新，请重新选择后再操作')
+        appMessage.warning('当前节点已刷新，请重新选择后再操作')
         return
       }
 
       await skipPathNode(liveNode.nodeId, '', courseStore.courseId)
-      ElMessage.success('已跳过该节点')
+      appMessage.success('已跳过该节点')
       await loadLearningPath()
     } catch (error) {
       if (error !== 'cancel') console.error('跳过节点失败:', error)
@@ -254,10 +254,10 @@ export function useLearningPath() {
       if (refreshSummary.ktInfo.answerCount > 0) summaryParts.push(`基于 ${refreshSummary.ktInfo.answerCount} 条答题记录的知识追踪分析。`)
       if (refreshSummary.profile.summaryText) summaryParts.push(`画像：${refreshSummary.profile.summaryText.slice(0, 80)}`)
 
-      ElMessage.success({ message: `学习路径已刷新：${summaryParts.join(' ')}`, duration: 5000 })
+      appMessage.success({ message: `学习路径已刷新：${summaryParts.join(' ')}`, duration: 5000 })
     } catch (error) {
       console.error('刷新学习路径失败:', error)
-      ElMessage.error('刷新失败，请稍后重试')
+      appMessage.error('刷新失败，请稍后重试')
     } finally {
       aiProgress.complete()
       await loadLearningPath()

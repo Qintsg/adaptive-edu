@@ -1,6 +1,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   createExam as apiCreateExam,
   deleteExam as apiDeleteExam,
@@ -277,7 +277,7 @@ export function useTeacherExamManage() {
 
   const submitExam = async () => {
     if (!currentCourseId.value) {
-      ElMessage.warning('请先在右上角选择课程')
+      appMessage.warning('请先在右上角选择课程')
       return
     }
     try {
@@ -300,10 +300,10 @@ export function useTeacherExamManage() {
       }
       if (editingExam.value) {
         await apiUpdateExam(editingExam.value.id, payload)
-        ElMessage.success('作业更新成功')
+        appMessage.success('作业更新成功')
       } else {
         await apiCreateExam(payload)
-        ElMessage.success('作业创建成功')
+        appMessage.success('作业创建成功')
       }
       showCreateDialog.value = false
       editingExam.value = null
@@ -311,7 +311,7 @@ export function useTeacherExamManage() {
       await loadExams()
     } catch (error) {
       console.error('保存作业失败:', error)
-      ElMessage.error('保存作业失败')
+      appMessage.error('保存作业失败')
     } finally {
       createLoading.value = false
     }
@@ -320,18 +320,18 @@ export function useTeacherExamManage() {
   const resolvePublishClassId = async () => {
     if (!classes.value.length) await loadClasses()
     if (!classes.value.length) {
-      ElMessage.warning('暂无可用班级，请先创建班级')
+      appMessage.warning('暂无可用班级，请先创建班级')
       return null
     }
     if (classes.value.length === 1) return classes.value[0].id
-    const promptResult = await ElMessageBox.prompt(
+    const promptResult = await appDialog.prompt(
       '请选择发布到的班级ID：\n' + classes.value.map(item => `${item.id} - ${item.name}`).join('\n'),
       '选择班级',
       { confirmButtonText: '发布', cancelButtonText: '取消', inputPlaceholder: '输入班级ID' }
     )
     const classId = Number.parseInt(normalizeText(promptResult.value), 10)
     if (!Number.isFinite(classId)) {
-      ElMessage.warning('请输入有效的班级ID')
+      appMessage.warning('请输入有效的班级ID')
       return null
     }
     return classId
@@ -342,21 +342,21 @@ export function useTeacherExamManage() {
       const classId = await resolvePublishClassId()
       if (!classId) return
       await apiPublishExam(exam.id, { class_id: classId })
-      ElMessage.success('作业发布成功')
+      appMessage.success('作业发布成功')
       await loadExams()
     } catch (error) {
       if (error !== 'cancel') {
         console.error('发布作业失败:', error)
-        ElMessage.error('发布作业失败')
+        appMessage.error('发布作业失败')
       }
     }
   }
 
   const unpublishExam = async (exam) => {
     try {
-      await ElMessageBox.confirm('确定取消发布该作业吗？', '提示', { type: 'warning' })
+      await appDialog.confirm('确定取消发布该作业吗？', '提示', { type: 'warning' })
       await apiUnpublishExam(exam.id)
-      ElMessage.success('已取消发布')
+      appMessage.success('已取消发布')
       await loadExams()
     } catch (error) {
       if (error !== 'cancel') console.error('取消发布失败:', error)
@@ -365,14 +365,14 @@ export function useTeacherExamManage() {
 
   const deleteExam = async (exam) => {
     try {
-      await ElMessageBox.confirm('确定删除该作业吗？此操作不可恢复。', '删除确认', { type: 'warning' })
+      await appDialog.confirm('确定删除该作业吗？此操作不可恢复。', '删除确认', { type: 'warning' })
       await apiDeleteExam(exam.id)
-      ElMessage.success('删除成功')
+      appMessage.success('删除成功')
       await loadExams()
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除作业失败:', error)
-        ElMessage.error('删除作业失败')
+        appMessage.error('删除作业失败')
       }
     }
   }

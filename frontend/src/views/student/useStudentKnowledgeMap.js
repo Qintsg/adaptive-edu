@@ -1,6 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { useCourseStore } from '@/stores/course'
 import { getKnowledgeMap, getKnowledgePointDetail } from '@/api/student/knowledge'
 import {
@@ -42,7 +42,7 @@ export function useStudentKnowledgeMap() {
 
   const fetchKnowledgeMap = async () => {
     if (!courseStore.courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       await router.push('/student/course-select')
       return
     }
@@ -57,7 +57,7 @@ export function useStudentKnowledgeMap() {
       knowledgeTree.value = buildKnowledgeTree(knowledgeNodes.value)
     } catch (error) {
       console.error('获取知识图谱失败:', error)
-      ElMessage.error('获取知识图谱失败')
+      appMessage.error('获取知识图谱失败')
     } finally {
       loading.value = false
     }
@@ -72,7 +72,7 @@ export function useStudentKnowledgeMap() {
       drawerVisible.value = true
     } catch (error) {
       console.error('获取知识点详情失败:', error)
-      ElMessage.error('获取知识点详情失败')
+      appMessage.error('获取知识点详情失败')
     }
   }
 
@@ -89,7 +89,7 @@ export function useStudentKnowledgeMap() {
     if (resourceItem.resourceUrl) {
       window.open(resourceItem.resourceUrl, '_blank')
     } else {
-      ElMessage.info('资源暂不可用')
+      appMessage.info('资源暂不可用')
     }
   }
 

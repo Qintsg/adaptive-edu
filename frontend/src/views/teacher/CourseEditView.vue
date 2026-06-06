@@ -1,50 +1,50 @@
 <template>
   <div class="course-edit-view">
-    <el-page-header @back="goBack">
+    <n-page-header @back="goBack">
       <template #content>{{ isEdit ? '编辑课程' : '创建课程' }}</template>
-    </el-page-header>
+    </n-page-header>
 
     <div class="course-edit-grid">
-      <el-card class="form-card" shadow="hover">
+      <n-card class="form-card" shadow="hover">
         <template #header>
           <div class="card-title">基础信息</div>
         </template>
-        <el-form :model="form" label-width="100px">
-          <el-form-item label="课程名称" required>
-            <el-input v-model="form.name" placeholder="请输入课程名称" />
-          </el-form-item>
-          <el-form-item label="课程描述">
-            <el-input v-model="form.description" type="textarea" :rows="5" placeholder="请输入课程描述" />
-          </el-form-item>
-          <el-form-item v-if="!isEdit" label="发布到班级">
-            <el-switch v-model="form.publishToClass" />
-          </el-form-item>
-          <el-form-item v-if="!isEdit && form.publishToClass" label="目标班级">
-            <el-select v-model="form.publishClassId" placeholder="请选择班级" :loading="classLoading" style="width: 100%;">
-              <el-option v-for="item in classOptions" :key="item.id" :label="item.name" :value="item.id" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="资源压缩包" v-if="!isEdit">
-            <el-upload drag :auto-upload="false" :limit="1" accept=".zip" :on-change="handleArchiveChange"
+        <n-form :model="form" label-width="100px">
+          <n-form-item label="课程名称" required>
+            <n-input v-model="form.name" placeholder="请输入课程名称" />
+          </n-form-item>
+          <n-form-item label="课程描述">
+            <n-input v-model="form.description" type="textarea" :rows="5" placeholder="请输入课程描述" />
+          </n-form-item>
+          <n-form-item v-if="!isEdit" label="发布到班级">
+            <n-switch v-model="form.publishToClass" />
+          </n-form-item>
+          <n-form-item v-if="!isEdit && form.publishToClass" label="目标班级">
+            <n-select v-model="form.publishClassId" placeholder="请选择班级" :loading="classLoading" style="width: 100%;">
+              <n-option v-for="item in classOptions" :key="item.id" :label="item.name" :value="item.id" />
+            </n-select>
+          </n-form-item>
+          <n-form-item label="资源压缩包" v-if="!isEdit">
+            <n-upload drag :auto-upload="false" :limit="1" accept=".zip" :on-change="handleArchiveChange"
               :file-list="archiveFileList">
-              <el-icon class="el-icon--upload">
+              <n-icon class="el-icon--upload">
                 <Upload />
-              </el-icon>
+              </n-icon>
               <div class="el-upload__text">拖拽 ZIP 压缩包到此处，或 <em>点击上传</em></div>
               <template #tip>
                 <div class="el-upload__tip">支持直接导入课程图谱、题库、PPT、视频、教材与作业库压缩包</div>
               </template>
-            </el-upload>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" :loading="saving" @click="saveCourse">{{ isEdit ? '保存修改' : '创建课程' }}</el-button>
-            <el-button v-if="isEdit" type="success" plain @click="goToResourceImport">前往资源导入</el-button>
-            <el-button @click="goBack">取消</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+            </n-upload>
+          </n-form-item>
+          <n-form-item>
+            <n-button type="primary" :loading="saving" @click="saveCourse">{{ isEdit ? '保存修改' : '创建课程' }}</n-button>
+            <n-button v-if="isEdit" type="success" plain @click="goToResourceImport">前往资源导入</n-button>
+            <n-button @click="goBack">取消</n-button>
+          </n-form-item>
+        </n-form>
+      </n-card>
 
-      <el-card class="guide-card" shadow="hover">
+      <n-card class="guide-card" shadow="hover">
         <template #header>
           <div class="card-title">导入说明</div>
         </template>
@@ -58,7 +58,7 @@
           </ul>
           <p>如果暂时没有压缩包，也可以先创建课程，随后进入课程工作台继续维护题库、资源和知识图谱。</p>
         </div>
-      </el-card>
+      </n-card>
     </div>
   </div>
 </template>
@@ -69,8 +69,8 @@
  */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Upload } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { Upload } from '@/theme/element-icons'
 import { getCourseDetail, createCourse, updateCourse } from '@/api/teacher/course'
 import { getMyClasses } from '@/api/teacher/class'
 import { useCourseStore } from '@/stores/course'
@@ -139,7 +139,7 @@ const loadCourseDetail = async () => {
     form.description = detail.description
   } catch (error) {
     console.error('加载课程详情失败:', error)
-    ElMessage.error('加载课程详情失败')
+    appMessage.error('加载课程详情失败')
   } finally {
     loading.value = false
   }
@@ -178,12 +178,12 @@ const loadClassOptions = async () => {
 const saveCourse = async () => {
   const courseName = normalizeText(form.name)
   if (!courseName) {
-    ElMessage.warning('请输入课程名称')
+    appMessage.warning('请输入课程名称')
     return
   }
 
   if (!isEdit.value && form.publishToClass && !form.publishClassId) {
-    ElMessage.warning('请选择要发布到的班级')
+    appMessage.warning('请选择要发布到的班级')
     return
   }
 
@@ -198,7 +198,7 @@ const saveCourse = async () => {
 
     if (isEdit.value) {
       await updateCourse(currentCourseId.value, data)
-      ElMessage.success('课程更新成功')
+      appMessage.success('课程更新成功')
       await router.push(`/teacher/courses/${currentCourseId.value}`)
     } else {
       const createdCourse = normalizeCreatedCourse(await createCourse(data))
@@ -214,7 +214,7 @@ const saveCourse = async () => {
           name: createdCourse.courseName || courseName
         })
       }
-      ElMessage.success('课程创建成功')
+      appMessage.success('课程创建成功')
       if (createdCourse.courseId) {
         await router.push(`/teacher/courses/${createdCourse.courseId}`)
         return
@@ -223,7 +223,7 @@ const saveCourse = async () => {
     await router.push('/teacher/courses')
   } catch (error) {
     console.error('保存课程失败:', error)
-    ElMessage.error('保存失败，请重试')
+    appMessage.error('保存失败，请重试')
   } finally {
     saving.value = false
   }

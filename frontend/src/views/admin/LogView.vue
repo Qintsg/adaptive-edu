@@ -1,71 +1,71 @@
 <template>
   <div class="log-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <h2>系统日志</h2>
-    </el-card>
+    </n-card>
 
-    <el-card v-loading="loading" shadow="hover">
+    <n-card v-loading="loading" shadow="hover">
       <div class="filter-bar">
-        <el-select v-model="filter.level" placeholder="日志状态" clearable style="width: 120px;" @change="search">
-          <el-option label="成功 (INFO)" value="info" />
-          <el-option label="失败 (ERROR)" value="error" />
-        </el-select>
-        <el-date-picker v-model="filter.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
+        <n-select v-model="filter.level" placeholder="日志状态" clearable style="width: 120px;" @change="search">
+          <n-option label="成功 (INFO)" value="info" />
+          <n-option label="失败 (ERROR)" value="error" />
+        </n-select>
+        <n-date-picker v-model="filter.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
           end-placeholder="结束日期" value-format="YYYY-MM-DD" @change="search" />
-        <el-input v-model="filter.keyword" placeholder="搜索描述/用户/路径" clearable style="width: 250px;"
+        <n-input v-model="filter.keyword" placeholder="搜索描述/用户/路径" clearable style="width: 250px;"
           @keyup.enter="search" />
-        <el-button type="primary" @click="search">搜索</el-button>
-        <el-button @click="resetFilter">重置</el-button>
+        <n-button type="primary" @click="search">搜索</n-button>
+        <n-button @click="resetFilter">重置</n-button>
       </div>
 
-      <el-table :data="operationLogs" style="width: 100%;" border stripe>
-        <el-table-column prop="createdAt" label="时间" width="180">
+      <n-table :data="operationLogs" style="width: 100%;" border stripe>
+        <n-table-column prop="createdAt" label="时间" width="180">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="100" align="center">
+        </n-table-column>
+        <n-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.isSuccess ? 'success' : 'danger'">
+            <n-tag :type="row.isSuccess ? 'success' : 'danger'">
               {{ row.isSuccess ? '成功' : '失败' }}
-            </el-tag>
+            </n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="usernameText" label="操作用户" width="120">
+        </n-table-column>
+        <n-table-column prop="usernameText" label="操作用户" width="120">
           <template #default="{ row }">{{ row.usernameText || '匿名' }}</template>
-        </el-table-column>
-        <el-table-column prop="moduleDisplayText" label="模块" width="120">
+        </n-table-column>
+        <n-table-column prop="moduleDisplayText" label="模块" width="120">
           <template #default="{ row }">{{ row.moduleDisplayText }}</template>
-        </el-table-column>
-        <el-table-column prop="actionTypeDisplayText" label="操作" width="120">
+        </n-table-column>
+        <n-table-column prop="actionTypeDisplayText" label="操作" width="120">
           <template #default="{ row }">{{ row.actionTypeDisplayText }}</template>
-        </el-table-column>
-        <el-table-column prop="descriptionText" label="描述" show-overflow-tooltip min-width="200">
+        </n-table-column>
+        <n-table-column prop="descriptionText" label="描述" show-overflow-tooltip min-width="200">
           <template #default="{ row }">
             <span>{{ row.descriptionText || '-' }}</span>
             <span v-if="!row.isSuccess && row.errorMessageText" class="error-inline-text">
               (错误: {{ row.errorMessageText }})
             </span>
           </template>
-        </el-table-column>
-        <el-table-column prop="ipAddressText" label="IP地址" width="140">
+        </n-table-column>
+        <n-table-column prop="ipAddressText" label="IP地址" width="140">
           <template #default="{ row }">{{ row.ipAddressText || '-' }}</template>
-        </el-table-column>
+        </n-table-column>
         <template #empty>
-          <el-empty description="暂无日志数据" />
+          <n-empty description="暂无日志数据" />
         </template>
-      </el-table>
+      </n-table>
 
       <div class="pagination-container">
-        <el-pagination layout="total, sizes, prev, pager, next, jumper" :total="totalLogCount"
+        <n-pagination layout="total, sizes, prev, pager, next, jumper" :total="totalLogCount"
           v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :page-sizes="[10, 20, 50, 100]"
           @size-change="handleSizeChange" @current-change="handlePageChange" />
       </div>
-    </el-card>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { getLogs } from '@/api/admin/log'
 
 /**
@@ -231,7 +231,7 @@ const loadLogs = async () => {
 
   } catch (error) {
     console.error('获取日志失败:', error)
-    ElMessage.error('获取日志列表失败')
+    appMessage.error('获取日志列表失败')
   } finally {
     loading.value = false
   }

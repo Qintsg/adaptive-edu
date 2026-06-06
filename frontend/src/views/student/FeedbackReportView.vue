@@ -1,29 +1,29 @@
 <template>
   <div class="feedback-report-view">
     <!-- Page-level navigation keeps the report in the homework flow. -->
-    <el-page-header @back="goBack" class="page-header">
+    <n-page-header @back="goBack" class="page-header">
       <template #content>
         <span>作业反馈报告</span>
       </template>
-    </el-page-header>
+    </n-page-header>
 
     <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="15" animated />
+      <n-skeleton :rows="15" animated />
     </div>
 
     <template v-else>
       <!-- Score overview stays visible even while the AI report is still polling. -->
-      <el-card class="score-card" shadow="hover">
+      <n-card class="score-card" shadow="hover">
         <div class="score-content">
           <div class="score-circle">
-            <el-progress type="circle" :percentage="scorePercent" :width="152" :stroke-width="12" :color="scoreColor">
+            <n-progress type="circle" :percentage="scorePercent" :width="152" :stroke-width="12" :color="scoreColor">
               <template #default>
                 <div class="score-text">
                   <span class="score-value">{{ examResult.score }}</span>
                   <span class="score-unit">/ {{ examResult.totalScore }}</span>
                 </div>
               </template>
-            </el-progress>
+            </n-progress>
           </div>
           <div class="score-info">
             <h2>{{ examResult.titleText }}</h2>
@@ -49,37 +49,37 @@
             </div>
           </div>
         </div>
-      </el-card>
+      </n-card>
 
-      <el-card class="analysis-card" shadow="hover">
+      <n-card class="analysis-card" shadow="hover">
         <template #header>
           <div class="card-header">
-            <span><el-icon>
+            <span><n-icon>
                 <MagicStick />
-              </el-icon> AI 智能分析</span>
-            <el-tag :type="statusTagType" effect="plain">{{ statusLabel }}</el-tag>
+              </n-icon> AI 智能分析</span>
+            <n-tag :type="statusTagType" effect="plain">{{ statusLabel }}</n-tag>
           </div>
         </template>
 
         <div class="analysis-content">
           <!-- Status alert changes first so the student immediately knows whether to wait or retry. -->
-          <el-alert v-if="feedbackStatus === 'pending'" :title="aiAnalysis.summary || '成绩已生成，AI 报告正在生成中...'" type="info"
+          <n-alert v-if="feedbackStatus === 'pending'" :title="aiAnalysis.summary || '成绩已生成，AI 报告正在生成中...'" type="info"
             :closable="false" show-icon />
-          <el-alert v-else-if="feedbackStatus === 'failed'" title="AI 报告生成失败，可以重新获取" type="warning" :closable="false"
+          <n-alert v-else-if="feedbackStatus === 'failed'" title="AI 报告生成失败，可以重新获取" type="warning" :closable="false"
             show-icon />
-          <el-alert v-else :title="aiAnalysis.summary || '暂无分析摘要'" type="info" :closable="false" show-icon />
+          <n-alert v-else :title="aiAnalysis.summary || '暂无分析摘要'" type="info" :closable="false" show-icon />
 
           <!-- Pending state keeps the page useful while background generation finishes. -->
           <div v-if="feedbackStatus === 'pending'" class="ai-pending">
-            <el-progress :percentage="aiProgressPercent" :stroke-width="10" :show-text="true" status="" />
+            <n-progress :percentage="aiProgressPercent" :stroke-width="10" :show-text="true" status="" />
             <p class="ai-progress-stage">{{ aiProgressStageText }}</p>
           </div>
 
           <!-- Failed state exposes a single retry action instead of stale partial content. -->
           <div v-else-if="feedbackStatus === 'failed'" class="ai-retry">
-            <el-button type="primary" size="small" :loading="aiRetrying" @click="retryAIFeedback">
+            <n-button type="primary" size="small" :loading="aiRetrying" @click="retryAIFeedback">
               重新获取 AI 分析
-            </el-button>
+            </n-button>
           </div>
 
           <template v-else>
@@ -92,10 +92,10 @@
             <div v-if="aiAnalysis.knowledgeGaps.length" class="feedback-section">
               <h4>薄弱知识点</h4>
               <div class="tag-group">
-                <el-tag v-for="(gap, index) in aiAnalysis.knowledgeGaps" :key="`gap-${index}`" type="warning"
+                <n-tag v-for="(gap, index) in aiAnalysis.knowledgeGaps" :key="`gap-${index}`" type="warning"
                   effect="plain">
                   {{ gap }}
-                </el-tag>
+                </n-tag>
               </div>
             </div>
 
@@ -136,21 +136,21 @@
             </div>
           </template>
         </div>
-      </el-card>
+      </n-card>
 
-      <el-card class="detail-card" shadow="hover">
+      <n-card class="detail-card" shadow="hover">
         <template #header>
           <span>答题详情</span>
         </template>
 
-        <el-collapse>
+        <n-collapse>
           <!-- Question review stays expanded per item so the student can inspect mistakes selectively. -->
-          <el-collapse-item v-for="(question, index) in questionDetails" :key="question.questionId" :name="index">
+          <n-collapse-item v-for="(question, index) in questionDetails" :key="question.questionId" :name="index">
             <template #title>
               <span>第 {{ index + 1 }} 题</span>
-              <el-tag :type="question.isCorrect ? 'success' : 'danger'" size="small" class="title-tag">
+              <n-tag :type="question.isCorrect ? 'success' : 'danger'" size="small" class="title-tag">
                 {{ question.isCorrect ? '正确' : '错误' }}
-              </el-tag>
+              </n-tag>
             </template>
 
             <p class="question-content">{{ question.contentText }}</p>
@@ -161,11 +161,11 @@
                 class="option-row" :class="{ correct: option.isCorrectOption, selected: option.isStudentSelected }">
                 <span class="option-prefix">{{ option.optionPrefix }}</span>
                 <span class="option-text">{{ option.optionText }}</span>
-                <el-tag v-if="option.isCorrectOption" size="small" type="success" effect="plain">正确选项</el-tag>
-                <el-tag v-if="option.isStudentSelected" size="small" :type="question.isCorrect ? 'success' : 'warning'"
+                <n-tag v-if="option.isCorrectOption" size="small" type="success" effect="plain">正确选项</n-tag>
+                <n-tag v-if="option.isStudentSelected" size="small" :type="question.isCorrect ? 'success' : 'warning'"
                   effect="plain">
                   你的选择
-                </el-tag>
+                </n-tag>
               </div>
             </div>
 
@@ -184,28 +184,28 @@
             <p v-if="question.analysisText" class="analysis-note">
               <span class="label">解析：</span>{{ question.analysisText }}
             </p>
-          </el-collapse-item>
-        </el-collapse>
+          </n-collapse-item>
+        </n-collapse>
 
-        <el-empty v-if="!questionDetails.length" description="暂无答题详情" />
-      </el-card>
+        <n-empty v-if="!questionDetails.length" description="暂无答题详情" />
+      </n-card>
 
       <!-- Action bar keeps the likely next decisions grouped at the bottom of the report. -->
       <div class="action-bar">
-        <el-button @click="goBack" size="large">返回作业列表</el-button>
-        <el-button v-if="!examResult.passed" type="warning" size="large" @click="retryExam">
+        <n-button @click="goBack" size="large">返回作业列表</n-button>
+        <n-button v-if="!examResult.passed" type="warning" size="large" @click="retryExam">
           再做一次
-        </el-button>
-        <el-button type="primary" size="large" @click="goToLearningPath">
+        </n-button>
+        <n-button type="primary" size="large" @click="goToLearningPath">
           继续学习
-        </el-button>
+        </n-button>
       </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { MagicStick } from '@element-plus/icons-vue'
+import { MagicStick } from '@/theme/element-icons'
 import { useFeedbackReport } from './useFeedbackReport'
 
 const {

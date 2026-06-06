@@ -3,85 +3,85 @@
     <div class="assessment-layout">
       <!-- 主题目区域 -->
       <div class="question-area">
-        <el-card v-loading="loading" class="question-card" shadow="hover">
+        <n-card v-loading="loading" class="question-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <div class="card-title">
                 <span>知识测评</span>
-                <el-tag size="small" type="info">{{ questions.length }} 题</el-tag>
-                <el-tag size="small" type="warning" v-if="totalScore > 0">总分 {{ totalScore }}</el-tag>
+                <n-tag size="small" type="info">{{ questions.length }} 题</n-tag>
+                <n-tag size="small" type="warning" v-if="totalScore > 0">总分 {{ totalScore }}</n-tag>
               </div>
-              <el-tag type="primary">{{ currentIndex + 1 }} / {{ questions.length || 1 }}</el-tag>
+              <n-tag type="primary">{{ currentIndex + 1 }} / {{ questions.length || 1 }}</n-tag>
             </div>
           </template>
 
           <div v-if="questions.length > 0" class="question-content">
             <div class="question-meta">
-              <el-tag size="small" type="success">{{ typeLabelMap[currentQuestionType] || '未知题型' }}</el-tag>
-              <el-tag size="small" type="warning" v-if="currentQuestion?.score">{{ currentQuestion.score }} 分</el-tag>
-              <el-tag size="small" v-if="currentQuestion?.difficulty">难度：{{ difficultyLabel(currentQuestion.difficulty)
-              }}</el-tag>
+              <n-tag size="small" type="success">{{ typeLabelMap[currentQuestionType] || '未知题型' }}</n-tag>
+              <n-tag size="small" type="warning" v-if="currentQuestion?.score">{{ currentQuestion.score }} 分</n-tag>
+              <n-tag size="small" v-if="currentQuestion?.difficulty">难度：{{ difficultyLabel(currentQuestion.difficulty)
+              }}</n-tag>
             </div>
             <h3 class="question-title" v-html="displayTitle"></h3>
 
             <template v-if="['single_choice', 'true_false'].includes(currentQuestionType)">
-              <el-radio-group v-model="currentAnswer" class="options-group" :key="currentQuestion?.id">
-                <el-radio v-for="option in currentQuestion?.options" :key="`${currentQuestion?.id}-${option.id}`"
+              <n-radio-group v-model="currentAnswer" class="options-group" :key="currentQuestion?.id">
+                <n-radio v-for="option in currentQuestion?.options" :key="`${currentQuestion?.id}-${option.id}`"
                   :value="option.id" class="option-item">
                   <span class="option-letter" v-if="option.letter">{{ option.letter }}.</span>
                   <span>{{ option.label }}</span>
-                </el-radio>
-              </el-radio-group>
+                </n-radio>
+              </n-radio-group>
             </template>
 
             <template v-else-if="currentQuestionType === 'multiple_choice'">
-              <el-checkbox-group v-model="currentAnswer" class="options-group" :key="currentQuestion?.id">
-                <el-checkbox v-for="option in currentQuestion?.options" :key="`${currentQuestion?.id}-${option.id}`"
+              <n-checkbox-group v-model="currentAnswer" class="options-group" :key="currentQuestion?.id">
+                <n-checkbox v-for="option in currentQuestion?.options" :key="`${currentQuestion?.id}-${option.id}`"
                   :value="option.id" class="option-item">
                   <span class="option-letter" v-if="option.letter">{{ option.letter }}.</span>
                   <span>{{ option.label }}</span>
-                </el-checkbox>
-              </el-checkbox-group>
+                </n-checkbox>
+              </n-checkbox-group>
             </template>
 
             <template v-else-if="currentQuestionType === 'fill_blank'">
-              <el-input v-model="currentAnswer" placeholder="请输入答案" clearable />
+              <n-input v-model="currentAnswer" placeholder="请输入答案" clearable />
             </template>
 
             <template v-else-if="['short_answer', 'code'].includes(currentQuestionType)">
-              <el-input v-model="currentAnswer" type="textarea" :rows="currentQuestionType === 'code' ? 10 : 6"
+              <n-input v-model="currentAnswer" type="textarea" :rows="currentQuestionType === 'code' ? 10 : 6"
                 placeholder="请输入答案" show-word-limit />
             </template>
 
             <template v-else>
-              <el-alert type="info" :closable="false" title="暂不支持的题型，已为您保留题目内容" />
+              <n-alert type="info" :closable="false" title="暂不支持的题型，已为您保留题目内容" />
               <p class="question-title">{{ currentQuestion?.content }}</p>
             </template>
           </div>
 
           <div v-else class="empty-state">
-            <el-empty description="暂无题目" />
+            <n-empty description="暂无题目" />
           </div>
 
           <div class="question-footer">
             <div class="footer-actions">
-              <el-button :disabled="currentIndex === 0" @click="prevQuestion">
+              <n-button :disabled="currentIndex === 0" @click="prevQuestion">
                 上一题
-              </el-button>
+              </n-button>
 
             </div>
-            <el-button type="primary" :disabled="!hasAnswer || submitting" :loading="submitting" @click="nextQuestion">
+            <n-button type="primary" :disabled="!hasAnswer || submitting" :loading="submitting" @click="nextQuestion">
               {{ isLastQuestion ? '提交' : '下一题' }}
-            </el-button>
+            </n-button>
           </div>
 
-          <el-progress :percentage="progressPercent" :stroke-width="8" class="progress-bar" />
-        </el-card>
+          <n-progress :percentage="progressPercent" :stroke-width="8" class="progress-bar" />
+        </n-card>
       </div>
 
       <!-- 答题卡侧栏 -->
       <div class="answer-card-area" v-if="questions.length > 0">
-        <el-card shadow="hover" class="answer-card">
+        <n-card shadow="hover" class="answer-card">
           <template #header>
             <div class="card-header">
               <span>答题卡</span>
@@ -100,7 +100,7 @@
             <div class="legend-item"><span class="legend-dot answered"></span> 已答</div>
             <div class="legend-item"><span class="legend-dot"></span> 未答</div>
           </div>
-        </el-card>
+        </n-card>
       </div>
     </div>
   </div>
@@ -114,7 +114,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
 import { getKnowledgeAssessment, submitKnowledgeAssessment } from '@/api/student/assessment'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 
 const router = useRouter()
 const route = useRoute()
@@ -177,7 +177,7 @@ const totalScore = computed(() => {
 const loadQuestions = async () => {
   const courseId = route.query['course_id'] || courseStore.courseId
   if (!courseId) {
-    ElMessage.warning('请先选择课程')
+    appMessage.warning('请先选择课程')
     await router.push('/student/course-select')
     return
   }
@@ -197,15 +197,15 @@ const loadQuestions = async () => {
     answers.value = []
     setCurrentAnswerFromSaved()
     if (questions.value.length === 0) {
-      ElMessage.info('该课程暂无知识测评题目')
+      appMessage.info('该课程暂无知识测评题目')
     }
   } catch (error) {
     console.error('获取知识测评题目失败:', error)
     // 根据错误状态码显示不同提示
     if (error.response?.status === 404) {
-      ElMessage.info('该课程暂未设置知识测评，请先完成能力评测和习惯问卷')
+      appMessage.info('该课程暂未设置知识测评，请先完成能力评测和习惯问卷')
     } else {
-      ElMessage.error('获取题目失败，请刷新重试')
+      appMessage.error('获取题目失败，请刷新重试')
     }
   } finally {
     loading.value = false
@@ -305,7 +305,7 @@ const submitAnswers = async () => {
       }))
     }
     const result = await submitKnowledgeAssessment(submissionData)
-    ElMessage.success('知识测评完成！正在生成学习报告…')
+    appMessage.success('知识测评完成！正在生成学习报告…')
     // 缓存即时评分结果到sessionStorage（不含 feedback_report，异步生成中）
     if (result) {
       try {
@@ -319,7 +319,7 @@ const submitAnswers = async () => {
     })
   } catch (error) {
     console.error('提交知识测评失败:', error)
-    ElMessage.error('提交失败，请重试')
+    appMessage.error('提交失败，请重试')
   } finally {
     submitting.value = false
   }

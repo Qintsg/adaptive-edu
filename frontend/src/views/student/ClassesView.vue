@@ -1,24 +1,24 @@
 <template>
   <div class="classes-view" v-loading="loading">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <div>
           <h2>我的班级</h2>
           <p>管理您加入的班级，参与班级学习活动</p>
         </div>
-        <el-button type="primary" @click="showJoinDialog = true">
-          <el-icon>
+        <n-button type="primary" @click="showJoinDialog = true">
+          <n-icon>
             <Plus />
-          </el-icon>
+          </n-icon>
           加入班级
-        </el-button>
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
 
     <div class="classes-list">
-      <el-row :gutter="20">
-        <el-col v-for="cls in classes" :key="cls.id" :xs="24" :sm="12" :lg="8">
-          <el-card class="class-card" shadow="hover">
+      <n-row :gutter="20">
+        <n-col v-for="cls in classes" :key="cls.id" :xs="24" :sm="12" :lg="8">
+          <n-card class="class-card" shadow="hover">
             <div class="class-header">
               <div class="class-avatar">
                 {{ cls.name ? cls.name.charAt(0) : '?' }}
@@ -30,45 +30,45 @@
             </div>
             <div class="class-meta"
               style="margin-top: 15px; display: flex; justify-content: space-between; color: #999; font-size: 13px;">
-              <span><el-icon>
+              <span><n-icon>
                   <User />
-                </el-icon> {{ cls.studentCount }} 名学生</span>
-              <span><el-icon>
+                </n-icon> {{ cls.studentCount }} 名学生</span>
+              <span><n-icon>
                   <UserFilled />
-                </el-icon> 教师：{{ cls.teacherName }}</span>
+                </n-icon> 教师：{{ cls.teacherName }}</span>
             </div>
             <div class="class-actions"
               style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: flex-end;">
-              <el-button type="primary" link @click="viewClass(cls)">
+              <n-button type="primary" link @click="viewClass(cls)">
                 进入班级
-              </el-button>
-              <el-button type="danger" link @click="leaveClass(cls)">
+              </n-button>
+              <n-button type="danger" link @click="leaveClass(cls)">
                 退出班级
-              </el-button>
+              </n-button>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </n-card>
+        </n-col>
+      </n-row>
 
-      <el-empty v-if="classes.length === 0" description="您还未加入任何班级">
-        <el-button type="primary" @click="showJoinDialog = true">使用邀请码加入班级</el-button>
-      </el-empty>
+      <n-empty v-if="classes.length === 0" description="您还未加入任何班级">
+        <n-button type="primary" @click="showJoinDialog = true">使用邀请码加入班级</n-button>
+      </n-empty>
     </div>
 
     <!-- 加入班级对话框 -->
-    <el-dialog v-model="showJoinDialog" title="加入班级" width="400px" :close-on-click-modal="!joining">
-      <el-form :model="joinForm" label-width="80px" @submit.prevent="joinClass">
-        <el-form-item label="邀请码">
-          <el-input v-model="joinForm.invitationCode" placeholder="请输入班级邀请码" clearable maxlength="20"
+    <n-dialog v-model="showJoinDialog" title="加入班级" width="400px" :close-on-click-modal="!joining">
+      <n-form :model="joinForm" label-width="80px" @submit.prevent="joinClass">
+        <n-form-item label="邀请码">
+          <n-input v-model="joinForm.invitationCode" placeholder="请输入班级邀请码" clearable maxlength="20"
             @keyup.enter="joinClass" />
-        </el-form-item>
-      </el-form>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button :disabled="joining" @click="showJoinDialog = false">取消</el-button>
-        <el-button type="primary" :loading="joining" :disabled="!normalizeText(joinForm.invitationCode)"
-          @click="joinClass">加入</el-button>
+        <n-button :disabled="joining" @click="showJoinDialog = false">取消</n-button>
+        <n-button type="primary" :loading="joining" :disabled="!normalizeText(joinForm.invitationCode)"
+          @click="joinClass">加入</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
@@ -78,8 +78,8 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, User, UserFilled } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus, User, UserFilled } from '@/theme/element-icons'
 import { getClassList, joinClass as apiJoinClass, leaveClass as apiLeaveClass } from '@/api/student/class'
 import { useCourseStore } from '@/stores/course'
 import { useUserStore } from '@/stores/user'
@@ -139,7 +139,7 @@ const loadClasses = async () => {
     classes.value = normalizeClassList(await getClassList())
   } catch (error) {
     console.error('获取班级列表失败:', error)
-    ElMessage.error('获取班级列表失败')
+    appMessage.error('获取班级列表失败')
   } finally {
     loading.value = false
   }
@@ -166,7 +166,7 @@ const viewClass = (cls) => {
 const joinClass = async () => {
   const invitationCode = normalizeText(joinForm.invitationCode)
   if (!invitationCode) {
-    ElMessage.warning('请输入邀请码')
+    appMessage.warning('请输入邀请码')
     return
   }
 
@@ -174,14 +174,14 @@ const joinClass = async () => {
   try {
     const joinedClass = await apiJoinClass({ code: invitationCode })
     const joinedClassName = normalizeText(joinedClass?.['class_name'] ?? joinedClass?.['name'])
-    ElMessage.success(joinedClassName ? `已加入${joinedClassName}` : '加入班级成功！')
+    appMessage.success(joinedClassName ? `已加入${joinedClassName}` : '加入班级成功！')
     showJoinDialog.value = false
     joinForm.invitationCode = ''
     await Promise.all([loadClasses(), refreshLearningContext()])
   } catch (error) {
     console.error('加入班级失败:', error)
     if (!error?.handledByInterceptor) {
-      ElMessage.error(error?.message || '加入失败，请检查邀请码是否正确')
+      appMessage.error(error?.message || '加入失败，请检查邀请码是否正确')
     }
   } finally {
     joining.value = false
@@ -193,7 +193,7 @@ const joinClass = async () => {
  */
 const leaveClass = async (cls) => {
   try {
-    await ElMessageBox.confirm(
+    await appDialog.confirm(
       `确定要退出班级"${cls.name}"吗？`,
       '退出确认',
       { type: 'warning' }
@@ -205,11 +205,11 @@ const leaveClass = async (cls) => {
       courseStore.clearSelection()
     }
     await refreshLearningContext()
-    ElMessage.success('已退出班级')
+    appMessage.success('已退出班级')
   } catch (error) {
     if (error !== 'cancel') {
       console.error('退出班级失败:', error)
-      ElMessage.error('退出失败，请稍后重试')
+      appMessage.error('退出失败，请稍后重试')
     }
   }
 }

@@ -3,60 +3,78 @@
     <h2 class="form-title">创建新账号</h2>
     <p class="form-desc">注册账号，加入自适应学习系统</p>
 
-    <el-form ref="formRef" :model="form" :rules="rules" class="register-form" @submit.prevent="handleRegister">
+    <n-form ref="formRef" :model="form" :rules="rules" class="register-form" @submit.prevent="handleRegister">
       <!-- 用户名 -->
-      <el-form-item prop="username">
-        <el-input v-model="form.username" placeholder="请输入用户名" size="large" :prefix-icon="User" clearable />
-      </el-form-item>
+      <n-form-item prop="username">
+        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
+          <template #prefix>
+            <AppIcon name="User" />
+          </template>
+        </n-input>
+      </n-form-item>
 
       <!-- 邮箱 -->
-      <el-form-item prop="email">
-        <el-input v-model="form.email" placeholder="请输入邮箱（选填）" size="large" :prefix-icon="Message" clearable />
-      </el-form-item>
+      <n-form-item prop="email">
+        <n-input v-model:value="form.email" placeholder="请输入邮箱（选填）" size="large" clearable>
+          <template #prefix>
+            <AppIcon name="Mail" />
+          </template>
+        </n-input>
+      </n-form-item>
 
       <!-- 密码 -->
-      <el-form-item prop="password">
-        <el-input v-model="form.password" type="password" placeholder="请输入密码（至少8位，包含大写字母和数字）" size="large"
-          :prefix-icon="Lock" show-password />
-      </el-form-item>
+      <n-form-item prop="password">
+        <n-input v-model:value="form.password" type="password" placeholder="请输入密码（至少8位，包含大写字母和数字）" size="large"
+          show-password-on="click">
+          <template #prefix>
+            <AppIcon name="Lock" />
+          </template>
+        </n-input>
+      </n-form-item>
 
       <!-- 确认密码 -->
-      <el-form-item prop="confirmPassword">
-        <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" size="large" :prefix-icon="Lock"
-          show-password />
-      </el-form-item>
+      <n-form-item prop="confirmPassword">
+        <n-input v-model:value="form.confirmPassword" type="password" placeholder="请再次输入密码" size="large"
+          show-password-on="click">
+          <template #prefix>
+            <AppIcon name="Lock" />
+          </template>
+        </n-input>
+      </n-form-item>
 
       <!-- 角色选择 -->
-      <el-form-item prop="role">
+      <n-form-item prop="role">
         <div class="role-selector">
           <div v-for="role in roles" :key="role.value" :class="['role-card', { active: form.role === role.value }]"
             @click="form.role = role.value">
-            <el-icon class="role-icon">
-              <component :is="role.icon" />
-            </el-icon>
+            <AppIcon class="role-icon" :name="role.icon" :size="28" />
             <span class="role-label">{{ role.label }}</span>
           </div>
         </div>
-      </el-form-item>
+      </n-form-item>
 
       <!-- 激活码（教师/管理员需要） -->
-      <el-form-item v-if="needActivationCode" prop="activation_code">
-        <el-input v-model="form.activation_code" placeholder="请输入激活码" size="large" :prefix-icon="Key" />
-      </el-form-item>
+      <n-form-item v-if="needActivationCode" prop="activation_code">
+        <n-input v-model:value="form.activation_code" placeholder="请输入激活码" size="large">
+          <template #prefix>
+            <AppIcon name="Key" />
+          </template>
+        </n-input>
+      </n-form-item>
 
       <!-- 注册按钮 -->
-      <el-form-item>
-        <el-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleRegister">
+      <n-form-item>
+        <n-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleRegister">
           {{ loading ? '注册中...' : '注 册' }}
-        </el-button>
-      </el-form-item>
+        </n-button>
+      </n-form-item>
 
       <!-- 登录链接 -->
       <div class="form-footer">
         <span>已有账号？</span>
         <router-link to="/login" class="login-link">立即登录</router-link>
       </div>
-    </el-form>
+    </n-form>
   </div>
 </template>
 
@@ -68,8 +86,8 @@
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { User, Lock, Message, Key, Reading, UserFilled } from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { showError, showSuccess } from '@/utils/feedback'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -82,8 +100,8 @@ const loading = ref(false)
 
 // 角色列表
 const roles = [
-  { value: 'student', label: '学生', icon: Reading },
-  { value: 'teacher', label: '教师', icon: UserFilled }
+  { value: 'student', label: '学生', icon: 'Reading' },
+  { value: 'teacher', label: '教师', icon: 'School' }
 ]
 
 // 表单数据
@@ -102,29 +120,23 @@ const needActivationCode = computed(() => {
 })
 
 // 密码验证
-const validatePassword = (rule, value, callback) => {
+const validatePassword = (_rule, value) => {
   if (!value) {
-    callback(new Error('请输入密码'))
-  } else if (value.length < 8) {
-    callback(new Error('密码长度至少8位'))
-  } else if (!/[A-Z]/.test(value)) {
-    callback(new Error('密码必须包含大写字母'))
-  } else if (!/[0-9]/.test(value)) {
-    callback(new Error('密码必须包含数字'))
-  } else {
-    callback()
+    return new Error('请输入密码')
   }
+  if (value.length < 8) return new Error('密码长度至少8位')
+  if (!/[A-Z]/.test(value)) return new Error('密码必须包含大写字母')
+  if (!/[0-9]/.test(value)) return new Error('密码必须包含数字')
+  return true
 }
 
 // 确认密码验证
-const validateConfirmPassword = (rule, value, callback) => {
+const validateConfirmPassword = (_rule, value) => {
   if (!value) {
-    callback(new Error('请确认密码'))
-  } else if (value !== form.password) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
+    return new Error('请确认密码')
   }
+  if (value !== form.password) return new Error('两次输入的密码不一致')
+  return true
 }
 
 // 表单验证规则
@@ -150,12 +162,21 @@ const rules = {
   ]
 }
 
+const validateForm = async () => {
+  try {
+    await formRef.value?.validate()
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * 处理注册
  */
 const handleRegister = async () => {
   // 验证表单
-  const valid = await formRef.value?.validate().catch(() => false)
+  const valid = await validateForm()
   if (!valid) return
 
   loading.value = true
@@ -177,7 +198,7 @@ const handleRegister = async () => {
 
     // 调用注册API
     await userStore.register(registerData)
-    ElMessage.success('注册成功，欢迎加入！')
+    showSuccess('注册成功，欢迎加入！')
 
     // 根据角色跳转到对应页面
     if (userStore.isAdmin) {
@@ -191,7 +212,7 @@ const handleRegister = async () => {
     }
   } catch (error) {
     console.error('注册失败:', error)
-    ElMessage.error(error.message || '注册失败，请稍后重试')
+    showError(error.message || '注册失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -220,17 +241,17 @@ const handleRegister = async () => {
   width: 100%;
 }
 
-.register-form :deep(.el-input__wrapper) {
+.register-form :deep(.n-input) {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.register-form :deep(.el-input__wrapper:hover) {
+.register-form :deep(.n-input:hover) {
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.12);
 }
 
-.register-form :deep(.el-input__wrapper.is-focus) {
+.register-form :deep(.n-input.n-input--focus) {
   box-shadow: 0 4px 16px rgba(20, 184, 166, 0.2);
 }
 

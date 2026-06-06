@@ -201,20 +201,20 @@
   min-height: 260px;
 }
 
-.ability-card :deep(.el-card__body),
-.mastery-card :deep(.el-card__body),
-.summary-card :deep(.el-card__body),
-.ai-card :deep(.el-card__body) {
+.ability-card :deep(.n-card__body),
+.mastery-card :deep(.n-card__body),
+.summary-card :deep(.n-card__body),
+.ai-card :deep(.n-card__body) {
   padding: 18px;
 }
 
-.ability-card :deep(.el-card__header),
-.mastery-card :deep(.el-card__header) {
+.ability-card :deep(.n-card__header),
+.mastery-card :deep(.n-card__header) {
   flex: 0 0 auto;
 }
 
-.ability-card :deep(.el-card__body),
-.mastery-card :deep(.el-card__body) {
+.ability-card :deep(.n-card__body),
+.mastery-card :deep(.n-card__body) {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -298,7 +298,7 @@
   text-align: center;
 }
 
-.chart-placeholder .el-icon {
+.chart-placeholder .n-icon {
   font-size: 48px;
   margin-bottom: 12px;
 }
@@ -328,8 +328,8 @@
     min-height: 0;
   }
 
-  .ability-card :deep(.el-card__body),
-  .mastery-card :deep(.el-card__body) {
+  .ability-card :deep(.n-card__body),
+  .mastery-card :deep(.n-card__body) {
     overflow: visible;
   }
 }

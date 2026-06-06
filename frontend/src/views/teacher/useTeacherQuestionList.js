@@ -1,6 +1,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   createQuestion,
   deleteQuestion as apiDeleteQuestion,
@@ -133,11 +133,11 @@ export function useTeacherQuestionList() {
     const rawFile = uploadFile?.raw
 
     if (!courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       return
     }
     if (!rawFile) {
-      ElMessage.warning('未检测到可导入的题目文件')
+      appMessage.warning('未检测到可导入的题目文件')
       return
     }
 
@@ -149,11 +149,11 @@ export function useTeacherQuestionList() {
       await request.post('/api/teacher/questions/import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      ElMessage.success('导入成功')
+      appMessage.success('导入成功')
       await loadQuestions()
     } catch (error) {
       console.error('导入失败:', error)
-      ElMessage.error(error?.msg || '导入失败，请检查文件格式')
+      appMessage.error(error?.msg || '导入失败，请检查文件格式')
     }
   }
 
@@ -202,7 +202,7 @@ export function useTeacherQuestionList() {
       isQuestionDialogVisible.value = true
     } catch (error) {
       console.error('获取题目详情失败:', error)
-      ElMessage.error('加载题目详情失败，请稍后重试')
+      appMessage.error('加载题目详情失败，请稍后重试')
     }
   }
 
@@ -214,7 +214,7 @@ export function useTeacherQuestionList() {
 
   const saveQuestion = async () => {
     if (!currentCourseId.value) {
-      ElMessage.warning('请先在右上角选择课程')
+      appMessage.warning('请先在右上角选择课程')
       return
     }
 
@@ -254,12 +254,12 @@ export function useTeacherQuestionList() {
         await createQuestion(requestPayload)
       }
 
-      ElMessage.success(editingQuestionRecord.value ? '题目更新成功' : '题目创建成功')
+      appMessage.success(editingQuestionRecord.value ? '题目更新成功' : '题目创建成功')
       closeCreateDialog()
       await loadQuestions()
     } catch (error) {
       console.error('保存题目失败:', error)
-      ElMessage.error('保存题目失败')
+      appMessage.error('保存题目失败')
     } finally {
       saveLoading.value = false
     }
@@ -267,9 +267,9 @@ export function useTeacherQuestionList() {
 
   const deleteQuestion = async (questionRecord) => {
     try {
-      await ElMessageBox.confirm('确定删除该题目吗？', '删除确认', { type: 'warning' })
+      await appDialog.confirm('确定删除该题目吗？', '删除确认', { type: 'warning' })
       await apiDeleteQuestion(questionRecord.questionId)
-      ElMessage.success('删除成功')
+      appMessage.success('删除成功')
       await loadQuestions()
     } catch (error) {
       if (error !== 'cancel') {

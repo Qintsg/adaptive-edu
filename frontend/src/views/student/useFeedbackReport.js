@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { generateFeedback, getExamResult, getFeedback } from '@/api/student/exam'
 import {
   aiProgressStages,
@@ -116,7 +116,7 @@ export function useFeedbackReport() {
       examResult.value = normalizedResult.examResult
     } catch (error) {
       console.error('获取反馈报告失败:', error)
-      ElMessage.error('获取反馈报告失败')
+      appMessage.error('获取反馈报告失败')
     } finally {
       loading.value = false
     }
@@ -166,10 +166,10 @@ export function useFeedbackReport() {
       pollAttempts.value = 0
       startAIProgress()
       await loadAIFeedback(reportId)
-      ElMessage.success('AI 报告已重新排队生成')
+      appMessage.success('AI 报告已重新排队生成')
     } catch (error) {
       console.error('重新获取 AI 分析失败:', error)
-      ElMessage.error('重新获取 AI 分析失败')
+      appMessage.error('重新获取 AI 分析失败')
     } finally {
       aiRetrying.value = false
     }

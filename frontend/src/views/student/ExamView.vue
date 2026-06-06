@@ -1,80 +1,80 @@
 <template>
   <div class="exam-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <h2>在线作业</h2>
       <p>通过作业检验学习成果，获取详细反馈报告</p>
-    </el-card>
+    </n-card>
 
-    <el-tabs v-model="activeTab" class="exam-tabs">
-      <el-tab-pane label="待参加" name="pending">
+    <n-tabs v-model="activeTab" class="exam-tabs">
+      <n-tab-pane label="待参加" name="pending">
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-container">
-          <el-skeleton :rows="5" animated />
+          <n-skeleton :rows="5" animated />
         </div>
 
         <div v-else class="exam-list">
-          <el-card v-for="exam in pendingExams" :key="exam.examId" class="exam-card" shadow="hover">
+          <n-card v-for="exam in pendingExams" :key="exam.examId" class="exam-card" shadow="hover">
             <div class="exam-content">
               <div class="exam-info">
                 <h3>{{ exam.titleText }}</h3>
                 <div class="exam-meta">
-                  <span><el-icon>
+                  <span><n-icon>
                       <Clock />
-                    </el-icon> {{ exam.durationMinutes }} 分钟</span>
-                  <span><el-icon>
+                    </n-icon> {{ exam.durationMinutes }} 分钟</span>
+                  <span><n-icon>
                       <Document />
-                    </el-icon> 总分：{{ exam.totalScore }}</span>
-                  <span><el-icon>
+                    </n-icon> 总分：{{ exam.totalScore }}</span>
+                  <span><n-icon>
                       <Calendar />
-                    </el-icon> 截止：{{ exam.deadlineText }}</span>
+                    </n-icon> 截止：{{ exam.deadlineText }}</span>
                 </div>
               </div>
               <div class="exam-action">
-                <el-button type="primary" @click="startExam(exam)">
+                <n-button type="primary" @click="startExam(exam)">
                   开始作业
-                </el-button>
+                </n-button>
               </div>
             </div>
-          </el-card>
+          </n-card>
 
-          <el-empty v-if="pendingExams.length === 0" description="暂无待参加的作业" />
+          <n-empty v-if="pendingExams.length === 0" description="暂无待参加的作业" />
         </div>
-      </el-tab-pane>
+      </n-tab-pane>
 
-      <el-tab-pane label="已完成" name="completed">
+      <n-tab-pane label="已完成" name="completed">
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-container">
-          <el-skeleton :rows="5" animated />
+          <n-skeleton :rows="5" animated />
         </div>
 
         <div v-else class="exam-list">
-          <el-card v-for="exam in completedExams" :key="exam.examId" class="exam-card" shadow="hover">
+          <n-card v-for="exam in completedExams" :key="exam.examId" class="exam-card" shadow="hover">
             <div class="exam-content">
               <div class="exam-info">
                 <h3>{{ exam.titleText }}</h3>
                 <div class="exam-meta">
-                  <span><el-icon>
+                  <span><n-icon>
                       <Trophy />
-                    </el-icon> 得分：{{ exam.score }} / {{ exam.totalScore }}</span>
+                    </n-icon> 得分：{{ exam.score }} / {{ exam.totalScore }}</span>
                   <span>
-                    <el-tag :type="exam.passed ? 'success' : 'danger'" size="small">
+                    <n-tag :type="exam.passed ? 'success' : 'danger'" size="small">
                       {{ exam.passed ? '通过' : '未通过' }}
-                    </el-tag>
+                    </n-tag>
                   </span>
                 </div>
               </div>
               <div class="exam-action">
-                <el-button @click="viewReport(exam)">
+                <n-button @click="viewReport(exam)">
                   查看报告
-                </el-button>
+                </n-button>
               </div>
             </div>
-          </el-card>
+          </n-card>
 
-          <el-empty v-if="completedExams.length === 0" description="暂无已完成的作业" />
+          <n-empty v-if="completedExams.length === 0" description="暂无已完成的作业" />
         </div>
-      </el-tab-pane>
-    </el-tabs>
+      </n-tab-pane>
+    </n-tabs>
   </div>
 </template>
 
@@ -87,8 +87,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
 import { getExamList } from '@/api/student/exam'
-import { ElMessage } from 'element-plus'
-import { Clock, Document, Calendar, Trophy } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { Clock, Document, Calendar, Trophy } from '@/theme/element-icons'
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -234,7 +234,7 @@ const loadExamList = async () => {
       .filter((exam) => exam.isSubmitted))
   } catch (error) {
     console.error('获取作业列表失败:', error)
-    ElMessage.error('获取作业列表失败')
+    appMessage.error('获取作业列表失败')
   } finally {
     loading.value = false
   }
@@ -359,7 +359,7 @@ onMounted(() => {
     width: 100%;
   }
 
-  .exam-action .el-button {
+  .exam-action .n-button {
     width: 100%;
   }
 }

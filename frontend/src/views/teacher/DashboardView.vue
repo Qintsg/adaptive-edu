@@ -1,136 +1,136 @@
 <template>
   <div class="dashboard-view">
-    <el-row :gutter="20">
+    <n-row :gutter="20">
       <!-- 欢迎卡片 -->
-      <el-col :span="24">
-        <el-card class="welcome-card" shadow="hover">
+      <n-col :span="24">
+        <n-card class="welcome-card" shadow="hover">
           <div class="welcome-content">
             <div class="welcome-text">
               <h2>欢迎回来，{{ username }}老师！</h2>
               <p>今天有 {{ pendingTasks.exams }} 份待开始的作业</p>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
-    <el-row :gutter="20" class="stats-row">
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+    <n-row :gutter="20" class="stats-row">
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <el-icon>
+            <n-icon>
               <User />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.studentCount }}</div>
             <div class="stat-label">学生总数</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-            <el-icon>
+            <n-icon>
               <Reading />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.courseCount }}</div>
             <div class="stat-label">课程数量</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <el-icon>
+            <n-icon>
               <School />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.classCount }}</div>
             <div class="stat-label">班级数量</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <el-icon>
+            <n-icon>
               <Document />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.questionCount }}</div>
             <div class="stat-label">题库题目</div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
-    <el-row :gutter="20" class="content-row">
-      <el-col :xs="24" :lg="14">
-        <el-card shadow="hover">
+    <n-row :gutter="20" class="content-row">
+      <n-col :xs="24" :lg="14">
+        <n-card shadow="hover">
           <template #header>
             <span>近期作业</span>
           </template>
-          <el-table :data="recentExams" style="width: 100%" empty-text="暂无作业数据">
-            <el-table-column prop="name" label="作业名称" min-width="120" />
-            <el-table-column prop="className" label="班级" min-width="80" />
-            <el-table-column prop="date" label="日期" min-width="90" />
-            <el-table-column prop="statusText" label="状态" width="90" align="center">
+          <n-table :data="recentExams" style="width: 100%" empty-text="暂无作业数据">
+            <n-table-column prop="name" label="作业名称" min-width="120" />
+            <n-table-column prop="className" label="班级" min-width="80" />
+            <n-table-column prop="date" label="日期" min-width="90" />
+            <n-table-column prop="statusText" label="状态" width="90" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.statusTagType" size="small">
+                <n-tag :type="row.statusTagType" size="small">
                   {{ row.statusText }}
-                </el-tag>
+                </n-tag>
               </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :lg="10">
-        <el-card shadow="hover">
+            </n-table-column>
+          </n-table>
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :lg="10">
+        <n-card shadow="hover">
           <template #header>
             <span>快捷操作</span>
           </template>
           <div class="quick-actions">
             <div class="action-item" @click="router.push('/teacher/exams')">
               <div class="action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <el-icon>
+                <n-icon>
                   <Document />
-                </el-icon>
+                </n-icon>
               </div>
               <span class="action-label">作业管理</span>
             </div>
             <div class="action-item" @click="router.push('/teacher/classes')">
               <div class="action-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                <el-icon>
+                <n-icon>
                   <School />
-                </el-icon>
+                </n-icon>
               </div>
               <span class="action-label">班级管理</span>
             </div>
             <div class="action-item" @click="router.push('/teacher/resources')">
               <div class="action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <el-icon>
+                <n-icon>
                   <Reading />
-                </el-icon>
+                </n-icon>
               </div>
               <span class="action-label">资源管理</span>
             </div>
             <div class="action-item" @click="router.push('/teacher/knowledge')">
               <div class="action-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <el-icon>
+                <n-icon>
                   <DataAnalysis />
-                </el-icon>
+                </n-icon>
               </div>
               <span class="action-label">知识图谱</span>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
   </div>
 </template>
 <script setup>
@@ -139,10 +139,10 @@
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { useUserStore } from '@/stores/user'
 import { useCourseStore } from '@/stores/course'
-import { User, Reading, School, Document, DataAnalysis } from '@element-plus/icons-vue'
+import { User, Reading, School, Document, DataAnalysis } from '@/theme/element-icons'
 import { getMyClasses } from '@/api/teacher/class'
 import { getMyCourses } from '@/api/teacher/course'
 import { getExams } from '@/api/teacher/exam'
@@ -307,7 +307,7 @@ const loadDashboardData = async () => {
     }
   } catch (error) {
     console.error('加载仪表盘数据失败:', error)
-    ElMessage.error('加载仪表盘数据失败')
+    appMessage.error('加载仪表盘数据失败')
   } finally {
     loading.value = false
   }
@@ -356,7 +356,7 @@ watch(() => courseStore.courseId, (newId, oldId) => {
   opacity: 0.9;
 }
 
-.stat-card :deep(.el-card__body) {
+.stat-card :deep(.n-card__body) {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -439,7 +439,7 @@ watch(() => courseStore.courseId, (newId, oldId) => {
     font-size: 18px;
   }
 
-  .stat-card :deep(.el-card__body) {
+  .stat-card :deep(.n-card__body) {
     flex-direction: column;
     text-align: center;
     padding: 16px;

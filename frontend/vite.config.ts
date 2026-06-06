@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import { copyFileSync, writeFileSync } from 'node:fs'
 
 /**
  * 统一清洗代理目标地址，避免拼接时出现尾部斜杠或空值。
@@ -31,11 +30,14 @@ export default defineConfig(({ mode }) => {
       /* 构建结束后生成 SPA fallback 文件，解决静态部署刷新 404 问题 */
       {
         name: 'spa-fallback',
-        closeBundle() {
-          // GitHub Pages 等服务：把 404 页面指向 SPA 入口
-          copyFileSync('dist/index.html', 'dist/404.html')
-          // Netlify / Cloudflare Pages：重写所有路径到 index.html
-          writeFileSync('dist/_redirects', '/* /index.html 200\n')
+        generateBundle(_options, bundle) {
+          const indexAsset = Object.values(bundle).find(asset => asset.type === 'asset' && asset.fileName === 'index.html')
+          if (indexAsset?.type === 'asset') {
+            // GitHub Pages 等服务：把 404 页面指向 SPA 入口。
+            this.emitFile({ type: 'asset', fileName: '404.html', source: indexAsset.source })
+          }
+          // Netlify / Cloudflare Pages：重写所有路径到 index.html。
+          this.emitFile({ type: 'asset', fileName: '_redirects', source: '/* /index.html 200\n' })
         }
       }
     ],
@@ -94,10 +96,12 @@ export default defineConfig(({ mode }) => {
 
             // UI组件库
             if (
-              moduleId.includes('element-plus')
-              || moduleId.includes('@element-plus/icons-vue')
+              moduleId.includes('naive-ui')
+              || moduleId.includes('@vicons/fluent')
+              || moduleId.includes('@css-render')
+              || moduleId.includes('@juggle/resize-observer')
             ) {
-              return 'element-plus'
+              return 'naive-ui'
             }
 
             // 可视化库

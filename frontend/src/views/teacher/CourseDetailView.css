@@ -9,7 +9,7 @@
     color: #fff !important;
 }
 
-.course-header :deep(.el-card__body) {
+.course-header :deep(.n-card__body) {
     padding: 20px 24px;
     background: transparent !important;
     color: inherit;
@@ -32,15 +32,15 @@
     font-size: 22px;
 }
 
-.header-info .el-button {
+.header-info .n-button {
     color: rgba(255, 255, 255, 0.88) !important;
 }
 
-.header-info .el-button:hover {
+.header-info .n-button:hover {
     color: #fff !important;
 }
 
-.header-actions .el-button {
+.header-actions .n-button {
     background: rgba(255, 255, 255, 0.15) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
     color: #fff !important;

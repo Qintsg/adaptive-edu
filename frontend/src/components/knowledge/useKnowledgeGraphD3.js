@@ -1,6 +1,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import * as d3 from 'd3'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 import { getKnowledgePointDetail } from '@/api/student/knowledge'
 import {
   getLinkCoordinate,
@@ -129,7 +129,7 @@ export function useKnowledgeGraphD3(props, emit) {
       } catch (error) {
         selectedNode.value = { ...node }
         nodeResources.value = []
-        ElMessage.warning('知识点详情加载失败，已展示基础信息')
+        appMessage.warning('知识点详情加载失败，已展示基础信息')
       }
     } else {
       selectedNode.value = { ...node }

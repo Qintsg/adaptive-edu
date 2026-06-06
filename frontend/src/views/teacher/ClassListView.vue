@@ -1,25 +1,25 @@
 <template>
   <div class="class-list-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <h2>班级管理</h2>
-        <el-button type="primary" @click="showCreateDialog = true">
-          <el-icon>
+        <n-button type="primary" @click="showCreateDialog = true">
+          <n-icon>
             <Plus />
-          </el-icon> 创建班级
-        </el-button>
+          </n-icon> 创建班级
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
 
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="6" animated />
+      <n-skeleton :rows="6" animated />
     </div>
 
     <!-- 班级列表 -->
-    <el-row v-else :gutter="20" class="class-grid">
-      <el-col v-for="cls in classes" :key="cls.id" :xs="24" :sm="12" :lg="8">
-        <el-card class="class-card" shadow="hover" @click="viewClass(cls)">
+    <n-row v-else :gutter="20" class="class-grid">
+      <n-col v-for="cls in classes" :key="cls.id" :xs="24" :sm="12" :lg="8">
+        <n-card class="class-card" shadow="hover" @click="viewClass(cls)">
           <div class="class-header">
             <div class="class-avatar">{{ cls.name.charAt(0) }}</div>
             <div class="class-info">
@@ -29,46 +29,46 @@
           </div>
           <div class="class-stats">
             <div class="class-stat">
-              <el-icon>
+              <n-icon>
                 <User />
-              </el-icon>
+              </n-icon>
               <span>{{ cls.studentCount }} 名学生</span>
             </div>
             <div v-if="cls.inviteCode" class="class-stat">
-              <el-icon>
+              <n-icon>
                 <Key />
-              </el-icon>
+              </n-icon>
               <span>邀请码: {{ cls.inviteCode }}</span>
             </div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col v-if="!classes.length" :span="24">
-        <el-card class="empty-card" shadow="never">
-          <el-empty description="暂无班级">
-            <el-button type="primary" @click="showCreateDialog = true">创建第一个班级</el-button>
-          </el-empty>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+      <n-col v-if="!classes.length" :span="24">
+        <n-card class="empty-card" shadow="never">
+          <n-empty description="暂无班级">
+            <n-button type="primary" @click="showCreateDialog = true">创建第一个班级</n-button>
+          </n-empty>
+        </n-card>
+      </n-col>
+    </n-row>
 
     <!-- 创建班级对话框 -->
-    <el-dialog v-model="showCreateDialog" title="创建班级" width="400px">
-      <el-form :model="createForm" label-width="80px">
-        <el-form-item label="班级名称">
-          <el-input v-model="createForm.name" placeholder="请输入班级名称" />
-        </el-form-item>
-        <el-form-item label="关联课程">
-          <el-select v-model="createForm.courseId" placeholder="请选择课程" style="width: 100%;">
-            <el-option v-for="course in courses" :key="course.id" :label="course.name" :value="course.id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
+    <n-dialog v-model="showCreateDialog" title="创建班级" width="400px">
+      <n-form :model="createForm" label-width="80px">
+        <n-form-item label="班级名称">
+          <n-input v-model="createForm.name" placeholder="请输入班级名称" />
+        </n-form-item>
+        <n-form-item label="关联课程">
+          <n-select v-model="createForm.courseId" placeholder="请选择课程" style="width: 100%;">
+            <n-option v-for="course in courses" :key="course.id" :label="course.name" :value="course.id" />
+          </n-select>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="createLoading" @click="createClass">创建</el-button>
+        <n-button @click="showCreateDialog = false">取消</n-button>
+        <n-button type="primary" :loading="createLoading" @click="createClass">创建</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
@@ -79,8 +79,8 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Plus, User, Key } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { Plus, User, Key } from '@/theme/element-icons'
 import { getMyClasses, createClass as apiCreateClass } from '@/api/teacher/class'
 import { getMyCourses } from '@/api/teacher/course'
 
@@ -136,7 +136,7 @@ const loadClasses = async () => {
     classes.value = classList.map((classItem, index) => normalizeClassSummary(classItem, index))
   } catch (error) {
     console.error('获取班级列表失败:', error)
-    ElMessage.error('获取班级列表失败')
+    appMessage.error('获取班级列表失败')
   } finally {
     loading.value = false
   }
@@ -166,11 +166,11 @@ const viewClass = (cls) => router.push(`/teacher/classes/${cls.id}`)
 const createClass = async () => {
   const className = normalizeText(createForm.name)
   if (!className) {
-    ElMessage.warning('请输入班级名称')
+    appMessage.warning('请输入班级名称')
     return
   }
   if (!createForm.courseId) {
-    ElMessage.warning('请选择关联课程')
+    appMessage.warning('请选择关联课程')
     return
   }
 
@@ -181,14 +181,14 @@ const createClass = async () => {
       course_id: createForm.courseId
     })
     // 注意：响应拦截器已自动提取data字段
-    ElMessage.success('班级创建成功')
+    appMessage.success('班级创建成功')
     showCreateDialog.value = false
     createForm.name = ''
     createForm.courseId = null
     await loadClasses()
   } catch (error) {
     console.error('创建班级失败:', error)
-    ElMessage.error('创建班级失败')
+    appMessage.error('创建班级失败')
   } finally {
     createLoading.value = false
   }
@@ -284,7 +284,7 @@ onMounted(() => {
   color: #606266;
 }
 
-.class-stat .el-icon {
+.class-stat .n-icon {
   color: #909399;
 }
 

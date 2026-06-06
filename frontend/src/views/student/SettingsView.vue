@@ -1,160 +1,160 @@
 <template>
   <div class="settings-view" v-loading="loading">
-    <el-card class="settings-card" shadow="hover">
+    <n-card class="settings-card" shadow="hover">
       <template #header>
         <span>个人信息</span>
       </template>
 
-      <el-form :model="accountForm" label-width="100px" class="settings-form">
-        <el-form-item label="头像">
+      <n-form :model="accountForm" label-width="100px" class="settings-form">
+        <n-form-item label="头像">
           <div class="avatar-field">
-            <el-avatar :size="64" :src="avatarUrl" class="user-avatar">
+            <n-avatar :size="64" :src="avatarUrl" class="user-avatar">
               {{ accountForm.username?.charAt(0)?.toUpperCase() }}
-            </el-avatar>
+            </n-avatar>
             <input ref="avatarInput" type="file" accept="image/*" class="avatar-file-input"
               @change="handleAvatarChange" />
-            <el-button size="small" class="avatar-trigger-button" @click="triggerAvatarPicker">更换头像</el-button>
+            <n-button size="small" class="avatar-trigger-button" @click="triggerAvatarPicker">更换头像</n-button>
           </div>
-        </el-form-item>
+        </n-form-item>
 
-        <el-form-item label="用户名">
-          <el-input v-model="accountForm.username" placeholder="支持中文、英文、数字和下划线">
+        <n-form-item label="用户名">
+          <n-input v-model="accountForm.username" placeholder="支持中文、英文、数字和下划线">
             <template #append>
-              <el-tooltip content="用户名仅支持中文、英文、数字和下划线" placement="top">
-                <el-icon>
+              <n-tooltip content="用户名仅支持中文、英文、数字和下划线" placement="top">
+                <n-icon>
                   <InfoFilled />
-                </el-icon>
-              </el-tooltip>
+                </n-icon>
+              </n-tooltip>
             </template>
-          </el-input>
-        </el-form-item>
+          </n-input>
+        </n-form-item>
 
-        <el-form-item label="真实姓名">
-          <el-input v-model="accountForm.realName" placeholder="请输入真实姓名" />
-        </el-form-item>
+        <n-form-item label="真实姓名">
+          <n-input v-model="accountForm.realName" placeholder="请输入真实姓名" />
+        </n-form-item>
 
-        <el-form-item label="学号/工号">
-          <el-input v-model="accountForm.studentId" placeholder="请输入学号或工号" />
-        </el-form-item>
+        <n-form-item label="学号/工号">
+          <n-input v-model="accountForm.studentId" placeholder="请输入学号或工号" />
+        </n-form-item>
 
-        <el-form-item label="邮箱">
-          <el-input v-model="accountForm.email" placeholder="请输入邮箱" />
-        </el-form-item>
+        <n-form-item label="邮箱">
+          <n-input v-model="accountForm.email" placeholder="请输入邮箱" />
+        </n-form-item>
 
-        <el-form-item label="手机号">
-          <el-input v-model="accountForm.phone" placeholder="请输入手机号" />
-        </el-form-item>
+        <n-form-item label="手机号">
+          <n-input v-model="accountForm.phone" placeholder="请输入手机号" />
+        </n-form-item>
 
-        <el-form-item>
-          <el-button type="primary" @click="saveUserInfo" :loading="loading">保存修改</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        <n-form-item>
+          <n-button type="primary" @click="saveUserInfo" :loading="loading">保存修改</n-button>
+        </n-form-item>
+      </n-form>
+    </n-card>
 
     <JoinClassCard />
 
-    <el-card class="settings-card" shadow="hover">
+    <n-card class="settings-card" shadow="hover">
       <template #header>
         <span>学习偏好</span>
       </template>
 
-      <el-form :model="preferenceForm" label-width="120px" class="settings-form">
-        <el-form-item label="偏好资源">
-          <el-select v-model="preferenceForm.preferredResource" style="width: 100%">
-            <el-option label="视频" value="video" />
-            <el-option label="文档" value="document" />
-            <el-option label="练习" value="exercise" />
-          </el-select>
-        </el-form-item>
+      <n-form :model="preferenceForm" label-width="120px" class="settings-form">
+        <n-form-item label="偏好资源">
+          <n-select v-model="preferenceForm.preferredResource" style="width: 100%">
+            <n-option label="视频" value="video" />
+            <n-option label="文档" value="document" />
+            <n-option label="练习" value="exercise" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="学习时段">
-          <el-select v-model="preferenceForm.preferredStudyTime" style="width: 100%">
-            <el-option label="早上" value="morning" />
-            <el-option label="下午" value="afternoon" />
-            <el-option label="晚上" value="evening" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="学习时段">
+          <n-select v-model="preferenceForm.preferredStudyTime" style="width: 100%">
+            <n-option label="早上" value="morning" />
+            <n-option label="下午" value="afternoon" />
+            <n-option label="晚上" value="evening" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="学习节奏">
-          <el-select v-model="preferenceForm.studyPace" style="width: 100%">
-            <el-option label="慢节奏" value="slow" />
-            <el-option label="适中" value="moderate" />
-            <el-option label="快节奏" value="fast" />
-            <el-option label="自适应" value="adaptive" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="学习节奏">
+          <n-select v-model="preferenceForm.studyPace" style="width: 100%">
+            <n-option label="慢节奏" value="slow" />
+            <n-option label="适中" value="moderate" />
+            <n-option label="快节奏" value="fast" />
+            <n-option label="自适应" value="adaptive" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="学习风格">
-          <el-select v-model="preferenceForm.learningStyle" style="width: 100%">
-            <el-option label="视觉型" value="visual" />
-            <el-option label="听觉型" value="auditory" />
-            <el-option label="读写型" value="reading" />
-            <el-option label="动手型" value="kinesthetic" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="学习风格">
+          <n-select v-model="preferenceForm.learningStyle" style="width: 100%">
+            <n-option label="视觉型" value="visual" />
+            <n-option label="听觉型" value="auditory" />
+            <n-option label="读写型" value="reading" />
+            <n-option label="动手型" value="kinesthetic" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="每日学习时长">
-          <el-select v-model="preferenceForm.studyDuration" style="width: 100%">
-            <el-option label="30分钟以内" value="short" />
-            <el-option label="30-60分钟" value="medium" />
-            <el-option label="60分钟以上" value="long" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="每日学习时长">
+          <n-select v-model="preferenceForm.studyDuration" style="width: 100%">
+            <n-option label="30分钟以内" value="short" />
+            <n-option label="30-60分钟" value="medium" />
+            <n-option label="60分钟以上" value="long" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="复习频率">
-          <el-select v-model="preferenceForm.reviewFrequency" style="width: 100%">
-            <el-option label="每天复习" value="daily" />
-            <el-option label="每周复习" value="weekly" />
-            <el-option label="按需复习" value="as_needed" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="复习频率">
+          <n-select v-model="preferenceForm.reviewFrequency" style="width: 100%">
+            <n-option label="每天复习" value="daily" />
+            <n-option label="每周复习" value="weekly" />
+            <n-option label="按需复习" value="as_needed" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="接受挑战">
-          <el-select v-model="preferenceForm.acceptChallenge" style="width: 100%">
-            <el-option label="喜欢挑战" value="yes" />
-            <el-option label="适度挑战" value="moderate" />
-            <el-option label="偏好简单" value="no" />
-          </el-select>
-        </el-form-item>
+        <n-form-item label="接受挑战">
+          <n-select v-model="preferenceForm.acceptChallenge" style="width: 100%">
+            <n-option label="喜欢挑战" value="yes" />
+            <n-option label="适度挑战" value="moderate" />
+            <n-option label="偏好简单" value="no" />
+          </n-select>
+        </n-form-item>
 
-        <el-form-item label="每日目标(分钟)">
-          <el-input-number v-model="preferenceForm.dailyGoalMinutes" :min="10" :max="480" :step="10"
+        <n-form-item label="每日目标(分钟)">
+          <n-input-number v-model="preferenceForm.dailyGoalMinutes" :min="10" :max="480" :step="10"
             style="width: 100%" />
-        </el-form-item>
+        </n-form-item>
 
-        <el-form-item label="每周学习天数">
-          <el-input-number v-model="preferenceForm.weeklyGoalDays" :min="1" :max="7" :step="1" style="width: 100%" />
-        </el-form-item>
+        <n-form-item label="每周学习天数">
+          <n-input-number v-model="preferenceForm.weeklyGoalDays" :min="1" :max="7" :step="1" style="width: 100%" />
+        </n-form-item>
 
-        <el-form-item>
-          <el-button type="primary" @click="savePreferences">保存偏好</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        <n-form-item>
+          <n-button type="primary" @click="savePreferences">保存偏好</n-button>
+        </n-form-item>
+      </n-form>
+    </n-card>
 
-    <el-card class="settings-card" shadow="hover">
+    <n-card class="settings-card" shadow="hover">
       <template #header>
         <span>修改密码</span>
       </template>
 
-      <el-form :model="passwordForm" label-width="100px" class="settings-form">
-        <el-form-item label="当前密码">
-          <el-input v-model="passwordForm.oldPassword" type="password" show-password />
-        </el-form-item>
+      <n-form :model="passwordForm" label-width="100px" class="settings-form">
+        <n-form-item label="当前密码">
+          <n-input v-model="passwordForm.oldPassword" type="password" show-password />
+        </n-form-item>
 
-        <el-form-item label="新密码">
-          <el-input v-model="passwordForm.newPassword" type="password" show-password />
-        </el-form-item>
+        <n-form-item label="新密码">
+          <n-input v-model="passwordForm.newPassword" type="password" show-password />
+        </n-form-item>
 
-        <el-form-item label="确认密码">
-          <el-input v-model="passwordForm.confirmPassword" type="password" show-password />
-        </el-form-item>
+        <n-form-item label="确认密码">
+          <n-input v-model="passwordForm.confirmPassword" type="password" show-password />
+        </n-form-item>
 
-        <el-form-item>
-          <el-button type="primary" @click="changePassword" :loading="savingPassword">修改密码</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        <n-form-item>
+          <n-button type="primary" @click="changePassword" :loading="savingPassword">修改密码</n-button>
+        </n-form-item>
+      </n-form>
+    </n-card>
   </div>
 </template>
 
@@ -168,8 +168,8 @@ import { getUserInfo, updateUserInfo, changePassword as changePasswordApi } from
 import { getProfile, updateHabitPreference } from '@/api/student/profile'
 import { useCourseStore } from '@/stores/course'
 import { toBackendAbsoluteUrl } from '@/api/backend'
-import { ElMessage } from 'element-plus'
-import { InfoFilled } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { InfoFilled } from '@/theme/element-icons'
 import JoinClassCard from './settings/JoinClassCard.vue'
 
 // 常量定义
@@ -334,7 +334,7 @@ const loadUserInfo = async () => {
 const saveUserInfo = async () => {
   // 用户名格式校验：仅支持中英文、数字和下划线
   if (accountForm.username && !/^[\w\u4e00-\u9fff]+$/.test(accountForm.username)) {
-    ElMessage.warning('用户名仅支持中文、英文、数字和下划线')
+    appMessage.warning('用户名仅支持中文、英文、数字和下划线')
     return
   }
   try {
@@ -347,10 +347,10 @@ const saveUserInfo = async () => {
     })
     // 同步更新Store中的用户名
     userStore.setUserInfo({ ...userStore.user, username: accountForm.username, real_name: accountForm.realName })
-    ElMessage.success('个人信息保存成功')
+    appMessage.success('个人信息保存成功')
   } catch (error) {
     console.error('保存用户信息失败:', error)
-    ElMessage.error(error?.detail || error?.message || '保存失败，请重试')
+    appMessage.error(error?.detail || error?.message || '保存失败，请重试')
   }
 }
 
@@ -363,13 +363,13 @@ const handleAvatarChange = async (event) => {
 
   // 检查文件类型
   if (!selectedFile.type.startsWith('image/')) {
-    ElMessage.warning('请选择图片文件')
+    appMessage.warning('请选择图片文件')
     return
   }
 
   // 检查文件大小（最大2MB）
   if (selectedFile.size > 2 * 1024 * 1024) {
-    ElMessage.warning('图片大小不能超过2MB')
+    appMessage.warning('图片大小不能超过2MB')
     return
   }
 
@@ -385,10 +385,10 @@ const handleAvatarChange = async (event) => {
     }
     reader.readAsDataURL(selectedFile)
 
-    ElMessage.success('头像更新成功')
+    appMessage.success('头像更新成功')
   } catch (error) {
     console.error('头像上传失败:', error)
-    ElMessage.error('头像上传失败，请重试')
+    appMessage.error('头像上传失败，请重试')
   }
 }
 
@@ -405,10 +405,10 @@ const savePreferences = async () => {
       daily_goal_minutes: preferenceForm.dailyGoalMinutes,
       weekly_goal_days: preferenceForm.weeklyGoalDays
     })
-    ElMessage.success('学习偏好已更新')
+    appMessage.success('学习偏好已更新')
   } catch (error) {
     console.error('更新学习偏好失败:', error)
-    ElMessage.error('学习偏好更新失败，请重试')
+    appMessage.error('学习偏好更新失败，请重试')
   }
 }
 
@@ -417,15 +417,15 @@ const savePreferences = async () => {
  */
 const changePassword = async () => {
   if (!passwordForm.oldPassword || !passwordForm.newPassword) {
-    ElMessage.warning('请填写完整的密码信息')
+    appMessage.warning('请填写完整的密码信息')
     return
   }
   if (passwordForm.newPassword.length < MIN_PASSWORD_LENGTH) {
-    ElMessage.warning(`新密码长度不能少于${MIN_PASSWORD_LENGTH}个字符`)
+    appMessage.warning(`新密码长度不能少于${MIN_PASSWORD_LENGTH}个字符`)
     return
   }
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    ElMessage.warning('两次输入的密码不一致')
+    appMessage.warning('两次输入的密码不一致')
     return
   }
 
@@ -435,13 +435,13 @@ const changePassword = async () => {
       old_password: passwordForm.oldPassword,
       new_password: passwordForm.newPassword
     })
-    ElMessage.success('密码修改成功')
+    appMessage.success('密码修改成功')
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
   } catch (error) {
     console.error('修改密码失败:', error)
-    ElMessage.error(error.message || '修改密码失败，请检查原密码是否正确')
+    appMessage.error(error.message || '修改密码失败，请检查原密码是否正确')
   } finally {
     savingPassword.value = false
   }

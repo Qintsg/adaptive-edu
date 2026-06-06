@@ -2,41 +2,41 @@
   <div class="course-list-view">
     <PageHero eyebrow="Teacher Workspace" title="课程管理" description="统一管理课程基本信息，并从课程详情进入题库、资源、图谱与作业工作台。">
       <template #actions>
-        <el-button type="primary" @click="createCourse">
-          <el-icon>
+        <n-button type="primary" @click="createCourse">
+          <n-icon>
             <Plus />
-          </el-icon> 创建课程
-        </el-button>
-        <el-button plain @click="openImportCoursePage">
-          <el-icon>
+          </n-icon> 创建课程
+        </n-button>
+        <n-button plain @click="openImportCoursePage">
+          <n-icon>
             <Plus />
-          </el-icon> 导入建课
-        </el-button>
+          </n-icon> 导入建课
+        </n-button>
       </template>
     </PageHero>
 
-    <el-card shadow="hover">
-      <el-table :data="courses" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="课程名称" />
-        <el-table-column prop="description" label="课程描述" show-overflow-tooltip />
-        <el-table-column prop="isPublic" label="状态" width="100">
+    <n-card shadow="hover">
+      <n-table :data="courses" v-loading="loading" style="width: 100%">
+        <n-table-column prop="name" label="课程名称" />
+        <n-table-column prop="description" label="课程描述" show-overflow-tooltip />
+        <n-table-column prop="isPublic" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.isPublic ? 'success' : 'info'">{{ row.isPublic ? '公开' : '未公开' }}</el-tag>
+            <n-tag :type="row.isPublic ? 'success' : 'info'">{{ row.isPublic ? '公开' : '未公开' }}</n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180" />
-        <el-table-column label="操作" width="250">
+        </n-table-column>
+        <n-table-column prop="createdAt" label="创建时间" width="180" />
+        <n-table-column label="操作" width="250">
           <template #default="{ row }">
-            <el-button type="primary" link @click="viewCourse(row)">查看详情</el-button>
-            <el-button type="warning" link @click="editCourse(row)">编辑</el-button>
-            <el-button type="danger" link @click="deleteCourse(row)">删除</el-button>
+            <n-button type="primary" link @click="viewCourse(row)">查看详情</n-button>
+            <n-button type="warning" link @click="editCourse(row)">编辑</n-button>
+            <n-button type="danger" link @click="deleteCourse(row)">删除</n-button>
           </template>
-        </el-table-column>
+        </n-table-column>
         <template #empty>
-          <el-empty description="暂无课程，点击右上角创建" />
+          <n-empty description="暂无课程，点击右上角创建" />
         </template>
-      </el-table>
-    </el-card>
+      </n-table>
+    </n-card>
   </div>
 </template>
 
@@ -47,8 +47,8 @@
  */
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus } from '@/theme/element-icons'
 import { getMyCourses, deleteCourse as apiDeleteCourse } from '@/api/teacher/course'
 import PageHero from '@/components/common/PageHero.vue'
 
@@ -97,7 +97,7 @@ const loadCourses = async () => {
     courses.value = courseList.map((course, index) => normalizeCourseSummary(course, index))
   } catch (error) {
     console.error('获取课程列表失败:', error)
-    ElMessage.error('获取课程列表失败')
+    appMessage.error('获取课程列表失败')
   } finally {
     loading.value = false
   }
@@ -119,15 +119,15 @@ const editCourse = (course) => router.push(`/teacher/courses/${course.id}/edit`)
  */
 const deleteCourse = async (course) => {
   try {
-    await ElMessageBox.confirm('确定删除该课程吗？此操作不可恢复。', '删除确认', { type: 'warning' })
+    await appDialog.confirm('确定删除该课程吗？此操作不可恢复。', '删除确认', { type: 'warning' })
 
     await apiDeleteCourse(course.id)
     courses.value = courses.value.filter(c => c.id !== course.id)
-    ElMessage.success('删除成功')
+    appMessage.success('删除成功')
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除课程失败:', error)
-      ElMessage.error('删除课程失败')
+      appMessage.error('删除课程失败')
     }
   }
 }

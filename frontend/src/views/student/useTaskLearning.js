@@ -1,6 +1,6 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import { getAINodeIntro } from '@/api/student/ai'
 import { useStudentAIStream } from '@/composables/useStudentAIStream'
 import {
@@ -122,7 +122,7 @@ export function useTaskLearning() {
 
   const loadNodeData = async () => {
     if (!currentNodeId.value) {
-      ElMessage.warning('缺少任务节点ID')
+      appMessage.warning('缺少任务节点ID')
       return
     }
 
@@ -134,7 +134,7 @@ export function useTaskLearning() {
       masteryAfterRate.value = normalizeNullableNumber(nodePayload.mastery_after)
     } catch (error) {
       console.error('加载节点数据失败:', error)
-      ElMessage.error('加载学习资源失败')
+      appMessage.error('加载学习资源失败')
     } finally {
       loading.value = false
     }
@@ -187,10 +187,10 @@ export function useTaskLearning() {
       try {
         await completeResource(currentNodeId.value, resourceRecord.resourceId, courseStore.courseId)
         resourceRecord.isCompleted = true
-        ElMessage.success('资源学习完成！')
+        appMessage.success('资源学习完成！')
       } catch (error) {
         console.error('标记资源完成失败:', error)
-        ElMessage.error('标记资源完成失败，请稍后重试')
+        appMessage.error('标记资源完成失败，请稍后重试')
       }
     }
   }
@@ -198,11 +198,11 @@ export function useTaskLearning() {
   const completeTask = async () => {
     try {
       await completePathNode(currentNodeId.value, courseStore.courseId)
-      ElMessage.success('恭喜！任务学习完成！')
+      appMessage.success('恭喜！任务学习完成！')
       await router.push('/student/learning-path?refreshing=1')
     } catch (error) {
       console.error('完成任务失败:', error)
-      ElMessage.error('完成任务失败，请稍后重试')
+      appMessage.error('完成任务失败，请稍后重试')
     }
   }
 
@@ -241,7 +241,7 @@ export function useTaskLearning() {
       return isEmptyStageAnswer(stageTestAnswers.value[questionItem.questionId])
     })
     if (unansweredQuestions.length > 0) {
-      ElMessage.warning(`还有 ${unansweredQuestions.length} 题未作答`)
+      appMessage.warning(`还有 ${unansweredQuestions.length} 题未作答`)
       return
     }
 
@@ -255,13 +255,13 @@ export function useTaskLearning() {
       stageTestResult.value = submissionResult
       stageTestPassScore.value = submissionResult.passThresholdValue || stageTestPassScore.value
       if (submissionResult.isPassed) {
-        ElMessage.success(`测试通过！得分：${submissionResult.scoreValue}分`)
+        appMessage.success(`测试通过！得分：${submissionResult.scoreValue}分`)
       } else {
-        ElMessage.warning(`未通过，得分：${submissionResult.scoreValue}分，需要${stageTestPassScore.value}分`)
+        appMessage.warning(`未通过，得分：${submissionResult.scoreValue}分，需要${stageTestPassScore.value}分`)
       }
     } catch (error) {
       console.error('提交阶段测试失败:', error)
-      ElMessage.error('提交失败，请重试')
+      appMessage.error('提交失败，请重试')
     } finally {
       stageTestLoading.value = false
     }
@@ -279,7 +279,7 @@ export function useTaskLearning() {
   const startQuiz = async () => {
     if (!currentNodeExam.value.examId) return
     try {
-      await ElMessageBox.confirm(
+      await appDialog.confirm(
         `即将开始「${currentNodeExam.value.titleText}」作业，准备好了吗？`,
         '节点作业',
         { confirmButtonText: '开始', cancelButtonText: '稍后', type: 'info' }

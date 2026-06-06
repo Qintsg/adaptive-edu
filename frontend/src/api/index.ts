@@ -4,8 +4,8 @@
  */
 import axios from 'axios'
 import type { AxiosError } from 'axios'
-import { ElMessage } from 'element-plus'
 import router from '@/router'
+import { showError } from '@/utils/feedback'
 import { API_BASE_URL } from './backend'
 import {
   clearStoredAuthTokens,
@@ -40,7 +40,7 @@ function delay(ms: number): Promise<void> {
 }
 
 function notifyError(message: string): void {
-  ElMessage.error(message || '请求失败')
+  showError(message || '请求失败')
 }
 
 function isAuthEntryRequest(config?: RetryableRequestConfig): boolean {

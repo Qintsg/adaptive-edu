@@ -1,5 +1,5 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   buildKnowledgeRagIndex,
   createKnowledgePoint,
@@ -87,7 +87,7 @@ export function useTeacherKnowledgeManage() {
     const courseId = currentCourseId.value
 
     if (!courseId) {
-      ElMessage.warning('请先在右上角选择课程')
+      appMessage.warning('请先在右上角选择课程')
       return
     }
 
@@ -105,7 +105,7 @@ export function useTeacherKnowledgeManage() {
       refreshStats()
     } catch (error) {
       console.error('加载知识图谱失败:', error)
-      ElMessage.error('加载知识图谱失败')
+      appMessage.error('加载知识图谱失败')
     } finally {
       loading.value = false
     }
@@ -143,7 +143,7 @@ export function useTeacherKnowledgeManage() {
 
   const addPoint = () => {
     if (!currentCourseId.value) {
-      ElMessage.warning('请先在右上角选择课程')
+      appMessage.warning('请先在右上角选择课程')
       return
     }
 
@@ -180,7 +180,7 @@ export function useTeacherKnowledgeManage() {
           chapter: pointForm.chapterText,
           description: pointForm.descriptionText
         })
-        ElMessage.success('更新成功')
+        appMessage.success('更新成功')
       } else {
         await createKnowledgePoint({
           point_name: pointForm.pointName,
@@ -188,14 +188,14 @@ export function useTeacherKnowledgeManage() {
           description: pointForm.descriptionText,
           course_id: currentCourseId.value
         })
-        ElMessage.success('添加成功')
+        appMessage.success('添加成功')
       }
 
       pointDialogVisible.value = false
       await loadAll()
     } catch (error) {
       console.error('提交失败:', error)
-      ElMessage.error('操作失败')
+      appMessage.error('操作失败')
     } finally {
       submitting.value = false
     }
@@ -203,14 +203,14 @@ export function useTeacherKnowledgeManage() {
 
   const deletePoint = async (selectedTreeNode) => {
     try {
-      await ElMessageBox.confirm(`确定删除知识点“${selectedTreeNode.pointName}”吗？`, '删除确认', { type: 'warning' })
+      await appDialog.confirm(`确定删除知识点“${selectedTreeNode.pointName}”吗？`, '删除确认', { type: 'warning' })
       await deleteKnowledgePoint(selectedTreeNode.pointId)
-      ElMessage.success('删除成功')
+      appMessage.success('删除成功')
       await loadAll()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close') {
         console.error('删除失败:', error)
-        ElMessage.error('删除失败')
+        appMessage.error('删除失败')
       }
     }
   }
@@ -219,17 +219,17 @@ export function useTeacherKnowledgeManage() {
     const courseId = currentCourseId.value
 
     if (!courseId) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       return
     }
 
     try {
       await saveKnowledgeGraph(courseId, graphPayload)
-      ElMessage.success('知识图谱保存成功')
+      appMessage.success('知识图谱保存成功')
       await loadAll()
     } catch (error) {
       console.error('保存失败:', error)
-      ElMessage.error('知识图谱保存失败')
+      appMessage.error('知识图谱保存失败')
     }
   }
 
@@ -239,7 +239,7 @@ export function useTeacherKnowledgeManage() {
 
   const buildRagIndex = async () => {
     if (!currentCourseId.value) {
-      ElMessage.warning('请先选择课程')
+      appMessage.warning('请先选择课程')
       return
     }
 
@@ -250,10 +250,10 @@ export function useTeacherKnowledgeManage() {
         await buildKnowledgeRagIndex(currentCourseId.value)
       )
       const builtFileCount = ragIndexBuildResult.indexPaths.length
-      ElMessage.success(`GraphRAG 索引构建完成${builtFileCount ? `（输出 ${builtFileCount} 个索引文件）` : ''}`)
+      appMessage.success(`GraphRAG 索引构建完成${builtFileCount ? `（输出 ${builtFileCount} 个索引文件）` : ''}`)
     } catch (error) {
       console.error('构建 GraphRAG 索引失败:', error)
-      ElMessage.error('构建 GraphRAG 索引失败，请稍后重试')
+      appMessage.error('构建 GraphRAG 索引失败，请稍后重试')
     } finally {
       indexBuilding.value = false
     }

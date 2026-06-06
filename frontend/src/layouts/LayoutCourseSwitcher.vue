@@ -1,52 +1,69 @@
 <template>
   <!-- Only render the trigger when course context exists, avoiding an empty header affordance. -->
-  <el-dropdown
+  <n-dropdown
     v-if="visible && currentCourse"
     trigger="click"
-    @command="$emit('change', $event)"
+    :options="courseOptions"
+    @select="handleSelect"
   >
     <span class="course-selector">
-      <el-icon>
-        <Reading />
-      </el-icon>
+      <AppIcon name="Reading" />
       <span class="course-name">{{ currentCourse.course_name }}</span>
-      <el-icon class="el-icon--right">
-        <ArrowDown />
-      </el-icon>
+      <AppIcon name="ChevronDown" class="dropdown-arrow" />
     </span>
-    <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item
-          v-for="course in courses"
-          :key="course.course_id"
-          :command="course"
-          :class="{ 'is-active': course.course_id === currentCourse?.course_id }"
-        >
-          {{ course.course_name }}
-        </el-dropdown-item>
-        <el-dropdown-item v-if="userRole === 'student'" divided command="switch">
-          <el-icon>
-            <Switch />
-          </el-icon>
-          切换课程
-        </el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
-  </el-dropdown>
+  </n-dropdown>
 </template>
 
 <script setup>
-import { ArrowDown, Reading, Switch } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { renderIcon } from '@/theme/icons'
 
 // The command payload is either a full course object or the student-only "switch" sentinel action.
-defineProps({
+const props = defineProps({
   visible: { type: Boolean, default: false },
   currentCourse: { type: Object, default: null },
   courses: { type: Array, default: () => [] },
   userRole: { type: String, default: '' }
 })
 
-defineEmits(['change'])
+const emit = defineEmits(['change'])
+
+const courseCommandMap = computed(() => {
+  const commandMap = new Map()
+  props.courses.forEach(course => {
+    commandMap.set(`course:${course.course_id}`, course)
+  })
+  return commandMap
+})
+
+const courseOptions = computed(() => {
+  const options = props.courses.map(course => ({
+    label: course.course_name,
+    key: `course:${course.course_id}`,
+    icon: renderIcon(course.course_id === props.currentCourse?.course_id ? 'CheckCircle' : 'Reading')
+  }))
+
+  if (props.userRole === 'student') {
+    options.push(
+      { type: 'divider', key: 'divider' },
+      { label: '切换课程', key: 'switch', icon: renderIcon('ArrowSync') }
+    )
+  }
+
+  return options
+})
+
+const handleSelect = (key) => {
+  if (key === 'switch') {
+    emit('change', 'switch')
+    return
+  }
+  const course = courseCommandMap.value.get(key)
+  if (course) {
+    emit('change', course)
+  }
+}
 </script>
 
 <style scoped>
@@ -74,5 +91,9 @@ defineEmits(['change'])
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dropdown-arrow {
+  color: var(--text-secondary);
 }
 </style>

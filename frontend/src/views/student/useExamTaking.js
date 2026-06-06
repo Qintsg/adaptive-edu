@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import { getExamDetail, submitExam as apiSubmitExam } from '@/api/student/exam'
 import { submitNodeExam } from '@/api/student/learning'
 import { useCourseStore } from '@/stores/course'
@@ -97,7 +97,7 @@ export function useExamTaking() {
     } catch (error) {
       console.error('加载考试数据失败:', error)
       loadError.value = '加载作业数据失败，请返回重试'
-      ElMessage.error('加载作业数据失败，请刷新重试')
+      appMessage.error('加载作业数据失败，请刷新重试')
     } finally {
       loading.value = false
     }
@@ -112,7 +112,7 @@ export function useExamTaking() {
         if (remainingTime.value % 5 === 0) localStorage.setItem(timeKey, remainingTime.value.toString())
       } else {
         clearInterval(timer)
-        ElMessage.warning('作答时间到，系统正在自动提交...')
+        appMessage.warning('作答时间到，系统正在自动提交...')
         forceSubmitExam()
       }
     }, 1000)
@@ -183,7 +183,7 @@ export function useExamTaking() {
       const message = unanswered > 0
         ? `已答 ${respondedCount.value} 道题，还有 ${unanswered} 道题未作答。确定要提交作业吗？提交后不可修改。`
         : `已答完全部 ${questions.value.length} 道题。确定要提交作业吗？提交后不可修改。`
-      await ElMessageBox.confirm(message, '提交确认', {
+      await appDialog.confirm(message, '提交确认', {
         confirmButtonText: '确定提交',
         cancelButtonText: '检查一下',
         type: unanswered > 0 ? 'warning' : 'info'
@@ -191,12 +191,12 @@ export function useExamTaking() {
 
       submitting.value = true
       const result = await submitCurrentAnswers()
-      ElMessage.success('作业提交成功！')
+      appMessage.success('作业提交成功！')
       await navigateToFeedback(result)
     } catch (error) {
       if (error !== 'cancel') {
         console.error('提交失败:', error)
-        ElMessage.error('提交失败，请重试')
+        appMessage.error('提交失败，请重试')
       }
     } finally {
       submitting.value = false
@@ -207,11 +207,11 @@ export function useExamTaking() {
     submitting.value = true
     try {
       const result = await submitCurrentAnswers()
-      ElMessage.success('作业已自动提交！')
+      appMessage.success('作业已自动提交！')
       await navigateToFeedback(result)
     } catch (error) {
       console.error('自动提交失败:', error)
-      ElMessage.error('自动提交失败，请联系老师')
+      appMessage.error('自动提交失败，请联系老师')
     } finally {
       submitting.value = false
     }

@@ -4,34 +4,42 @@
     <h2 class="form-title">欢迎回来</h2>
     <p class="form-desc">登录您的账号，开启个性化学习之旅</p>
 
-    <el-form ref="formRef" :model="form" :rules="rules" class="login-form" @submit.prevent="handleLogin">
-      <el-form-item prop="username">
-        <el-input v-model="form.username" placeholder="请输入用户名" size="large" :prefix-icon="User" clearable />
-      </el-form-item>
+    <n-form ref="formRef" :model="form" :rules="rules" class="login-form" @submit.prevent="handleLogin">
+      <n-form-item prop="username">
+        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
+          <template #prefix>
+            <AppIcon name="User" />
+          </template>
+        </n-input>
+      </n-form-item>
 
-      <el-form-item prop="password">
-        <el-input v-model="form.password" type="password" placeholder="请输入密码" size="large" :prefix-icon="Lock"
-          show-password @keyup.enter="handleLogin" />
-      </el-form-item>
+      <n-form-item prop="password">
+        <n-input v-model:value="form.password" type="password" placeholder="请输入密码" size="large"
+          show-password-on="click" @keyup.enter="handleLogin">
+          <template #prefix>
+            <AppIcon name="Lock" />
+          </template>
+        </n-input>
+      </n-form-item>
 
-      <el-form-item>
+      <n-form-item>
         <div class="form-options">
-          <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-          <a href="javascript:;" class="forgot-link" @click="ElMessage.info('请联系管理员重置密码')">忘记密码？</a>
+          <n-checkbox v-model:checked="rememberMe">记住我</n-checkbox>
+          <a href="javascript:;" class="forgot-link" @click="showForgotPasswordHint">忘记密码？</a>
         </div>
-      </el-form-item>
+      </n-form-item>
 
-      <el-form-item>
-        <el-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleLogin">
+      <n-form-item>
+        <n-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleLogin">
           {{ loading ? '登录中...' : '登 录' }}
-        </el-button>
-      </el-form-item>
+        </n-button>
+      </n-form-item>
 
       <div class="form-footer">
         <span>还没有账号？</span>
         <router-link to="/register" class="register-link">立即注册</router-link>
       </div>
-    </el-form>
+    </n-form>
   </div>
 </template>
 
@@ -40,8 +48,8 @@ import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { extractApiErrorMessage, isApiErrorHandled } from '@/api'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { showError, showInfo, showSuccess } from '@/utils/feedback'
 
 const router = useRouter()
 const route = useRoute()
@@ -69,15 +77,28 @@ const rules = {
   ]
 }
 
+const validateForm = async () => {
+  try {
+    await formRef.value?.validate()
+    return true
+  } catch {
+    return false
+  }
+}
+
+const showForgotPasswordHint = () => {
+  showInfo('请联系管理员重置密码')
+}
+
 const handleLogin = async () => {
-  // Reuse Element Plus form validation so keyboard submit and button click share one path.
-  const valid = await formRef.value?.validate().catch(() => false)
+  // Reuse form validation so keyboard submit and button click share one path.
+  const valid = await validateForm()
   if (!valid) return
 
   loading.value = true
   try {
     await userStore.login({ ...form, rememberMe: rememberMe.value })
-    ElMessage.success('登录成功，欢迎回来！')
+    showSuccess('登录成功，欢迎回来！')
 
     // Prefer an intercepted redirect, then fall back to the first dashboard that matches the signed-in role.
     const redirect = route.query.redirect
@@ -96,7 +117,7 @@ const handleLogin = async () => {
     // Surface backend auth feedback while still logging the raw error for local diagnosis.
     console.error('登录失败:', error)
     if (!isApiErrorHandled(error)) {
-      ElMessage.error(extractApiErrorMessage(error, '登录失败，请检查用户名和密码'))
+      showError(extractApiErrorMessage(error, '登录失败，请检查用户名和密码'))
     }
   } finally {
     loading.value = false
@@ -122,17 +143,17 @@ const handleLogin = async () => {
   margin: 0 0 32px;
 }
 
-.login-form :deep(.el-input__wrapper) {
+.login-form :deep(.n-input) {
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.login-form :deep(.el-input__wrapper:hover) {
+.login-form :deep(.n-input:hover) {
   box-shadow: 0 2px 8px rgba(20, 184, 166, 0.12);
 }
 
-.login-form :deep(.el-input__wrapper.is-focus) {
+.login-form :deep(.n-input.n-input--focus) {
   box-shadow: 0 2px 12px rgba(20, 184, 166, 0.2);
 }
 

@@ -4,7 +4,7 @@
  */
 import { useUserStore } from '@/stores/user'
 import { useCourseStore } from '@/stores/course'
-import { ElMessage } from 'element-plus'
+import { appMessage } from '@/utils/feedback'
 
 /**
  * 角色与首页路由映射
@@ -86,7 +86,7 @@ export function setupRouterGuards(router) {
 
     // 未登录用户访问需要认证的页面
     if (requiresAuth && !userStore.isLoggedIn) {
-      ElMessage.warning('请先登录')
+      appMessage.warning('请先登录')
       return {
         name: 'Login',
         query: { redirect: to.fullPath }  // 保存原目标路径，登录后跳转
@@ -104,7 +104,7 @@ export function setupRouterGuards(router) {
     // 检查角色权限
     const requiredRole = to.matched.find(record => record.meta.role)?.meta.role
     if (requiredRole && !hasRolePermission(userStore, requiredRole)) {
-      ElMessage.error('没有访问权限')
+      appMessage.error('没有访问权限')
       return { name: 'Forbidden' }
     }
 
@@ -134,7 +134,7 @@ export function setupRouterGuards(router) {
   // 全局错误处理
   router.onError((error) => {
     console.error('路由错误:', error)
-    ElMessage.error('页面加载失败，请刷新重试')
+    appMessage.error('页面加载失败，请刷新重试')
   })
 }
 

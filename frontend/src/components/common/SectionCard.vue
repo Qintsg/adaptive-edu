@@ -1,6 +1,6 @@
 <template>
   <!-- Standard content card with an optional descriptive header to keep admin pages visually aligned. -->
-  <el-card class="section-card" shadow="hover">
+  <n-card class="section-card" hoverable>
     <template v-if="title || $slots.header" #header>
       <div class="section-card__header">
         <div>
@@ -11,7 +11,7 @@
       </div>
     </template>
     <slot />
-  </el-card>
+  </n-card>
 </template>
 
 <script setup>

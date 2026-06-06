@@ -1,6 +1,6 @@
 <template>
-  <el-container class="default-layout">
-    <el-aside :width="isCollapsed ? '72px' : '252px'" class="layout-sidebar glass-sidebar">
+  <div class="default-layout">
+    <aside class="layout-sidebar glass-sidebar" :style="{ width: isCollapsed ? '72px' : '252px' }">
       <div class="sidebar-logo" :class="{ 'is-collapsed': isCollapsed }" @click="goHome">
         <img src="/images/logo.svg" alt="Logo" class="logo-image" />
         <transition name="fade">
@@ -9,27 +9,27 @@
       </div>
 
       <TheSidebar :is-collapse="isCollapsed" />
-    </el-aside>
+    </aside>
 
-    <el-container class="layout-main-container">
+    <section class="layout-main-container">
       <div class="layout-ambient" aria-hidden="true">
         <span class="ambient-orb ambient-orb--primary" />
         <span class="ambient-orb ambient-orb--accent" />
       </div>
 
-      <el-header class="layout-header glass-header">
+      <header class="layout-header glass-header">
         <div class="header-left">
-          <el-icon class="collapse-trigger" @click="toggleCollapse">
-            <Expand v-if="isCollapsed" />
-            <Fold v-else />
-          </el-icon>
+          <button class="collapse-trigger" type="button" aria-label="切换侧边栏" @click="toggleCollapse">
+            <AppIcon :name="isCollapsed ? 'Navigation' : 'List'" :size="22" />
+          </button>
 
-          <el-breadcrumb separator="/" class="breadcrumb">
-            <el-breadcrumb-item :to="homeRoute">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="currentPageTitle">
+          <nav class="breadcrumb" aria-label="当前位置">
+            <button type="button" class="breadcrumb-link" @click="goHome">首页</button>
+            <span v-if="currentPageTitle" class="breadcrumb-separator">/</span>
+            <span v-if="currentPageTitle" class="breadcrumb-current">
               {{ currentPageTitle }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
+            </span>
+          </nav>
         </div>
 
         <div class="header-right">
@@ -39,17 +39,17 @@
           <LayoutUserMenu :avatar-url="avatarUrl" :avatar-text="avatarText" :display-name="displayName"
             :user-role="userRole" @command="handleUserCommand" />
         </div>
-      </el-header>
+      </header>
 
-      <el-main class="layout-main">
+      <main class="layout-main">
         <router-view v-slot="{ Component, route: viewRoute }">
           <transition name="page-fade" mode="out-in">
             <component :is="Component" :key="resolveRouteKey(viewRoute)" />
           </transition>
         </router-view>
-      </el-main>
-    </el-container>
-  </el-container>
+      </main>
+    </section>
+  </div>
 </template>
 
 <script setup>
@@ -66,12 +66,9 @@ import { selectCourse as selectCourseApi } from '@/api/course'
 import TheSidebar from './TheSidebar.vue'
 import LayoutCourseSwitcher from './LayoutCourseSwitcher.vue'
 import LayoutUserMenu from './LayoutUserMenu.vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
 import { toBackendAbsoluteUrl } from '@/api/backend'
-import {
-  Expand,
-  Fold
-} from '@element-plus/icons-vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { confirmAction, showError, showSuccess } from '@/utils/feedback'
 
 const route = useRoute()
 const router = useRouter()
@@ -204,10 +201,10 @@ const handleCourseChange = async (command) => {
         class_id: selectedCourseResponse.classId || selectedCourse.classId,
         class_name: selectedCourseResponse.className || selectedCourse.className
       })
-      ElMessage.success(`已切换到课程：${selectedCourseResponse.courseName || selectedCourse.courseName}`)
+      showSuccess(`已切换到课程：${selectedCourseResponse.courseName || selectedCourse.courseName}`)
     } catch (error) {
       console.error('切换课程失败:', error)
-      ElMessage.error('切换课程失败，请稍后重试')
+      showError('切换课程失败，请稍后重试')
     }
   }
 }
@@ -252,20 +249,17 @@ const handleUserCommand = async (command) => {
  */
 const handleLogout = async () => {
   try {
-    await ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '退出确认',
-      {
-        confirmButtonText: '确定退出',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
+    await confirmAction({
+      title: '退出确认',
+      content: '确定要退出登录吗？',
+      positiveText: '确定退出',
+      negativeText: '取消'
+    })
 
     // 先退出登录并跳转，避免当前页面在卸载前响应课程清空导致额外警告
     userStore.logout()
 
-    ElMessage.success('已退出登录')
+    showSuccess('已退出登录')
     setTimeout(() => {
       courseStore.clearSelection()
     }, 0)

@@ -1,7 +1,7 @@
 <template>
   <div class="profile-view">
     <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="15" animated />
+      <n-skeleton :rows="15" animated />
     </div>
 
     <template v-else>
@@ -12,24 +12,24 @@
           <h3>完成初始测评后，画像会变得可解释</h3>
           <p>系统会结合能力测评、知识测评和学习轨迹生成画像，而不是只展示静态标签。</p>
         </div>
-        <el-button type="primary" @click="$router.push('/student/assessment')">
+        <n-button type="primary" @click="$router.push('/student/assessment')">
           前往测评中心
-        </el-button>
+        </n-button>
       </div>
 
       <!-- Header collects identity, learner tags, and the manual refresh entry point. -->
       <section class="profile-hero">
         <div class="hero-main">
-          <el-avatar :size="64" class="user-avatar">
+          <n-avatar :size="64" class="user-avatar">
             {{ username.charAt(0).toUpperCase() }}
-          </el-avatar>
+          </n-avatar>
           <div class="user-info">
             <p class="hero-eyebrow">Learner Profile</p>
             <h2>{{ username }} 的学习画像</h2>
             <p>基于学习数据、评测结果与知识追踪生成的个性化画像。</p>
             <div class="tags">
-              <el-tag v-for="tag in learnerTags" :key="tag" effect="plain">{{ tag }}</el-tag>
-              <el-tag v-if="!learnerTags.length" type="info" effect="plain">等待更多学习信号</el-tag>
+              <n-tag v-for="tag in learnerTags" :key="tag" effect="plain">{{ tag }}</n-tag>
+              <n-tag v-if="!learnerTags.length" type="info" effect="plain">等待更多学习信号</n-tag>
             </div>
           </div>
         </div>
@@ -37,11 +37,11 @@
           <div class="profile-score-card">
             <span>画像完整度</span>
             <strong>{{ profileCompleteness }}%</strong>
-            <el-progress :percentage="profileCompleteness" :stroke-width="8" :show-text="false" />
+            <n-progress :percentage="profileCompleteness" :stroke-width="8" :show-text="false" />
           </div>
-          <el-button :icon="Refresh" type="primary" class="refresh-btn" :loading="refreshing" @click="refreshProfile">
+          <n-button :icon="Refresh" type="primary" class="refresh-btn" :loading="refreshing" @click="refreshProfile">
             刷新画像
-          </el-button>
+          </n-button>
         </div>
       </section>
 
@@ -75,14 +75,14 @@
 
       <div class="profile-analysis-grid">
         <!-- Ability radar prefers the compact chart because dimensions are fixed and comparable. -->
-        <el-card class="ability-card" shadow="hover">
+        <n-card class="ability-card" shadow="hover">
           <template #header>
             <div class="card-header stacked">
               <div>
                 <span class="card-eyebrow">Ability radar</span>
                 <strong>能力画像</strong>
               </div>
-              <el-tag v-if="abilityData.length" type="success" effect="plain">{{ abilityData.length }} 项能力</el-tag>
+              <n-tag v-if="abilityData.length" type="success" effect="plain">{{ abilityData.length }} 项能力</n-tag>
             </div>
           </template>
           <div v-if="abilityData.length" class="ability-chart-wrapper">
@@ -101,18 +101,18 @@
             </div>
           </div>
           <div v-else class="chart-placeholder">
-            <el-icon>
+            <n-icon>
               <DataAnalysis />
-            </el-icon>
+            </n-icon>
             <p>暂无能力数据，请先完成能力测评。</p>
-            <el-button type="primary" size="small" @click="$router.push('/student/assessment/ability')">
+            <n-button type="primary" size="small" @click="$router.push('/student/assessment/ability')">
               前往能力测评
-            </el-button>
+            </n-button>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- Mastery area uses a scroll container so long knowledge lists keep readable labels. -->
-        <el-card class="mastery-card" shadow="hover">
+        <n-card class="mastery-card" shadow="hover">
           <template #header>
             <div class="card-header stacked">
               <div>
@@ -129,7 +129,7 @@
                 <span>整体掌握均值</span>
                 <strong>{{ masteryAverage }}%</strong>
               </div>
-              <el-progress :percentage="masteryAverage" :stroke-width="12" :show-text="false" />
+              <n-progress :percentage="masteryAverage" :stroke-width="12" :show-text="false" />
             </div>
 
             <div class="mastery-summary">
@@ -149,9 +149,9 @@
 
             <div v-if="topWeakMasteries.length" class="focus-cluster">
               <span>优先突破</span>
-              <el-tag v-for="item in topWeakMasteries" :key="item.pointId || item.name" type="warning" effect="plain">
+              <n-tag v-for="item in topWeakMasteries" :key="item.pointId || item.name" type="warning" effect="plain">
                 {{ item.name }} · {{ item.value }}%
-              </el-tag>
+              </n-tag>
             </div>
 
             <div class="mastery-chart-scroller" :style="{ maxHeight: masteryViewportHeight + 'px' }">
@@ -160,17 +160,17 @@
           </div>
 
           <div v-else class="chart-placeholder">
-            <el-icon>
+            <n-icon>
               <DataAnalysis />
-            </el-icon>
+            </n-icon>
             <p>暂无知识数据，请先完成知识测评。</p>
-            <el-button type="primary" size="small" @click="$router.push('/student/assessment/knowledge')">
+            <n-button type="primary" size="small" @click="$router.push('/student/assessment/knowledge')">
               前往知识测评
-            </el-button>
+            </n-button>
           </div>
-        </el-card>
+        </n-card>
         <!-- Summary text is optional because some courses only return structured chart data. -->
-        <el-card v-if="profileSummary || profileWeakness || profileStrength" class="summary-card" shadow="hover">
+        <n-card v-if="profileSummary || profileWeakness || profileStrength" class="summary-card" shadow="hover">
           <template #header>
             <div class="card-header stacked">
               <div>
@@ -183,49 +183,49 @@
             <p v-if="profileSummary" class="summary-text">{{ profileSummary }}</p>
             <div v-if="profileStrength || profileWeakness" class="summary-lenses">
               <div v-if="profileStrength" class="summary-block strength-block">
-                <el-tag type="success" effect="plain" size="small">学习优势</el-tag>
+                <n-tag type="success" effect="plain" size="small">学习优势</n-tag>
                 <p class="summary-strength">{{ profileStrength }}</p>
               </div>
               <div v-if="profileWeakness" class="summary-block weakness-block">
-                <el-tag type="warning" effect="plain" size="small">薄弱环节</el-tag>
+                <n-tag type="warning" effect="plain" size="small">薄弱环节</n-tag>
                 <p class="summary-weakness">{{ profileWeakness }}</p>
               </div>
             </div>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- AI advice is intentionally isolated from the base profile so stale suggestions can retry safely. -->
-        <el-card class="ai-card" shadow="hover">
+        <n-card class="ai-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span><el-icon>
+              <span><n-icon>
                   <MagicStick />
-                </el-icon> AI 学习建议</span>
-              <el-button v-if="assessmentReady" :icon="Refresh" text :loading="aiLoading" @click="refreshAISuggestions">
+                </n-icon> AI 学习建议</span>
+              <n-button v-if="assessmentReady" :icon="Refresh" text :loading="aiLoading" @click="refreshAISuggestions">
                 刷新 AI 建议
-              </el-button>
+              </n-button>
             </div>
           </template>
           <div v-if="!assessmentReady" class="chart-placeholder ai-placeholder">
-            <el-icon>
+            <n-icon>
               <DataAnalysis />
-            </el-icon>
+            </n-icon>
             <p>请先完成初始测评，系统才会生成 AI 学习建议。</p>
-            <el-button type="primary" size="small" @click="$router.push('/student/assessment')">
+            <n-button type="primary" size="small" @click="$router.push('/student/assessment')">
               前往测评中心
-            </el-button>
+            </n-button>
           </div>
           <div v-else-if="aiLoading" class="ai-loading">
-            <el-progress :percentage="aiProgressPercent" :stroke-width="10" :show-text="true" status="" />
+            <n-progress :percentage="aiProgressPercent" :stroke-width="10" :show-text="true" status="" />
             <p class="ai-progress-stage">{{ aiProgressStageText }}</p>
           </div>
           <div v-else class="ai-content">
             <template v-if="aiLoadFailed">
-              <el-alert type="warning" :closable="false" title="获取 AI 学习建议失败" show-icon />
+              <n-alert type="warning" :closable="false" title="获取 AI 学习建议失败" show-icon />
               <div class="retry-row">
-                <el-button type="primary" size="small" @click="loadAISuggestions">
+                <n-button type="primary" size="small" @click="loadAISuggestions">
                   重新获取
-                </el-button>
+                </n-button>
               </div>
             </template>
             <template v-else>
@@ -237,17 +237,17 @@
                   <p>{{ suggestion }}</p>
                 </article>
               </div>
-              <el-empty v-if="!aiSuggestions.length" description="暂无学习建议" />
+              <n-empty v-if="!aiSuggestions.length" description="暂无学习建议" />
             </template>
           </div>
-        </el-card>
+        </n-card>
       </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { DataAnalysis, MagicStick, Refresh } from '@element-plus/icons-vue'
+import { DataAnalysis, MagicStick, Refresh } from '@/theme/element-icons'
 import RadarChart from '@/components/charts/RadarChart.vue'
 import { useProfileView } from './useProfileView'
 

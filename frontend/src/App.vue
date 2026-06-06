@@ -1,27 +1,48 @@
-<script setup>
+<script setup lang="ts">
 /**
  * 主应用组件
  * 提供全局配置和根路由视图
  */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import {
+  NConfigProvider,
+  NDialogProvider,
+  NLoadingBarProvider,
+  NMessageProvider,
+  NNotificationProvider,
+  dateZhCN,
+  zhCN
+} from 'naive-ui'
+import AppFeedbackProvider from '@/components/common/AppFeedbackProvider.vue'
+import { naiveThemeOverrides } from '@/theme/naive'
 
 const route = useRoute()
 
 // 根据当前路由判断是否需要显示布局过渡动画
 const transitionName = computed(() => {
-  return route.meta.transition || 'fade'
+  return String(route.meta.transition || 'fade')
 })
 </script>
 
 <template>
-  <el-config-provider>
-    <router-view v-slot="{ Component }">
-      <transition :name="transitionName" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
-  </el-config-provider>
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme-overrides="naiveThemeOverrides">
+    <n-message-provider placement="top-right">
+      <n-dialog-provider>
+        <n-notification-provider placement="top-right">
+          <n-loading-bar-provider>
+            <app-feedback-provider>
+              <router-view v-slot="{ Component }">
+                <transition :name="transitionName" mode="out-in">
+                  <component :is="Component" />
+                </transition>
+              </router-view>
+            </app-feedback-provider>
+          </n-loading-bar-provider>
+        </n-notification-provider>
+      </n-dialog-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
 <style>

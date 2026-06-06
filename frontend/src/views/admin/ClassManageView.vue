@@ -1,90 +1,90 @@
 <template>
   <div class="class-manage-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <h2>班级管理</h2>
-        <el-button type="primary" @click="handleAddClass">
-          <el-icon>
+        <n-button type="primary" @click="handleAddClass">
+          <n-icon>
             <Plus />
-          </el-icon>创建班级
-        </el-button>
+          </n-icon>创建班级
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
 
-    <el-card v-loading="loading" shadow="hover">
+    <n-card v-loading="loading" shadow="hover">
       <div class="filter-bar">
-        <el-input v-model="filter.keyword" placeholder="搜索班级" clearable style="width: 200px;"
+        <n-input v-model="filter.keyword" placeholder="搜索班级" clearable style="width: 200px;"
           @keyup.enter="loadClasses" />
-        <el-select v-model="filter.course" placeholder="关联课程" clearable style="width: 180px;" @change="loadClasses">
-          <el-option v-for="c in courseOptions" :key="c.id" :label="c.name" :value="c.id" />
-        </el-select>
-        <el-button type="primary" @click="loadClasses">搜索</el-button>
+        <n-select v-model="filter.course" placeholder="关联课程" clearable style="width: 180px;" @change="loadClasses">
+          <n-option v-for="c in courseOptions" :key="c.id" :label="c.name" :value="c.id" />
+        </n-select>
+        <n-button type="primary" @click="loadClasses">搜索</n-button>
       </div>
 
-      <el-table :data="classes" style="width: 100%;">
-        <el-table-column prop="name" label="班级名称" />
-        <el-table-column prop="course" label="关联课程" width="180">
+      <n-table :data="classes" style="width: 100%;">
+        <n-table-column prop="name" label="班级名称" />
+        <n-table-column prop="course" label="关联课程" width="180">
           <template #default="{ row }">{{ row.course || '未关联课程' }}</template>
-        </el-table-column>
-        <el-table-column prop="teacherName" label="授课教师" width="120">
+        </n-table-column>
+        <n-table-column prop="teacherName" label="授课教师" width="120">
           <template #default="{ row }">{{ row.teacherName || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="studentCount" label="学生数" width="100">
+        </n-table-column>
+        <n-table-column prop="studentCount" label="学生数" width="100">
           <template #default="{ row }">{{ row.studentCount ?? 0 }}</template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180">
+        </n-table-column>
+        <n-table-column prop="createdAt" label="创建时间" width="180">
           <template #default="{ row }">{{ row.createdAt }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="200">
+        </n-table-column>
+        <n-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button type="primary" link @click="viewClassDetail(row)">查看</el-button>
-            <el-button type="warning" link @click="handleEditClass(row)">编辑</el-button>
-            <el-button type="danger" link @click="deleteClass(row)">删除</el-button>
+            <n-button type="primary" link @click="viewClassDetail(row)">查看</n-button>
+            <n-button type="warning" link @click="handleEditClass(row)">编辑</n-button>
+            <n-button type="danger" link @click="deleteClass(row)">删除</n-button>
           </template>
-        </el-table-column>
+        </n-table-column>
         <template #empty>
-          <el-empty description="暂无班级数据" />
+          <n-empty description="暂无班级数据" />
         </template>
-      </el-table>
+      </n-table>
 
-      <el-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="total"
+      <n-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="total"
         v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" @size-change="loadClasses"
         @current-change="loadClasses" />
-    </el-card>
+    </n-card>
 
     <!-- 创建/编辑班级 -->
-    <el-dialog v-model="classDialogVisible" :title="isEditClass ? '编辑班级' : '创建班级'" width="480px">
-      <el-form :model="classForm" label-width="80px">
-        <el-form-item label="班级名称" required>
-          <el-input v-model="classForm.name" placeholder="请输入班级名称" />
-        </el-form-item>
-        <el-form-item label="关联课程">
-          <el-select v-model="classForm.courseId" placeholder="选择课程" style="width: 100%;">
-            <el-option v-for="c in courseOptions" :key="c.id" :label="c.name" :value="c.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input type="textarea" v-model="classForm.description" placeholder="班级描述（可选）" />
-        </el-form-item>
-      </el-form>
+    <n-dialog v-model="classDialogVisible" :title="isEditClass ? '编辑班级' : '创建班级'" width="480px">
+      <n-form :model="classForm" label-width="80px">
+        <n-form-item label="班级名称" required>
+          <n-input v-model="classForm.name" placeholder="请输入班级名称" />
+        </n-form-item>
+        <n-form-item label="关联课程">
+          <n-select v-model="classForm.courseId" placeholder="选择课程" style="width: 100%;">
+            <n-option v-for="c in courseOptions" :key="c.id" :label="c.name" :value="c.id" />
+          </n-select>
+        </n-form-item>
+        <n-form-item label="描述">
+          <n-input type="textarea" v-model="classForm.description" placeholder="班级描述（可选）" />
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="classDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitClassForm">确定</el-button>
+        <n-button @click="classDialogVisible = false">取消</n-button>
+        <n-button type="primary" @click="submitClassForm">确定</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
 
     <!-- 班级详情 -->
-    <el-drawer v-model="detailDrawerVisible" title="班级详情" size="40%">
+    <n-drawer v-model="detailDrawerVisible" title="班级详情" size="40%">
       <template v-if="selectedClass">
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="班级名称">{{ selectedClass.name }}</el-descriptions-item>
-          <el-descriptions-item label="关联课程">{{ selectedClass.course }}</el-descriptions-item>
-          <el-descriptions-item label="授课教师">{{ selectedClass.teacherName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="学生人数">{{ selectedClass.studentCount ?? 0 }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ selectedClass.createdAt }}</el-descriptions-item>
-        </el-descriptions>
+        <n-descriptions :column="1" border>
+          <n-descriptions-item label="班级名称">{{ selectedClass.name }}</n-descriptions-item>
+          <n-descriptions-item label="关联课程">{{ selectedClass.course }}</n-descriptions-item>
+          <n-descriptions-item label="授课教师">{{ selectedClass.teacherName || '-' }}</n-descriptions-item>
+          <n-descriptions-item label="学生人数">{{ selectedClass.studentCount ?? 0 }}</n-descriptions-item>
+          <n-descriptions-item label="创建时间">{{ selectedClass.createdAt }}</n-descriptions-item>
+        </n-descriptions>
       </template>
-    </el-drawer>
+    </n-drawer>
   </div>
 </template>
 
@@ -93,8 +93,8 @@
  * 管理端 - 班级管理视图
  */
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus } from '@/theme/element-icons'
 import { getClassList, deleteClass as apiDeleteClass, createClass, updateClass } from '@/api/admin/class'
 import { getAllCourses } from '@/api/admin/course'
 
@@ -198,7 +198,7 @@ const loadClasses = async () => {
     total.value = classList.total
   } catch (error) {
     console.error('获取班级列表失败:', error)
-    ElMessage.error('获取班级列表失败')
+    appMessage.error('获取班级列表失败')
   } finally {
     loading.value = false
   }
@@ -209,14 +209,14 @@ const loadClasses = async () => {
  */
 const deleteClass = async (cls) => {
   try {
-    await ElMessageBox.confirm('确定删除该班级吗？', '删除确认', { type: 'warning' })
+    await appDialog.confirm('确定删除该班级吗？', '删除确认', { type: 'warning' })
     await apiDeleteClass(cls.id)
     classes.value = classes.value.filter(c => c.id !== cls.id)
-    ElMessage.success('删除成功')
+    appMessage.success('删除成功')
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
-      ElMessage.error('删除失败')
+      appMessage.error('删除失败')
     }
   }
 }
@@ -258,19 +258,19 @@ const viewClassDetail = (row) => {
  */
 const submitClassForm = async () => {
   const payload = buildClassPayload()
-  if (!payload.class_name) return ElMessage.warning('请输入班级名称')
+  if (!payload.class_name) return appMessage.warning('请输入班级名称')
   try {
     if (isEditClass.value && classForm.id) {
       await updateClass(classForm.id, payload)
-      ElMessage.success('更新成功')
+      appMessage.success('更新成功')
     } else {
       await createClass(payload)
-      ElMessage.success('创建成功')
+      appMessage.success('创建成功')
     }
     classDialogVisible.value = false
     await loadClasses()
   } catch (e) {
-    ElMessage.error(isEditClass.value ? '更新失败' : '创建失败')
+    appMessage.error(isEditClass.value ? '更新失败' : '创建失败')
   }
 }
 

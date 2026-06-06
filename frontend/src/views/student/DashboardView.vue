@@ -1,187 +1,187 @@
 <template>
   <div class="dashboard-view" v-loading="loading">
-    <el-row :gutter="20">
+    <n-row :gutter="20">
       <!-- 欢迎卡片 -->
-      <el-col :span="24">
-        <el-card class="welcome-card" shadow="hover">
+      <n-col :span="24">
+        <n-card class="welcome-card" shadow="hover">
           <div class="welcome-content">
             <div class="welcome-text">
               <h2>欢迎回来，{{ username }}！</h2>
               <p>{{ greeting }}</p>
             </div>
             <div class="welcome-actions">
-              <el-button type="primary" @click="goToLearningPath">
-                <el-icon>
+              <n-button type="primary" @click="goToLearningPath">
+                <n-icon>
                   <Guide />
-                </el-icon>
+                </n-icon>
                 继续学习
-              </el-button>
+              </n-button>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
     <!-- 未选课程提示 -->
-    <el-alert v-if="!courseStore.courseId" title="请先选择课程" type="info" show-icon description="请在左上角的课程选择器中选择一门课程以查看学习数据"
+    <n-alert v-if="!courseStore.courseId" title="请先选择课程" type="info" show-icon description="请在左上角的课程选择器中选择一门课程以查看学习数据"
       :closable="false" style="margin-top: 20px;" />
 
-    <el-row :gutter="20" class="stats-row">
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card stat-card-1" shadow="hover">
-          <div class="stat-icon"><el-icon>
+    <n-row :gutter="20" class="stats-row">
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card stat-card-1" shadow="hover">
+          <div class="stat-icon"><n-icon>
               <TrendCharts />
-            </el-icon></div>
+            </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ learningProgress }}%</div>
             <div class="stat-label">学习进度</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card stat-card-2" shadow="hover">
-          <div class="stat-icon"><el-icon>
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card stat-card-2" shadow="hover">
+          <div class="stat-icon"><n-icon>
               <Checked />
-            </el-icon></div>
+            </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ masteredPoints }}</div>
             <div class="stat-label">已掌握知识点</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card stat-card-3" shadow="hover">
-          <div class="stat-icon"><el-icon>
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card stat-card-3" shadow="hover">
+          <div class="stat-icon"><n-icon>
               <Timer />
-            </el-icon></div>
+            </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ studyHours }}h</div>
             <div class="stat-label">本周学习时长</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card stat-card-4" shadow="hover">
-          <div class="stat-icon"><el-icon>
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card stat-card-4" shadow="hover">
+          <div class="stat-icon"><n-icon>
               <Finished />
-            </el-icon></div>
+            </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ completedTasks }}</div>
             <div class="stat-label">完成任务数</div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
-    <el-row :gutter="20" class="content-row">
+    <n-row :gutter="20" class="content-row">
       <!-- 学习路径概览 -->
-      <el-col :xs="24" :lg="16">
-        <el-card class="path-card" shadow="hover">
+      <n-col :xs="24" :lg="16">
+        <n-card class="path-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>学习路径</span>
-              <el-button type="primary" link @click="goToLearningPath">查看全部</el-button>
+              <n-button type="primary" link @click="goToLearningPath">查看全部</n-button>
             </div>
           </template>
           <div v-if="learningNodes.length" class="path-content">
-            <el-timeline>
-              <el-timeline-item v-for="node in learningNodes" :key="node.id"
+            <n-timeline>
+              <n-timeline-item v-for="node in learningNodes" :key="node.id"
                 :type="node.status === 'completed' ? 'success' : node.status === 'current' ? 'primary' : 'info'"
                 :hollow="node.status !== 'completed'">
                 <div class="timeline-node">
                   <span class="node-title">{{ node.title }}</span>
-                  <el-tag :type="getNodeTagType(node.status)" size="small">
+                  <n-tag :type="getNodeTagType(node.status)" size="small">
                     {{ getNodeStatusText(node.status) }}
-                  </el-tag>
+                  </n-tag>
                 </div>
-              </el-timeline-item>
-            </el-timeline>
+              </n-timeline-item>
+            </n-timeline>
           </div>
           <div v-else class="empty-path">
-            <el-empty description="暂无学习路径" :image-size="80">
+            <n-empty description="暂无学习路径" :image-size="80">
               <template #description>
                 <p>完成初始评测后将自动为您生成个性化学习路径</p>
               </template>
-              <el-button type="primary" size="small" @click="$router.push('/student/assessment')">
+              <n-button type="primary" size="small" @click="$router.push('/student/assessment')">
                 前往初始评测
-              </el-button>
-            </el-empty>
+              </n-button>
+            </n-empty>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- 待完成作业 -->
-        <el-card v-if="pendingExams.length" class="exams-card" shadow="hover">
+        <n-card v-if="pendingExams.length" class="exams-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>待完成作业</span>
-              <el-button type="primary" link @click="$router.push('/student/exams')">查看全部</el-button>
+              <n-button type="primary" link @click="$router.push('/student/exams')">查看全部</n-button>
             </div>
           </template>
           <div v-for="exam in pendingExams" :key="exam.id" class="exam-item">
             <div class="exam-info">
               <span class="exam-title">{{ exam.title }}</span>
-              <el-tag size="small" type="warning">{{ exam.examTypeText }}</el-tag>
+              <n-tag size="small" type="warning">{{ exam.examTypeText }}</n-tag>
             </div>
-            <el-button size="small" type="primary" @click="startExam(exam)">
+            <n-button size="small" type="primary" @click="startExam(exam)">
               开始作业
-            </el-button>
+            </n-button>
           </div>
-        </el-card>
-      </el-col>
+        </n-card>
+      </n-col>
 
       <!-- 右侧栏 -->
-      <el-col :xs="24" :lg="8">
+      <n-col :xs="24" :lg="8">
         <!-- 快捷入口 -->
-        <el-card class="quick-card" shadow="hover">
+        <n-card class="quick-card" shadow="hover">
           <template #header><span>快捷入口</span></template>
           <div class="quick-actions">
             <div class="quick-item" @click="$router.push('/student/knowledge-map')">
-              <el-icon>
+              <n-icon>
                 <Share />
-              </el-icon>
+              </n-icon>
               <span>知识图谱</span>
             </div>
             <div class="quick-item" @click="$router.push('/student/exams')">
-              <el-icon>
+              <n-icon>
                 <Document />
-              </el-icon>
+              </n-icon>
               <span>在线作业</span>
             </div>
             <div class="quick-item" @click="$router.push('/student/profile')">
-              <el-icon>
+              <n-icon>
                 <User />
-              </el-icon>
+              </n-icon>
               <span>学习画像</span>
             </div>
             <div class="quick-item" @click="$router.push('/student/resources')">
-              <el-icon>
+              <n-icon>
                 <FolderOpened />
-              </el-icon>
+              </n-icon>
               <span>课程资源</span>
             </div>
             <div class="quick-item" @click="$router.push('/student/ai-assistant')">
-              <el-icon>
+              <n-icon>
                 <ChatDotRound />
-              </el-icon>
+              </n-icon>
               <span>AI助手</span>
             </div>
           </div>
-        </el-card>
+        </n-card>
 
         <!-- 最近学习的知识点 -->
-        <el-card class="recent-card" shadow="hover">
+        <n-card class="recent-card" shadow="hover">
           <template #header><span>最近学习</span></template>
           <div v-if="recentMastery.length" class="recent-list">
             <div v-for="item in recentMastery" :key="item.name" class="recent-item">
               <span class="recent-name">{{ item.name }}</span>
-              <el-progress :percentage="item.value" :stroke-width="6" :color="getProgressColor(item.value)"
+              <n-progress :percentage="item.value" :stroke-width="6" :color="getProgressColor(item.value)"
                 style="flex: 1;" />
             </div>
           </div>
-          <el-empty v-else description="暂无学习记录" :image-size="60" />
-        </el-card>
-      </el-col>
-    </el-row>
+          <n-empty v-else description="暂无学习记录" :image-size="60" />
+        </n-card>
+      </n-col>
+    </n-row>
   </div>
 </template>
 
@@ -199,7 +199,7 @@ import { getProfile } from '@/api/student/profile'
 import {
   Guide, TrendCharts, Checked, Timer, Finished,
   Share, Document, User, FolderOpened, ChatDotRound
-} from '@element-plus/icons-vue'
+} from '@/theme/element-icons'
 
 const router = useRouter()
 const userStore = useUserStore()

@@ -1,101 +1,101 @@
 <template>
   <div class="user-manage-view">
-    <el-card class="page-header" shadow="never">
+    <n-card class="page-header" shadow="never">
       <div class="header-content">
         <h2>用户管理</h2>
-        <el-button type="primary" @click="openCreateDialog">
-          <el-icon>
+        <n-button type="primary" @click="openCreateDialog">
+          <n-icon>
             <Plus />
-          </el-icon> 添加用户
-        </el-button>
+          </n-icon> 添加用户
+        </n-button>
       </div>
-    </el-card>
+    </n-card>
 
-    <el-card shadow="hover">
+    <n-card shadow="hover">
       <div class="filter-bar">
-        <el-select v-model="userFilter.roleCode" placeholder="用户角色" clearable style="width: 120px;" @change="loadUsers">
-          <el-option label="学生" value="student" />
-          <el-option label="教师" value="teacher" />
-          <el-option label="管理员" value="admin" />
-        </el-select>
-        <el-input v-model="userFilter.keywordText" placeholder="搜索用户名" clearable style="width: 200px;"
+        <n-select v-model="userFilter.roleCode" placeholder="用户角色" clearable style="width: 120px;" @change="loadUsers">
+          <n-option label="学生" value="student" />
+          <n-option label="教师" value="teacher" />
+          <n-option label="管理员" value="admin" />
+        </n-select>
+        <n-input v-model="userFilter.keywordText" placeholder="搜索用户名" clearable style="width: 200px;"
           @keyup.enter="loadUsers" />
-        <el-button type="primary" @click="loadUsers">搜索</el-button>
+        <n-button type="primary" @click="loadUsers">搜索</n-button>
       </div>
 
-      <el-table :data="userRecords" v-loading="loading" style="width: 100%;">
-        <el-table-column prop="username" label="用户名" width="120" />
-        <el-table-column prop="realNameText" label="姓名" width="100">
+      <n-table :data="userRecords" v-loading="loading" style="width: 100%;">
+        <n-table-column prop="username" label="用户名" width="120" />
+        <n-table-column prop="realNameText" label="姓名" width="100">
           <template #default="{ row }">{{ row.realNameText || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="emailText" label="邮箱" />
-        <el-table-column prop="phoneText" label="手机号" width="130">
+        </n-table-column>
+        <n-table-column prop="emailText" label="邮箱" />
+        <n-table-column prop="phoneText" label="手机号" width="130">
           <template #default="{ row }">{{ row.phoneText || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="roleCode" label="角色" width="100">
+        </n-table-column>
+        <n-table-column prop="roleCode" label="角色" width="100">
           <template #default="{ row }">
-            <el-tag :type="getRoleType(row.roleCode)">{{ getRoleText(row.roleCode) }}</el-tag>
+            <n-tag :type="getRoleType(row.roleCode)">{{ getRoleText(row.roleCode) }}</n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="statusText" label="状态" width="80">
+        </n-table-column>
+        <n-table-column prop="statusText" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.statusText === 'active' ? 'success' : 'danger'" size="small">
+            <n-tag :type="row.statusText === 'active' ? 'success' : 'danger'" size="small">
               {{ row.statusText === 'active' ? '正常' : '禁用' }}
-            </el-tag>
+            </n-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="lastLoginText" label="最后登录" width="160" />
-        <el-table-column prop="createdAtText" label="注册时间" width="120" />
-        <el-table-column label="操作" width="200" fixed="right">
+        </n-table-column>
+        <n-table-column prop="lastLoginText" label="最后登录" width="160" />
+        <n-table-column prop="createdAtText" label="注册时间" width="120" />
+        <n-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="editUser(row)">编辑</el-button>
-            <el-button :type="row.statusText === 'active' ? 'warning' : 'success'" link @click="toggleStatus(row)">
+            <n-button type="primary" link @click="editUser(row)">编辑</n-button>
+            <n-button :type="row.statusText === 'active' ? 'warning' : 'success'" link @click="toggleStatus(row)">
               {{ row.statusText === 'active' ? '禁用' : '启用' }}
-            </el-button>
-            <el-button type="danger" link @click="deleteUser(row)">删除</el-button>
+            </n-button>
+            <n-button type="danger" link @click="deleteUser(row)">删除</n-button>
           </template>
-        </el-table-column>
+        </n-table-column>
         <template #empty>
-          <el-empty description="暂无用户数据" />
+          <n-empty description="暂无用户数据" />
         </template>
-      </el-table>
+      </n-table>
 
-      <el-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="totalUserCount"
+      <n-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="totalUserCount"
         :page-sizes="[10, 20, 50]" v-model:current-page="pagination.currentPage" v-model:page-size="pagination.pageSize"
         @size-change="loadUsers" @current-change="loadUsers" />
-    </el-card>
+    </n-card>
 
     <!-- 创建/编辑用户对话框 -->
-    <el-dialog v-model="isUserDialogVisible" :title="isEditingUser ? '编辑用户' : '添加用户'" width="500px">
-      <el-form :model="userForm" label-width="80px">
-        <el-form-item label="用户名" required>
-          <el-input v-model="userForm.username" placeholder="请输入用户名" :disabled="isEditingUser" />
-        </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="userForm.realName" placeholder="请输入真实姓名" />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="userForm.email" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="userForm.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="密码" :required="!isEditingUser">
-          <el-input v-model="userForm.password" type="password" :placeholder="isEditingUser ? '留空则不修改' : '请输入密码'" />
-        </el-form-item>
-        <el-form-item label="角色" required>
-          <el-select v-model="userForm.roleCode" placeholder="请选择角色" style="width: 100%;">
-            <el-option label="学生" value="student" />
-            <el-option label="教师" value="teacher" />
-            <el-option label="管理员" value="admin" />
-          </el-select>
-        </el-form-item>
-      </el-form>
+    <n-dialog v-model="isUserDialogVisible" :title="isEditingUser ? '编辑用户' : '添加用户'" width="500px">
+      <n-form :model="userForm" label-width="80px">
+        <n-form-item label="用户名" required>
+          <n-input v-model="userForm.username" placeholder="请输入用户名" :disabled="isEditingUser" />
+        </n-form-item>
+        <n-form-item label="姓名">
+          <n-input v-model="userForm.realName" placeholder="请输入真实姓名" />
+        </n-form-item>
+        <n-form-item label="邮箱">
+          <n-input v-model="userForm.email" placeholder="请输入邮箱" />
+        </n-form-item>
+        <n-form-item label="手机号">
+          <n-input v-model="userForm.phone" placeholder="请输入手机号" />
+        </n-form-item>
+        <n-form-item label="密码" :required="!isEditingUser">
+          <n-input v-model="userForm.password" type="password" :placeholder="isEditingUser ? '留空则不修改' : '请输入密码'" />
+        </n-form-item>
+        <n-form-item label="角色" required>
+          <n-select v-model="userForm.roleCode" placeholder="请选择角色" style="width: 100%;">
+            <n-option label="学生" value="student" />
+            <n-option label="教师" value="teacher" />
+            <n-option label="管理员" value="admin" />
+          </n-select>
+        </n-form-item>
+      </n-form>
       <template #footer>
-        <el-button @click="closeUserDialog">取消</el-button>
-        <el-button type="primary" :loading="saveLoading" @click="saveUser">保存</el-button>
+        <n-button @click="closeUserDialog">取消</n-button>
+        <n-button type="primary" :loading="saveLoading" @click="saveUser">保存</n-button>
       </template>
-    </el-dialog>
+    </n-dialog>
   </div>
 </template>
 
@@ -105,8 +105,8 @@
  * 管理用户、添加/编辑/删除用户、启用/禁用用户等功能
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { appMessage, appDialog } from '@/utils/feedback'
+import { Plus } from '@/theme/element-icons'
 import {
   getUsers,
   createUser,
@@ -324,7 +324,7 @@ const loadUsers = async () => {
     totalUserCount.value = totalCount
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败')
+    appMessage.error('获取用户列表失败')
   } finally {
     loading.value = false
   }
@@ -379,15 +379,15 @@ const closeUserDialog = () => {
  */
 const saveUser = async () => {
   if (!userForm.username) {
-    ElMessage.warning('请输入用户名')
+    appMessage.warning('请输入用户名')
     return
   }
   if (!isEditingUser.value && !userForm.password) {
-    ElMessage.warning('请输入密码')
+    appMessage.warning('请输入密码')
     return
   }
   if (!userForm.roleCode) {
-    ElMessage.warning('请选择角色')
+    appMessage.warning('请选择角色')
     return
   }
 
@@ -411,12 +411,12 @@ const saveUser = async () => {
       await createUser(userPayload)
     }
 
-    ElMessage.success(isEditingCurrentUser ? '用户更新成功' : '用户创建成功')
+    appMessage.success(isEditingCurrentUser ? '用户更新成功' : '用户创建成功')
     closeUserDialog()
     await loadUsers()
   } catch (error) {
     console.error('保存用户失败:', error)
-    ElMessage.error('保存用户失败')
+    appMessage.error('保存用户失败')
   } finally {
     saveLoading.value = false
   }
@@ -433,10 +433,10 @@ const toggleStatus = async (userRecord) => {
       await enableUser(userRecord.userId)
     }
     userRecord.statusText = userRecord.statusText === 'active' ? 'disabled' : 'active'
-    ElMessage.success('状态已更新')
+    appMessage.success('状态已更新')
   } catch (error) {
     console.error('更新状态失败:', error)
-    ElMessage.error('更新状态失败')
+    appMessage.error('更新状态失败')
   }
 }
 
@@ -445,14 +445,14 @@ const toggleStatus = async (userRecord) => {
  */
 const deleteUser = async (userRecord) => {
   try {
-    await ElMessageBox.confirm('确定删除该用户吗？此操作不可恢复。', '删除确认', { type: 'warning' })
+    await appDialog.confirm('确定删除该用户吗？此操作不可恢复。', '删除确认', { type: 'warning' })
     await apiDeleteUser(userRecord.userId)
-    ElMessage.success('删除成功')
+    appMessage.success('删除成功')
     await loadUsers()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除用户失败:', error)
-      ElMessage.error('删除用户失败')
+      appMessage.error('删除用户失败')
     }
   }
 }

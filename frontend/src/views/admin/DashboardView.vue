@@ -1,92 +1,92 @@
 <template>
   <div class="dashboard-view" v-loading="loading">
-    <el-row :gutter="20">
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+    <n-row :gutter="20">
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <el-icon>
+            <n-icon>
               <User />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.userCount.toLocaleString() }}</div>
             <div class="stat-label">用户总数</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-            <el-icon>
+            <n-icon>
               <Reading />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.courseCount }}</div>
             <div class="stat-label">课程总数</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <el-icon>
+            <n-icon>
               <School />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.classCount }}</div>
             <div class="stat-label">班级总数</div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-card class="stat-card" shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :sm="12" :md="6">
+        <n-card class="stat-card" shadow="hover">
           <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <el-icon>
+            <n-icon>
               <TrendCharts />
-            </el-icon>
+            </n-icon>
           </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.onlineRate }}</div>
             <div class="stat-label">系统在线率</div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </n-card>
+      </n-col>
+    </n-row>
 
-    <el-row :gutter="20" class="content-row">
-      <el-col :xs="24" :lg="12">
-        <el-card shadow="hover">
+    <n-row :gutter="20" class="content-row">
+      <n-col :xs="24" :lg="12">
+        <n-card shadow="hover">
           <template #header>角色分布</template>
           <div class="role-stats">
             <div class="role-item">
               <span class="role-label">学生</span>
-              <el-progress :percentage="rolePercent('student')" :stroke-width="16" color="#409eff" />
+              <n-progress :percentage="rolePercent('student')" :stroke-width="16" color="#409eff" />
             </div>
             <div class="role-item">
               <span class="role-label">教师</span>
-              <el-progress :percentage="rolePercent('teacher')" :stroke-width="16" color="#e6a23c" />
+              <n-progress :percentage="rolePercent('teacher')" :stroke-width="16" color="#e6a23c" />
             </div>
             <div class="role-item">
               <span class="role-label">管理员</span>
-              <el-progress :percentage="rolePercent('admin')" :stroke-width="16" color="#f56c6c" />
+              <n-progress :percentage="rolePercent('admin')" :stroke-width="16" color="#f56c6c" />
             </div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :lg="12">
-        <el-card shadow="hover">
+        </n-card>
+      </n-col>
+      <n-col :xs="24" :lg="12">
+        <n-card shadow="hover">
           <template #header>最近活动</template>
-          <el-timeline v-if="recentLogs.length">
-            <el-timeline-item v-for="log in recentLogs" :key="log.id" :timestamp="log.time">
+          <n-timeline v-if="recentLogs.length">
+            <n-timeline-item v-for="log in recentLogs" :key="log.id" :timestamp="log.time">
               {{ log.content }}
-            </el-timeline-item>
-          </el-timeline>
-          <el-empty v-else description="暂无活动记录" :image-size="80" />
-        </el-card>
-      </el-col>
-    </el-row>
+            </n-timeline-item>
+          </n-timeline>
+          <n-empty v-else description="暂无活动记录" :image-size="80" />
+        </n-card>
+      </n-col>
+    </n-row>
   </div>
 </template>
 
@@ -95,8 +95,8 @@
  * 管理端仪表盘视图
  */
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { User, Reading, School, TrendCharts } from '@element-plus/icons-vue'
+import { appMessage } from '@/utils/feedback'
+import { User, Reading, School, TrendCharts } from '@/theme/element-icons'
 import { getOverviewStats } from '@/api/admin/statistics'
 import { getLogs } from '@/api/admin/log'
 
@@ -195,7 +195,7 @@ const loadDashboardData = async () => {
     }
   } catch (error) {
     console.error('加载仪表盘数据失败:', error)
-    ElMessage.error('加载仪表盘数据失败')
+    appMessage.error('加载仪表盘数据失败')
   } finally {
     loading.value = false
   }
@@ -231,7 +231,7 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-.stat-card :deep(.el-card__body) {
+.stat-card :deep(.n-card__body) {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -290,7 +290,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .stat-card :deep(.el-card__body) {
+  .stat-card :deep(.n-card__body) {
     flex-direction: column;
     text-align: center;
     padding: 16px;

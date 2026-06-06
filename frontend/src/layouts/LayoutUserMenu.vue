@@ -1,52 +1,24 @@
 <template>
   <!-- Account menu groups profile actions and role-specific shortcuts behind one stable trigger. -->
-  <el-dropdown trigger="click" @command="$emit('command', $event)">
+  <n-dropdown trigger="click" :options="menuOptions" @select="$emit('command', $event)">
     <div class="user-dropdown">
-      <el-avatar v-if="avatarUrl" :size="32" :src="avatarUrl" class="user-avatar" />
-      <el-avatar v-else :size="32" class="user-avatar">
+      <n-avatar v-if="avatarUrl" :size="32" :src="avatarUrl" class="user-avatar" />
+      <n-avatar v-else :size="32" class="user-avatar">
         {{ avatarText }}
-      </el-avatar>
+      </n-avatar>
       <span class="user-name">{{ displayName }}</span>
-      <el-icon class="el-icon--right">
-        <ArrowDown />
-      </el-icon>
+      <AppIcon name="ChevronDown" class="dropdown-arrow" />
     </div>
-    <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item command="profile">
-          <el-icon>
-            <User />
-          </el-icon>
-          个人信息
-        </el-dropdown-item>
-        <el-dropdown-item command="settings">
-          <el-icon>
-            <Setting />
-          </el-icon>
-          个人设置
-        </el-dropdown-item>
-        <el-dropdown-item v-if="userRole === 'admin'" command="system-settings">
-          <el-icon>
-            <Setting />
-          </el-icon>
-          系统设置
-        </el-dropdown-item>
-        <el-dropdown-item divided command="logout">
-          <el-icon>
-            <SwitchButton />
-          </el-icon>
-          退出登录
-        </el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
-  </el-dropdown>
+  </n-dropdown>
 </template>
 
 <script setup>
-import { ArrowDown, Setting, SwitchButton, User } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { renderIcon } from '@/theme/icons'
 
 // The parent decides command handling so this menu stays presentational and reusable.
-defineProps({
+const props = defineProps({
   avatarUrl: { type: String, default: null },
   avatarText: { type: String, default: '' },
   displayName: { type: String, default: '用户' },
@@ -54,6 +26,24 @@ defineProps({
 })
 
 defineEmits(['command'])
+
+const menuOptions = computed(() => {
+  const options = [
+    { label: '个人信息', key: 'profile', icon: renderIcon('User') },
+    { label: '个人设置', key: 'settings', icon: renderIcon('Setting') }
+  ]
+
+  if (props.userRole === 'admin') {
+    options.push({ label: '系统设置', key: 'system-settings', icon: renderIcon('Settings') })
+  }
+
+  options.push(
+    { type: 'divider', key: 'divider' },
+    { label: '退出登录', key: 'logout', icon: renderIcon('SignOut') }
+  )
+
+  return options
+})
 </script>
 
 <style scoped>
@@ -86,6 +76,10 @@ defineEmits(['command'])
   font-size: 14px;
   color: var(--text-primary);
   font-weight: 700;
+}
+
+.dropdown-arrow {
+  color: var(--text-secondary);
 }
 
 </style>

@@ -1,6 +1,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { appMessage, appDialog } from '@/utils/feedback'
 import {
   createResource,
   deleteResource as deleteResourceApi,
@@ -70,7 +70,7 @@ export function useTeacherResourceManage() {
 
     if (file.size > maxSize) {
       const maxSizeMB = Math.round(maxSize / (1024 * 1024))
-      ElMessage.error(`文件大小不能超过 ${maxSizeMB}MB`)
+      appMessage.error(`文件大小不能超过 ${maxSizeMB}MB`)
       return false
     }
     return true
@@ -126,7 +126,7 @@ export function useTeacherResourceManage() {
       isResourceDialogVisible.value = true
     } catch (error) {
       console.error('加载资源详情失败:', error)
-      ElMessage.error('加载资源详情失败，请稍后重试')
+      appMessage.error('加载资源详情失败，请稍后重试')
     }
   }
 
@@ -142,7 +142,7 @@ export function useTeacherResourceManage() {
     try {
       const courseId = await ensureCourseId()
       if (!courseId) {
-        ElMessage.warning('请先选择课程')
+        appMessage.warning('请先选择课程')
         return
       }
 
@@ -161,17 +161,17 @@ export function useTeacherResourceManage() {
 
       if (isEditingResource.value) {
         await updateResource(resourceForm.resourceId, formData)
-        ElMessage.success('更新成功')
+        appMessage.success('更新成功')
       } else {
         await createResource(formData)
-        ElMessage.success('创建成功')
+        appMessage.success('创建成功')
       }
 
       isResourceDialogVisible.value = false
       await fetchResources()
     } catch (error) {
       console.error('提交失败:', error)
-      ElMessage.error('提交失败，请稍后重试')
+      appMessage.error('提交失败，请稍后重试')
     } finally {
       submitting.value = false
     }
@@ -181,20 +181,20 @@ export function useTeacherResourceManage() {
     if (resourceRecord.previewUrl) {
       window.open(resourceRecord.previewUrl, '_blank')
     } else {
-      ElMessage.info('暂无预览链接')
+      appMessage.info('暂无预览链接')
     }
   }
 
   const deleteResource = async (resourceRecord) => {
     try {
-      await ElMessageBox.confirm('确定要删除该资源吗？', '提示', {
+      await appDialog.confirm('确定要删除该资源吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
 
       await deleteResourceApi(resourceRecord.resourceId)
-      ElMessage.success('删除成功')
+      appMessage.success('删除成功')
       await fetchResources()
     } catch (error) {
       if (error !== 'cancel') {
@@ -214,7 +214,7 @@ export function useTeacherResourceManage() {
 
   const submitImport = async () => {
     if (!importFile.value) {
-      ElMessage.warning('请选择文件')
+      appMessage.warning('请选择文件')
       return
     }
 
@@ -222,7 +222,7 @@ export function useTeacherResourceManage() {
     try {
       const courseId = await ensureCourseId()
       if (!courseId) {
-        ElMessage.warning('请先选择课程')
+        appMessage.warning('请先选择课程')
         return
       }
 
@@ -230,12 +230,12 @@ export function useTeacherResourceManage() {
       formData.append('file', importFile.value)
       formData.append('course_id', String(courseId))
       await createResource(formData)
-      ElMessage.success('导入成功')
+      appMessage.success('导入成功')
       importDialogVisible.value = false
       await fetchResources()
     } catch (error) {
       console.error('导入失败:', error)
-      ElMessage.error('导入失败，请检查文件格式')
+      appMessage.error('导入失败，请检查文件格式')
     } finally {
       importing.value = false
     }
