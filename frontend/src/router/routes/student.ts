@@ -15,6 +15,7 @@ const KnowledgeMapView = () => import('@/views/student/KnowledgeMapView.vue')
 const LearningPathView = () => import('@/views/student/LearningPathView.vue')
 const TaskLearningView = () => import('@/views/student/TaskLearningView.vue')
 const AIAssistantView = () => import('@/views/student/AIAssistantView.vue')
+const AgentLearningView = () => import('@/views/student/AgentLearningView.vue')
 const ExamView = () => import('@/views/student/ExamView.vue')
 const ExamTakingView = () => import('@/views/student/ExamTakingView.vue')
 const ClassesView = () => import('@/views/student/ClassesView.vue')
@@ -158,6 +159,15 @@ export default {
       meta: {
         title: 'AI助手',
         icon: 'ChatDotRound'
+      }
+    },
+    {
+      path: 'agent-learning',
+      name: 'AgentLearning',
+      component: AgentLearningView,
+      meta: {
+        title: '个性化智能体',
+        icon: 'Sparkle'
       }
     },
     {
