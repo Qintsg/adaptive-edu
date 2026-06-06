@@ -108,3 +108,267 @@ studentAgentGenerateResources:
         $ref: ../components/responses.yaml#/Forbidden
       "404":
         $ref: ../components/responses.yaml#/NotFound
+
+studentAgentLearningPackage:
+  post:
+    tags: [Agent]
+    operationId: studentAgentLearningPackage
+    summary: A3 学习资源包生成
+    description: 基于画像和课程证据生成学习资源包，返回进度事件、质量报告和学习路径绑定建议。
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id]
+            properties:
+              course_id:
+                type: integer
+              target:
+                type: string
+                maxLength: 1000
+              knowledge_point_id:
+                type: integer
+              profile:
+                type: object
+                additionalProperties: true
+              resource_types:
+                type: array
+                items:
+                  type: string
+                  enum: [explanation, mindmap, quiz, reading, coding_case, video_script]
+    responses:
+      "200":
+        description: data 包含学习包、进度事件、质量报告、路径建议和 warnings。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/AgentLearningPackage.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentApplyToPath:
+  post:
+    tags: [Agent, Learning]
+    operationId: studentAgentApplyToPath
+    summary: A3 生成资源应用到学习路径
+    description: 将本次 AgentRun 下的生成资源绑定到当前学生学习路径，优先匹配相同知识点节点，必要时插入补充节点。
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id, run_id]
+            properties:
+              course_id:
+                type: integer
+              run_id:
+                type: integer
+              resource_ids:
+                type: array
+                items:
+                  type: integer
+    responses:
+      "200":
+        description: data 包含路径绑定结果和更新后的节点摘要。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/AgentPathBindingResult.yaml
+      "400":
+        $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentRunDetail:
+  get:
+    tags: [Agent]
+    operationId: studentAgentRunDetail
+    summary: 查询 A3 Agent 运行详情
+    parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: data 包含运行记录与本次生成资源。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/AgentRun.yaml
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentRunComplete:
+  post:
+    tags: [Agent]
+    operationId: studentAgentRunComplete
+    summary: 标记 A3 Agent 运行完成
+    parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [course_id]
+            properties:
+              course_id:
+                type: integer
+    responses:
+      "200":
+        description: data 返回更新后的运行详情。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/AgentRun.yaml
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentResources:
+  get:
+    tags: [Agent, Knowledge]
+    operationId: studentAgentResources
+    summary: 查询 A3 生成学习资源
+    parameters:
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 30
+      - name: resource_type
+        in: query
+        required: false
+        schema:
+          type: string
+    responses:
+      "200":
+        description: data 包含资源列表和 count。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        count:
+                          type: integer
+                        resources:
+                          type: array
+                          items:
+                            $ref: ../components/schemas/GeneratedLearningResource.yaml
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+
+studentAgentResourceFeedback:
+  post:
+    tags: [Agent, Learning]
+    operationId: studentAgentResourceFeedback
+    summary: 提交 A3 生成资源学习反馈
+    parameters:
+      - name: resource_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/GeneratedResourceFeedbackRequest.yaml
+    responses:
+      "200":
+        description: data 包含反馈记录、节点进度更新和画像/路径更新摘要。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/GeneratedResourceFeedbackResult.yaml
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
+      "404":
+        $ref: ../components/responses.yaml#/NotFound
+
+studentAgentEffectSummary:
+  get:
+    tags: [Agent, Learning]
+    operationId: studentAgentEffectSummary
+    summary: 查询 A3 生成资源学习效果摘要
+    parameters:
+      - name: course_id
+        in: query
+        required: true
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: data 包含资源数量、反馈数量、完成率、平均评分和更新摘要。
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: ../components/schemas/ApiEnvelope.yaml
+                - type: object
+                  properties:
+                    data:
+                      $ref: ../components/schemas/AgentEffectSummary.yaml
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden

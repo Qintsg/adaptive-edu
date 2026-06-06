@@ -2,34 +2,38 @@ type: object
 required:
   - run_id
   - status
-  - agent_trace
+  - resources
+  - quality_report
 properties:
   run_id:
     type: integer
   status:
     type: string
     enum: [pending, running, completed, failed, cancelled]
-  input_text:
+  target:
     type: string
-  profile_snapshot:
+  profile:
     type: object
     additionalProperties: true
   agent_trace:
     type: array
     items:
       $ref: ./AgentTraceItem.yaml
-  result_payload:
-    type: object
-    additionalProperties: true
-  error_message:
-    type: string
-  started_at:
-    type: string
-    format: date-time
-  finished_at:
-    type: string
-    format: date-time
+  progress_events:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
   resources:
     type: array
     items:
       $ref: ./GeneratedLearningResource.yaml
+  quality_report:
+    $ref: ./AgentQualityReport.yaml
+  path_suggestion:
+    type: object
+    additionalProperties: true
+  warnings:
+    type: array
+    items:
+      type: string

@@ -4343,6 +4343,284 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/student/agent/learning-package:
+    post:
+      tags:
+        - Agent
+      operationId: studentAgentLearningPackage
+      summary: A3 学习资源包生成
+      description: 基于画像和课程证据生成学习资源包，返回进度事件、质量报告和学习路径绑定建议。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+                target:
+                  type: string
+                  maxLength: 1000
+                knowledge_point_id:
+                  type: integer
+                profile:
+                  type: object
+                  additionalProperties: true
+                resource_types:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - explanation
+                      - mindmap
+                      - quiz
+                      - reading
+                      - coding_case
+                      - video_script
+      responses:
+        '200':
+          description: data 包含学习包、进度事件、质量报告、路径建议和 warnings。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentLearningPackage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/apply-to-path:
+    post:
+      tags:
+        - Agent
+        - Learning
+      operationId: studentAgentApplyToPath
+      summary: A3 生成资源应用到学习路径
+      description: 将本次 AgentRun 下的生成资源绑定到当前学生学习路径，优先匹配相同知识点节点，必要时插入补充节点。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+                - run_id
+              properties:
+                course_id:
+                  type: integer
+                run_id:
+                  type: integer
+                resource_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: data 包含路径绑定结果和更新后的节点摘要。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentPathBindingResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/runs/{run_id}:
+    get:
+      tags:
+        - Agent
+      operationId: studentAgentRunDetail
+      summary: 查询 A3 Agent 运行详情
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含运行记录与本次生成资源。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentRun'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/runs/{run_id}/complete:
+    post:
+      tags:
+        - Agent
+      operationId: studentAgentRunComplete
+      summary: 标记 A3 Agent 运行完成
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course_id
+              properties:
+                course_id:
+                  type: integer
+      responses:
+        '200':
+          description: data 返回更新后的运行详情。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentRun'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/resources:
+    get:
+      tags:
+        - Agent
+        - Knowledge
+      operationId: studentAgentResources
+      summary: 查询 A3 生成学习资源
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+        - name: resource_type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: data 包含资源列表和 count。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                          resources:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/GeneratedLearningResource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/student/agent/resources/{resource_id}/feedback:
+    post:
+      tags:
+        - Agent
+        - Learning
+      operationId: studentAgentResourceFeedback
+      summary: 提交 A3 生成资源学习反馈
+      parameters:
+        - name: resource_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneratedResourceFeedbackRequest'
+      responses:
+        '200':
+          description: data 包含反馈记录、节点进度更新和画像/路径更新摘要。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GeneratedResourceFeedbackResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/student/agent/effect-summary:
+    get:
+      tags:
+        - Agent
+        - Learning
+      operationId: studentAgentEffectSummary
+      summary: 查询 A3 生成资源学习效果摘要
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: data 包含资源数量、反馈数量、完成率、平均评分和更新摘要。
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentEffectSummary'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/student/ai/path-planning:
     post:
       tags:
@@ -5562,6 +5840,10 @@ components:
         finished_at:
           type: string
           format: date-time
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneratedLearningResource'
     AgentTraceItem:
       type: object
       required:
@@ -5588,6 +5870,118 @@ components:
           additionalProperties: true
         error:
           type: string
+    AgentLearningPackage:
+      type: object
+      required:
+        - run_id
+        - status
+        - resources
+        - quality_report
+      properties:
+        run_id:
+          type: integer
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+            - cancelled
+        target:
+          type: string
+        profile:
+          type: object
+          additionalProperties: true
+        agent_trace:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentTraceItem'
+        progress_events:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneratedLearningResource'
+        quality_report:
+          $ref: '#/components/schemas/AgentQualityReport'
+        path_suggestion:
+          type: object
+          additionalProperties: true
+        warnings:
+          type: array
+          items:
+            type: string
+    AgentQualityReport:
+      type: object
+      required:
+        - status
+        - score
+        - resource_count
+      properties:
+        status:
+          type: string
+          enum:
+            - passed
+            - warning
+            - failed
+        score:
+          type: number
+          format: float
+        resource_count:
+          type: integer
+        required_types:
+          type: array
+          items:
+            type: string
+        missing_types:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+        errors:
+          type: array
+          items:
+            type: string
+        resources:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    AgentPathBindingResult:
+      type: object
+      required:
+        - ok
+        - path_id
+        - run_id
+        - bindings
+      properties:
+        ok:
+          type: boolean
+        path_id:
+          type: integer
+        run_id:
+          type: integer
+        bindings:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        nodes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        warnings:
+          type: array
+          items:
+            type: string
     ProfileDialogResult:
       type: object
       required:
@@ -5667,6 +6061,87 @@ components:
           type: string
           format: date-time
           nullable: true
+    GeneratedResourceFeedbackRequest:
+      type: object
+      required:
+        - course_id
+        - completed
+      properties:
+        course_id:
+          type: integer
+        completed:
+          type: boolean
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        usefulness:
+          type: string
+          enum:
+            - useful
+            - neutral
+            - not_useful
+          default: neutral
+        difficulty:
+          type: string
+          enum:
+            - easy
+            - moderate
+            - hard
+          default: moderate
+        feedback:
+          type: string
+          maxLength: 2000
+        quiz_result:
+          type: object
+          additionalProperties: true
+        time_spent_seconds:
+          type: integer
+          minimum: 0
+          nullable: true
+    GeneratedResourceFeedbackResult:
+      type: object
+      properties:
+        feedback:
+          type: object
+          additionalProperties: true
+        created:
+          type: boolean
+        resource:
+          type: object
+          additionalProperties: true
+        node_update:
+          type: object
+          additionalProperties: true
+        update_summary:
+          type: object
+          additionalProperties: true
+    AgentEffectSummary:
+      type: object
+      properties:
+        resource_count:
+          type: integer
+        feedback_count:
+          type: integer
+        completed_count:
+          type: integer
+        completion_rate:
+          type: number
+          format: float
+        average_rating:
+          type: number
+          format: float
+        useful_count:
+          type: integer
+        recent_feedback:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        update_summary:
+          type: object
+          additionalProperties: true
     OperationLog:
       type: object
       properties:

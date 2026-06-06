@@ -7,13 +7,15 @@
 ## 推荐阅读顺序
 
 1. `使用说明.md`：学生、教师、管理员三端页面、主要业务流程和常用命令。
-2. `openapi/openapi.yaml`：模块化 OpenAPI 契约入口；`api.yaml` 为打包产物。
-3. `API端点测试报告.md`：基于真实 HTTP 请求的 OpenAPI 端点巡检结果。
-4. `CHANGELOG.md`：项目变更记录。
+2. `a3/README.md`：A3 参赛专题文档入口、交付清单、PRD、架构、演示和验收矩阵。
+3. `openapi/openapi.yaml`：模块化 OpenAPI 契约入口；`api.yaml` 为打包产物。
+4. `API端点测试报告.md`：基于真实 HTTP 请求的 OpenAPI 端点巡检结果。
+5. `CHANGELOG.md`：项目变更记录。
 
 ## 文档索引
 
 - `README.md`：当前文档总导航。
+- `a3/README.md`：A3 参赛专题文档总览，覆盖 PRD、架构、多智能体、数据、API、部署、演示、验收和合规说明。
 - `使用说明.md`：三端页面、典型流程和常用接口入口。
 - `openapi/openapi.yaml`：模块化 OpenAPI 描述文件和接口契约源，入口显式映射真实 URL 到模块化路径项 `$ref`。
 - `api.yaml`：由 Redocly CLI 从 `docs/openapi/openapi.yaml` 打包生成的单文件 OpenAPI 描述。
@@ -41,7 +43,7 @@
 - GraphRAG 课程索引默认位于 `backend/runtime_logs/rag/course_{course_id}.json`。
 - GraphRAG 本地向量库默认位于 `backend/runtime_logs/rag/qdrant/`。
 - KT 当前只保留 `MEFKT`，默认 `single` 模式；`fusion / ensemble` 响应结构保留用于后续扩展。
-- A3 Agent 后端已提供学生端画像对话和个性化资源生成最小闭环，入口为 `/api/student/agent/profile-dialog` 与 `/api/student/agent/generate-resources`；学生端专题页面仍待后续 Issue 接线。
+- A3 Agent 已提供学生端画像对话、资源生成、学习包、路径绑定、反馈和效果摘要闭环；学生端专题页面为 `/student/agent-learning`。
 
 ## 常用命令
 
@@ -101,5 +103,6 @@ uv run python tools.py browser-audit --scenario audit --frontend-url http://127.
 1. 只引用当前仓库中真实存在的文件。
 2. 只写当前代码已实现的能力，不用文档承诺未接线功能。
 3. 接口变化时优先更新 `docs/openapi/` 下的模块化源文件，再用 Redocly CLI 校验并打包 `docs/api.yaml`，最后同步使用说明和 `docs/CHANGELOG.md`。
-4. 路径、命令、环境变量变更时同步根 `README.md`、`docs/README.md`、`docs/使用说明.md`、`backend/.env.example` 与相关说明。
-5. 缓存、依赖目录、测试输出、代理状态和私有配置只进入 `.gitignore`，不进入版本库。
+4. A3 赛题相关功能、接口、演示流程或合规边界变化时，同步 `docs/a3/` 专题文档。
+5. 路径、命令、环境变量变更时同步根 `README.md`、`docs/README.md`、`docs/使用说明.md`、`backend/.env.example` 与相关说明。
+6. 缓存、依赖目录、测试输出、代理状态和私有配置只进入 `.gitignore`，不进入版本库。

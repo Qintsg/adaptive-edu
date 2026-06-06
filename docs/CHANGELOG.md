@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-06-07
+
+### Backend / API — A3 Agent 学习包、路径绑定与反馈闭环
+
+- 新增学生端 Agent 学习包能力：`/api/student/agent/learning-package` 生成进度事件、质量报告、资源列表和路径绑定建议。
+- 新增 `/api/student/agent/apply-to-path`、运行详情、资源列表、资源反馈、运行完成和效果摘要接口，生成资源可写入 `GeneratedLearningResource.metadata` 与 `NodeProgress.extra_data`。
+- 新增 `AgentQualityGuard`，校验资源标题、正文、类型、证据和结构；证据为空时返回 warnings，不伪造来源。
+- `ai_services.tests` 新增 A3 学习包、路径绑定、运行查询、反馈和效果摘要回归覆盖。
+
+### Frontend — 学生端个性化智能体主流程页
+
+- 新增 `/student/agent-learning`，提供画像输入、资源类型选择、资源包生成、Agent 时间线、质量分、路径绑定建议、资源卡片、证据抽屉、反馈面板和效果摘要。
+- 新增 `frontend/src/api/student/agent.ts` 和 `components/agent/*`，对接 A3 Agent API 并保持 Naive UI + Fluent 2 风格。
+
+### Docs / OpenAPI — A3 参赛文档包与接口契约
+
+- 新增 `docs/a3/` 专题文档包，覆盖 PRD、架构、多智能体、课程知识库、API、部署验收、演示脚本、测试矩阵和 AI 工具/开源合规说明。
+- OpenAPI 新增学习包、路径绑定、运行详情、资源反馈和效果摘要 schema 与路径，`docs/api.yaml` 已重新打包。
+- 根 `README.md`、`docs/README.md`、`docs/使用说明.md` 同步新增 A3 文档入口、学生端页面和 Agent API 概览。
+
+### Validation
+
+- 已通过 `uv run python manage.py check`。
+- 已通过 `uv run python manage.py makemigrations --check --dry-run`。
+- 已通过 `uv run python manage.py test ai_services.tests --verbosity 2`。
+- 已通过 `npm run typecheck` 与 `npm run build`。
+- 已通过 `npx @redocly/cli lint adaptiveedu@v1` 与 `npx @redocly/cli bundle adaptiveedu@v1`。
+
 ## 2026-06-05
 
 ### Backend / API — A3 Agent 最小后端闭环

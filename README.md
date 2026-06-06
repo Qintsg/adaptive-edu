@@ -22,6 +22,7 @@ Supported by the Shanghai Undergraduate Training Program on Innovation and Entre
 - 课程知识图谱可视化，支持知识点详情、关系查询、课程资源与学习状态联动。
 - 个性化学习路径、任务学习、初始测评、阶段测试、在线作业与反馈报告闭环。
 - 学习画像、资源推荐、课程问答、图谱增强解释和 GraphRAG 证据召回。
+- A3 多智能体个性化资源生成，支持画像对话、学习资源包、证据追溯、路径绑定和反馈闭环。
 - MEFKT 知识追踪与规则兜底并行，输出掌握度、薄弱点和学习建议。
 - 基础测试数据、课程资产导入、API 回归和浏览器巡检覆盖开发与验收场景。
 
@@ -29,7 +30,7 @@ Supported by the Shanghai Undergraduate Training Program on Innovation and Entre
 
 - 前端：`frontend/`
   - Vue 3、Vite、TypeScript、Pinia、Vue Router。
-  - Element Plus 组件基础，界面规范按 Fluent 2 风格收口。
+  - Naive UI + Fluent 2 风格组件体系。
   - D3.js / ECharts 用于知识图谱、画像和统计可视化。
 - 后端：`backend/`
   - Python 3.12、Django、Django REST Framework、Channels。
@@ -119,6 +120,7 @@ docs/      使用说明、OpenAPI 契约、变更记录与项目材料
 ## 文档导航
 
 - `docs/README.md`：文档总览和推荐阅读顺序。
+- `docs/a3/README.md`：A3 参赛专题文档入口、交付清单和验收顺序。
 - `docs/使用说明.md`：学生、教师、管理员三端使用路径。
 - `docs/openapi/openapi.yaml`：模块化 OpenAPI 契约源文件。
 - `docs/api.yaml`：Redocly CLI 打包后的单文件 OpenAPI 产物。

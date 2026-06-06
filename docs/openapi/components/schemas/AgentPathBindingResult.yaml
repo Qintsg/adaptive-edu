@@ -1,0 +1,27 @@
+type: object
+required:
+  - ok
+  - path_id
+  - run_id
+  - bindings
+properties:
+  ok:
+    type: boolean
+  path_id:
+    type: integer
+  run_id:
+    type: integer
+  bindings:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  nodes:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  warnings:
+    type: array
+    items:
+      type: string

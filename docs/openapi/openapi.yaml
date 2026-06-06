@@ -414,6 +414,20 @@ paths:
     $ref: ./paths/student_agent.yaml#/studentAgentProfileDialog
   /api/student/agent/generate-resources:
     $ref: ./paths/student_agent.yaml#/studentAgentGenerateResources
+  /api/student/agent/learning-package:
+    $ref: ./paths/student_agent.yaml#/studentAgentLearningPackage
+  /api/student/agent/apply-to-path:
+    $ref: ./paths/student_agent.yaml#/studentAgentApplyToPath
+  /api/student/agent/runs/{run_id}:
+    $ref: ./paths/student_agent.yaml#/studentAgentRunDetail
+  /api/student/agent/runs/{run_id}/complete:
+    $ref: ./paths/student_agent.yaml#/studentAgentRunComplete
+  /api/student/agent/resources:
+    $ref: ./paths/student_agent.yaml#/studentAgentResources
+  /api/student/agent/resources/{resource_id}/feedback:
+    $ref: ./paths/student_agent.yaml#/studentAgentResourceFeedback
+  /api/student/agent/effect-summary:
+    $ref: ./paths/student_agent.yaml#/studentAgentEffectSummary
   /api/student/ai/path-planning:
     $ref: ./paths/ai.yaml#/aiPathPlanning
   /api/student/ai/resource-reason:
@@ -514,10 +528,22 @@ components:
       $ref: ./components/schemas/AgentRun.yaml
     AgentTraceItem:
       $ref: ./components/schemas/AgentTraceItem.yaml
+    AgentLearningPackage:
+      $ref: ./components/schemas/AgentLearningPackage.yaml
+    AgentQualityReport:
+      $ref: ./components/schemas/AgentQualityReport.yaml
+    AgentPathBindingResult:
+      $ref: ./components/schemas/AgentPathBindingResult.yaml
     ProfileDialogResult:
       $ref: ./components/schemas/ProfileDialogResult.yaml
     GeneratedLearningResource:
       $ref: ./components/schemas/GeneratedLearningResource.yaml
+    GeneratedResourceFeedbackRequest:
+      $ref: ./components/schemas/GeneratedResourceFeedbackRequest.yaml
+    GeneratedResourceFeedbackResult:
+      $ref: ./components/schemas/GeneratedResourceFeedbackResult.yaml
+    AgentEffectSummary:
+      $ref: ./components/schemas/AgentEffectSummary.yaml
     OperationLog:
       $ref: ./components/schemas/OperationLog.yaml
   parameters:

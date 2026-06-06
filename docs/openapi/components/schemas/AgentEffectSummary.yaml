@@ -1,0 +1,24 @@
+type: object
+properties:
+  resource_count:
+    type: integer
+  feedback_count:
+    type: integer
+  completed_count:
+    type: integer
+  completion_rate:
+    type: number
+    format: float
+  average_rating:
+    type: number
+    format: float
+  useful_count:
+    type: integer
+  recent_feedback:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  update_summary:
+    type: object
+    additionalProperties: true

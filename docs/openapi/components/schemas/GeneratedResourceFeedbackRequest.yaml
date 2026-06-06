@@ -1,0 +1,32 @@
+type: object
+required:
+  - course_id
+  - completed
+properties:
+  course_id:
+    type: integer
+  completed:
+    type: boolean
+  rating:
+    type: integer
+    minimum: 1
+    maximum: 5
+    nullable: true
+  usefulness:
+    type: string
+    enum: [useful, neutral, not_useful]
+    default: neutral
+  difficulty:
+    type: string
+    enum: [easy, moderate, hard]
+    default: moderate
+  feedback:
+    type: string
+    maxLength: 2000
+  quiz_result:
+    type: object
+    additionalProperties: true
+  time_spent_seconds:
+    type: integer
+    minimum: 0
+    nullable: true

@@ -1,0 +1,35 @@
+type: object
+required:
+  - status
+  - score
+  - resource_count
+properties:
+  status:
+    type: string
+    enum: [passed, warning, failed]
+  score:
+    type: number
+    format: float
+  resource_count:
+    type: integer
+  required_types:
+    type: array
+    items:
+      type: string
+  missing_types:
+    type: array
+    items:
+      type: string
+  warnings:
+    type: array
+    items:
+      type: string
+  errors:
+    type: array
+    items:
+      type: string
+  resources:
+    type: array
+    items:
+      type: object
+      additionalProperties: true

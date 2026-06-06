@@ -1,0 +1,16 @@
+type: object
+properties:
+  feedback:
+    type: object
+    additionalProperties: true
+  created:
+    type: boolean
+  resource:
+    type: object
+    additionalProperties: true
+  node_update:
+    type: object
+    additionalProperties: true
+  update_summary:
+    type: object
+    additionalProperties: true
