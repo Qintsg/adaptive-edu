@@ -18,7 +18,7 @@ from ai_services.services.kt.prediction_modes import KTPredictionModeMixin
 
 
 logger = logging.getLogger(__name__)
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 
 MODEL_CONFIGS = {
@@ -50,6 +50,34 @@ def _resolve_backend_path(path_value: str | None) -> str:
     return str((BACKEND_ROOT / candidate).resolve())
 
 
+def _resolve_mefkt_model_path(raw_model_path: str | None, default_model_path: Path) -> str:
+    """
+    解析 MEFKT 模型路径，旧环境变量失效时回退到当前仓库默认模型。
+
+    :param raw_model_path: 环境变量或调用方传入的模型路径。
+    :param default_model_path: 当前仓库默认模型路径。
+    :return: 可用于运行时探测的绝对路径。
+    """
+    resolved_model_path_value = _resolve_backend_path(raw_model_path)
+    if resolved_model_path_value:
+        resolved_model_path = Path(resolved_model_path_value)
+        if resolved_model_path.exists():
+            return str(resolved_model_path)
+    else:
+        resolved_model_path = default_model_path
+
+    if default_model_path.exists():
+        logger.warning(
+            build_log_message(
+                "kt.model_path.fallback",
+                configured_path=str(resolved_model_path),
+                fallback_path=str(default_model_path),
+            )
+        )
+        return str(default_model_path)
+    return str(resolved_model_path)
+
+
 class KnowledgeTracingService(KTModelRuntimeMixin, KTPredictionModeMixin):
     """
     知识追踪服务类。
@@ -71,13 +99,18 @@ class KnowledgeTracingService(KTModelRuntimeMixin, KTPredictionModeMixin):
     ):
         """初始化知识追踪服务和预测模式配置。"""
         default_mefkt_model_root = BACKEND_ROOT / "models" / "MEFKT"
+        default_mefkt_model_path = default_mefkt_model_root / "mefkt_model.pt"
         raw_model_paths = model_paths or {
             "mefkt": os.getenv(
-                "KT_MEFKT_MODEL_PATH", str(default_mefkt_model_root / "mefkt_model.pt")
+                "KT_MEFKT_MODEL_PATH", str(default_mefkt_model_path)
             ),
         }
         self.model_paths = {
-            model_type: _resolve_backend_path(model_path)
+            model_type: (
+                _resolve_mefkt_model_path(model_path, default_mefkt_model_path)
+                if model_type == "mefkt"
+                else _resolve_backend_path(model_path)
+            )
             for model_type, model_path in raw_model_paths.items()
             if model_type in self.MODEL_CONFIGS
         }

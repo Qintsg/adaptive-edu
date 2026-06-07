@@ -19,7 +19,7 @@ from ai_services.services.mefkt.runtime import (
 )
 
 logger = logging.getLogger(__name__)
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 if TYPE_CHECKING:
     from models.MEFKT.model import MEFKTSequenceModel

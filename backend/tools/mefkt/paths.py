@@ -5,7 +5,7 @@
 from pathlib import Path
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 MEFKT_MODEL_PATH = BASE_DIR / "models" / "MEFKT" / "mefkt_model.pt"
 MEFKT_META_PATH = BASE_DIR / "models" / "MEFKT" / "mefkt_model.meta.json"
 MEFKT_PUBLIC_BASELINE_DIR = BASE_DIR / "models" / "MEFKT" / "public_baselines"

@@ -16,6 +16,16 @@ from tools.kt_synthetic import _build_kp_profiles, _simulate_student_sequence
 class MEFKTServiceTests(SimpleTestCase):
     """Cover MEFKT model registration, metadata and runtime loading."""
 
+    def test_mefkt_tool_paths_should_point_to_backend_models(self):
+        """MEFKT CLI status paths should resolve to backend/models."""
+        from tools.mefkt.paths import BASE_DIR, MEFKT_META_PATH, MEFKT_MODEL_PATH
+
+        backend_root = Path(__file__).resolve().parents[3]
+
+        self.assertEqual(BASE_DIR, backend_root)
+        self.assertEqual(MEFKT_MODEL_PATH, backend_root / "models" / "MEFKT" / "mefkt_model.pt")
+        self.assertEqual(MEFKT_META_PATH, backend_root / "models" / "MEFKT" / "mefkt_model.meta.json")
+
     def test_kt_service_model_info_should_expose_mefkt_config(self):
         """KT model-info payload should list MEFKT as an optional model."""
         from ai_services.services.kt.service import KnowledgeTracingService
@@ -33,6 +43,63 @@ class MEFKTServiceTests(SimpleTestCase):
             info["models"]["mefkt"]["paper_doi"], "10.11896/jsjkx.250700092"
         )
         self.assertTrue(info["models"]["mefkt"]["is_enabled"])
+
+    def test_kt_service_should_use_backend_model_path_by_default(self):
+        """KT service should use backend/models as the default MEFKT checkpoint path."""
+        from ai_services.services.kt.service import KnowledgeTracingService
+
+        backend_root = Path(__file__).resolve().parents[3]
+        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+
+        with patch.dict("os.environ", {}, clear=True):
+            service = KnowledgeTracingService()
+
+        self.assertEqual(Path(service.model_paths["mefkt"]), expected_path)
+
+    def test_kt_service_should_fallback_when_env_model_path_is_stale(self):
+        """A stale KT_MEFKT_MODEL_PATH should not hide the checked-in default model."""
+        from ai_services.services.kt.service import KnowledgeTracingService
+
+        backend_root = Path(__file__).resolve().parents[3]
+        stale_path = backend_root / "old-project" / "models" / "MEFKT" / "mefkt_model.pt"
+        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+
+        with patch.dict("os.environ", {"KT_MEFKT_MODEL_PATH": str(stale_path)}, clear=True):
+            service = KnowledgeTracingService()
+
+        self.assertEqual(Path(service.model_paths["mefkt"]), expected_path)
+
+    def test_auto_load_model_should_fallback_when_env_model_path_is_stale(self):
+        """MEFKT auto loader should load the default checkpoint when env path is stale."""
+        from ai_services.services.mefkt.loader import auto_load_mefkt_model
+
+        class FakePredictor:
+            """Capture the model path passed into auto loader."""
+
+            def __init__(self) -> None:
+                self.model_path = ""
+                self.metadata_path = None
+
+            def load_model(self, model_path: str, metadata_path: str | None = None) -> bool:
+                """Record load arguments and report success."""
+                self.model_path = model_path
+                self.metadata_path = metadata_path
+                return True
+
+        backend_root = Path(__file__).resolve().parents[3]
+        stale_path = str(backend_root / "old-project" / "mefkt_model.pt")
+        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+        predictor = FakePredictor()
+
+        loaded = auto_load_mefkt_model(
+            predictor,
+            backend_root,
+            {"KT_MEFKT_MODEL_PATH": stale_path},
+        )
+
+        self.assertTrue(loaded)
+        self.assertEqual(Path(predictor.model_path), expected_path)
+        self.assertIsNone(predictor.metadata_path)
 
     def test_mefkt_predictor_should_load_checkpoint_and_return_predictions(self):
         """A minimal MEFKT checkpoint should be loadable for KT prediction."""
