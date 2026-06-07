@@ -58,6 +58,11 @@ const currentCourseId = computed(() => courseStore.courseId)
 const resources = computed(() => packageResult.value?.resources || existingResources.value)
 const warnings = computed(() => packageResult.value?.warnings || [])
 const qualityReport = computed(() => packageResult.value?.quality_report || null)
+const qualityScoreText = computed(() => {
+  const rawScore = Number(qualityReport.value?.score ?? 0)
+  const percentage = rawScore <= 1 ? rawScore * 100 : rawScore
+  return `${Math.round(percentage)}%`
+})
 const canGenerate = computed(() => Boolean(currentCourseId.value && form.target.trim()))
 const profileFields = computed(() => Object.entries(form.profile).filter(([, value]) => value))
 const pathBindings = computed(() => packageResult.value?.path_suggestion.suggested_bindings || [])
@@ -217,7 +222,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
         <div class="hero-meta">
           <n-tag :bordered="false">课程：{{ courseStore.courseName || '未选择' }}</n-tag>
           <n-tag v-if="qualityReport" :type="qualityStatusType" :bordered="false">
-            质量分 {{ qualityReport.score }}
+            质量分 {{ qualityScoreText }}
           </n-tag>
         </div>
       </template>
