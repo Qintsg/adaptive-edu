@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import cast
 
 from platform_ai.kt.datasets import DEFAULT_PUBLIC_DATASET
+from tools.mefkt.course_data import build_course_bundle
 from tools.mefkt.paths import MEFKT_META_PATH, MEFKT_MODEL_PATH, MEFKT_PUBLIC_BASELINE_DIR
 from tools.mefkt.public_data import MEFKTTrainingBundle, _build_public_bundle
 from tools.mefkt.training_support import (
@@ -36,6 +37,10 @@ def _train_mefkt_bundle(
     num_heads: int,
     head_dim: int,
     use_gpu: bool | None = None,
+    seed: int = 42,
+    early_stopping_patience: int = 12,
+    lr_decay: float = 0.96,
+    profile: str = "full",
 ) -> dict[str, object]:
     """兼容旧私有入口，实际训练委托给 support 模块。"""
     return train_mefkt_bundle(
@@ -53,6 +58,10 @@ def _train_mefkt_bundle(
             num_heads=num_heads,
             head_dim=head_dim,
             use_gpu=use_gpu,
+            seed=seed,
+            early_stopping_patience=early_stopping_patience,
+            lr_decay=lr_decay,
+            profile=profile,
         ),
     )
 
@@ -75,14 +84,34 @@ def train_mefkt_v2(
     output_path: str | None = None,
     use_gpu: bool | None = None,
     sequence_max_step: int = 64,
+    validation_ratio: float = 0.2,
+    seed: int = 42,
+    early_stopping_patience: int = 12,
+    lr_decay: float = 0.96,
+    profile: str = "full",
 ) -> dict[str, object]:
     """训练 MEFKT 模型，保持旧参数签名兼容。"""
-    if course_id is not None or use_synthetic or synthetic_students != 96:
-        logger.info("MEFKT 训练已切换为公开数据优先模式，course_id/use_synthetic 参数仅保留兼容，不参与监督训练")
+    if use_synthetic or synthetic_students != 96:
+        logger.info("MEFKT 当前训练优先使用公开数据或课程真实历史，use_synthetic 参数仅保留兼容，不参与监督训练")
 
     dataset_name = (public_dataset or DEFAULT_PUBLIC_DATASET).strip().lower()
-    bundle = build_training_bundle(dataset_name, sequence_max_step, max_sequences)
-    output = resolve_mefkt_output_path(dataset_name, output_path)
+    if course_id is not None or profile == "course-finetune":
+        if course_id is None:
+            raise ValueError("course-finetune 训练需要传入 course_id")
+        bundle = build_course_bundle(
+            course_id=int(course_id),
+            validation_ratio=validation_ratio,
+            seed=seed,
+        )
+    else:
+        bundle = build_training_bundle(
+            dataset_name=dataset_name,
+            sequence_max_step=sequence_max_step,
+            max_sequences=max_sequences,
+            validation_ratio=validation_ratio,
+            seed=seed,
+        )
+    output = resolve_mefkt_output_path(bundle.dataset_name, output_path)
     result = _train_mefkt_bundle(
         bundle=bundle,
         output_path=output,
@@ -97,6 +126,10 @@ def train_mefkt_v2(
         num_heads=num_heads,
         head_dim=head_dim,
         use_gpu=use_gpu,
+        seed=seed,
+        early_stopping_patience=early_stopping_patience,
+        lr_decay=lr_decay,
+        profile=profile,
     )
     print_training_result(result)
     return result
@@ -106,11 +139,27 @@ def build_training_bundle(
     dataset_name: str,
     sequence_max_step: int,
     max_sequences: int | None,
+    validation_ratio: float = 0.2,
+    seed: int = 42,
 ) -> MEFKTTrainingBundle:
     """构建并按需裁剪公开训练包。"""
-    bundle = _build_public_bundle(dataset_name, sequence_max_step=sequence_max_step)
+    bundle = _build_public_bundle(
+        dataset_name,
+        sequence_max_step=sequence_max_step,
+        validation_ratio=validation_ratio,
+        seed=seed,
+    )
     if not max_sequences or len(bundle.sequences) <= max_sequences:
         return bundle
+    validation_limit = max(1, min(len(bundle.validation_sequences), max_sequences // 5))
+    test_limit = max(1, min(len(bundle.test_sequences), max_sequences // 5))
+    split_policy = {
+        **bundle.split_policy,
+        "max_sequences": max_sequences,
+        "train_sequences": max_sequences,
+        "validation_sequences": validation_limit,
+        "test_sequences": test_limit,
+    }
     return MEFKTTrainingBundle(
         dataset_name=bundle.dataset_name,
         item_ids=bundle.item_ids,
@@ -125,6 +174,14 @@ def build_training_bundle(
         exercise_type_vector=bundle.exercise_type_vector,
         training_mode=bundle.training_mode,
         training_sources=bundle.training_sources + [f"max_sequences={max_sequences}"],
+        validation_sequences=bundle.validation_sequences[:validation_limit],
+        test_sequences=bundle.test_sequences[:test_limit],
+        split_policy=split_policy,
+        graph_source=bundle.graph_source,
+        feature_coverage=bundle.feature_coverage,
+        paper_reproduction_notes=bundle.paper_reproduction_notes + [
+            "本次训练使用 max_sequences 裁剪，仅适合作为 smoke/快速验证，不作为论文复现指标。",
+        ],
     )
 
 
@@ -140,10 +197,13 @@ def resolve_mefkt_output_path(dataset_name: str, output_path: str | None) -> Pat
 def print_training_result(result: dict[str, object]) -> None:
     """输出 MEFKT 训练摘要。"""
     metrics_payload = cast(dict[str, float], result["metrics"])
+    test_metrics_payload = cast(dict[str, float], result.get("test_metrics") or {})
     print(
         f"[MEFKT] 训练完成: dataset={result['training_dataset']}, "
-        f"auc={metrics_payload['auc']:.4f}, acc={metrics_payload['acc']:.4f}, "
-        f"path={result['model_path']}"
+        f"val_auc={metrics_payload['auc']:.4f}, val_acc={metrics_payload['acc']:.4f}, "
+        f"test_auc={test_metrics_payload.get('auc', 0.0):.4f}, "
+        f"test_acc={test_metrics_payload.get('acc', 0.0):.4f}, "
+        f"path={result['model_path']}, backup={result.get('backup_path')}"
     )
 
 

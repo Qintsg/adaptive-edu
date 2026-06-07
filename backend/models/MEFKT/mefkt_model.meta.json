@@ -2,12 +2,15 @@
   "model_name": "MEFKT",
   "paper_title": "融合多视角习题表征与遗忘机制的深度知识追踪",
   "paper_doi": "10.11896/jsjkx.250700092",
-  "created_at": "2026-04-04T08:06:38.826238Z",
+  "created_at": "2026-06-07T12:29:19.061508Z",
   "runtime_schema": "question_online_v1",
   "training_mode": "public_pretrain_question_online",
   "training_dataset": "assist2017",
   "public_training_only": true,
   "question_online_enabled": true,
+  "is_paper_reproduction_candidate": false,
+  "paper_reproduction_level": "engineering_adaptation",
+  "paper_reproduction_summary": "公开数据训练使用题目关系和属性代理特征，属于工程化适配而非严格论文复现。",
   "item_count": 102,
   "item_ids": [
     0,
@@ -219,21 +222,53 @@
   ],
   "feature_dim": 16,
   "relation_dim": 4,
-  "embedding_dim": 128,
+  "embedding_dim": 256,
   "num_heads": 4,
   "head_dim": 32,
-  "hidden_dim": 64,
-  "align_dim": 64,
-  "epochs": 4,
-  "pretrain_epochs": 2,
+  "hidden_dim": 128,
+  "align_dim": 128,
+  "epochs": 8,
+  "pretrain_epochs": 4,
   "learning_rate": 0.001,
-  "batch_size": 4,
+  "batch_size": 256,
   "similarity_weight": 0.5,
+  "seed": 42,
+  "early_stopping_patience": 3,
+  "lr_decay": 0.96,
+  "training_profile": "full",
+  "torch_version": "2.11.0+cu130",
+  "torch_cuda_version": "13.0",
+  "cuda_available": true,
+  "requested_gpu": true,
+  "using_gpu": true,
   "training_device": "cuda:0",
+  "training_device_reason": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
   "training_sources": [
     "models/MEFKT/public_datasets/assist2017/assist2017_train.txt",
-    "sequence_max_step=32",
-    "max_sequences=128"
+    "models/MEFKT/public_datasets/assist2017/assist2017_test.txt",
+    "sequence_max_step=64"
+  ],
+  "split_policy": {
+    "strategy": "sequence_level_train_validation_with_public_test_file",
+    "validation_ratio": 0.2,
+    "seed": 42,
+    "train_sequences": 9848,
+    "validation_sequences": 2462,
+    "test_sequences": 3254
+  },
+  "graph_source": "sequence_transition_plus_short_window_cooccurrence_proxy",
+  "feature_coverage": {
+    "real_response_time_ratio": 0.0,
+    "real_question_type_ratio": 0.0,
+    "difficulty_source": "train_error_rate",
+    "response_time_source": "revisit_distance_proxy",
+    "question_type_source": "unknown_default",
+    "item_count": 102
+  },
+  "paper_reproduction_notes": [
+    "仓库内公开三行数据缺少显式题目-知识点矩阵，当前使用序列转移和短窗口共现代理习题关系图。",
+    "仓库内公开三行数据缺少真实响应时长和题型，相关属性使用代理特征并在元数据中标记。"
   ],
   "type_mapping": {
     "unknown": 0,
@@ -278,11 +313,83 @@
     "resource_overlap"
   ],
   "best_metrics": {
-    "auc": 0.6481017280649634,
-    "acc": 0.6104218362282878,
-    "samples": 806.0
+    "auc": 0.6703320293510378,
+    "acc": 0.6660984590208646,
+    "samples": 146660.0
   },
+  "test_metrics": {
+    "auc": 0.674461654555767,
+    "acc": 0.672223741018327,
+    "samples": 193867.0
+  },
+  "training_history": [
+    {
+      "epoch": 1.0,
+      "loss": 0.6396545966466268,
+      "val_auc": 0.6480725974006555,
+      "val_acc": 0.6595936178917223,
+      "val_samples": 146660.0,
+      "lr": 0.001
+    },
+    {
+      "epoch": 2.0,
+      "loss": 0.6255634381220891,
+      "val_auc": 0.6570394965017884,
+      "val_acc": 0.6607391245056593,
+      "val_samples": 146660.0,
+      "lr": 0.00096
+    },
+    {
+      "epoch": 3.0,
+      "loss": 0.6224911549152472,
+      "val_auc": 0.6622757066217239,
+      "val_acc": 0.6626414837038047,
+      "val_samples": 146660.0,
+      "lr": 0.0009216
+    },
+    {
+      "epoch": 4.0,
+      "loss": 0.6205525214855487,
+      "val_auc": 0.6645985534869102,
+      "val_acc": 0.6639369971362334,
+      "val_samples": 146660.0,
+      "lr": 0.0008847359999999999
+    },
+    {
+      "epoch": 5.0,
+      "loss": 0.6196027428675921,
+      "val_auc": 0.66604159188626,
+      "val_acc": 0.6649734078821765,
+      "val_samples": 146660.0,
+      "lr": 0.0008493465599999999
+    },
+    {
+      "epoch": 6.0,
+      "loss": 0.6182577778131534,
+      "val_auc": 0.6679754212623997,
+      "val_acc": 0.6663371062321014,
+      "val_samples": 146660.0,
+      "lr": 0.0008153726975999999
+    },
+    {
+      "epoch": 7.0,
+      "loss": 0.6174806509262476,
+      "val_auc": 0.6688479957537943,
+      "val_acc": 0.6665552979680894,
+      "val_samples": 146660.0,
+      "lr": 0.0007827577896959998
+    },
+    {
+      "epoch": 8.0,
+      "loss": 0.6169003798411443,
+      "val_auc": 0.6703320293510378,
+      "val_acc": 0.6660984590208646,
+      "val_samples": 146660.0,
+      "lr": 0.0007514474781081598
+    }
+  ],
   "model_path": "models/MEFKT/mefkt_model.pt",
+  "backup_path": "models/MEFKT/mefkt_model.pt.bak",
   "response_time_proxy": "公开数据使用重访距离代理，在线课程题图使用题目难度、长度、历史正确率与图结构统计综合近似",
   "difficulty_proxy": "公开数据使用错误率，在线课程题图使用题目难度与历史表现联合编码"
 }

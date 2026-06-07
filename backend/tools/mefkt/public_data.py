@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import csv
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import torch
@@ -15,6 +15,8 @@ from torch import Tensor
 from models.MEFKT.model import NODE_FEATURE_SCHEMA, QUESTION_TYPE_VOCAB
 from platform_ai.kt.datasets import get_public_dataset_info
 from tools.mefkt.paths import BASE_DIR
+
+SequenceRecord = tuple[list[int], list[int], list[float]]
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,12 @@ class MEFKTTrainingBundle:
     exercise_type_vector: Tensor
     training_mode: str
     training_sources: list[str]
+    validation_sequences: list[SequenceRecord] = field(default_factory=list)
+    test_sequences: list[SequenceRecord] = field(default_factory=list)
+    split_policy: dict[str, object] = field(default_factory=dict)
+    graph_source: str = "sequence_transition_proxy"
+    feature_coverage: dict[str, object] = field(default_factory=dict)
+    paper_reproduction_notes: list[str] = field(default_factory=list)
 
 
 def relative_to_project(path_value: Path | str) -> str:
@@ -71,8 +79,23 @@ def load_three_line_sequences(data_path: Path) -> list[tuple[list[int], list[int
     return sequences
 
 
+def looks_like_three_line_sequences(data_path: Path) -> bool:
+    """判断带非标准后缀的数据是否实际采用三行序列格式。"""
+    lines = [line.strip() for line in data_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if len(lines) < 3:
+        return False
+    try:
+        int(lines[0].rstrip(","))
+    except ValueError:
+        return False
+    return "," in lines[1] and "," in lines[2]
+
+
 def load_csv_sequences(data_path: Path) -> list[tuple[list[int], list[int]]]:
     """读取带 user / item / correct 字段的 CSV 公开数据。"""
+    if looks_like_three_line_sequences(data_path):
+        return load_three_line_sequences(data_path)
+
     with data_path.open("r", encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))
     if not rows:
@@ -136,8 +159,12 @@ def chunk_public_sequences(raw_sequences: list[tuple[list[int], list[int]]], seq
     return chunked_sequences
 
 
-def build_transition_matrices(sequence_items: list[list[int]], item_count: int) -> tuple[Tensor, Tensor, Tensor, list[int]]:
-    """根据交互转移构建无向图、前驱/后继统计与出现次数。"""
+def build_transition_matrices(
+    sequence_items: list[list[int]],
+    item_count: int,
+    cooccurrence_window: int = 3,
+) -> tuple[Tensor, Tensor, Tensor, list[int]]:
+    """根据交互转移与短窗口共现构建无向图、前驱/后继统计与出现次数。"""
     adjacency = torch.zeros(item_count, item_count, dtype=torch.float32)
     predecessor_matrix = torch.zeros(item_count, item_count, dtype=torch.float32)
     successor_matrix = torch.zeros(item_count, item_count, dtype=torch.float32)
@@ -150,6 +177,14 @@ def build_transition_matrices(sequence_items: list[list[int]], item_count: int) 
             adjacency[right_item, left_item] += 1.0
             successor_matrix[left_item, right_item] += 1.0
             predecessor_matrix[right_item, left_item] += 1.0
+        if cooccurrence_window > 1:
+            for left_position, left_item in enumerate(item_sequence):
+                right_limit = min(len(item_sequence), left_position + cooccurrence_window + 1)
+                for right_item in item_sequence[left_position + 1 : right_limit]:
+                    if left_item == right_item:
+                        continue
+                    adjacency[left_item, right_item] += 1.0
+                    adjacency[right_item, left_item] += 1.0
     return (adjacency > 0).float(), (predecessor_matrix > 0).float(), (successor_matrix > 0).float(), occurrence_count
 
 
@@ -221,30 +256,62 @@ def build_public_features(adjacency: Tensor, predecessor_matrix: Tensor, success
     return node_feature_matrix, relation_stats_matrix
 
 
-def build_public_bundle(dataset_name: str, sequence_max_step: int = 64) -> MEFKTTrainingBundle:
-    """从公开数据构建固定特征维度的训练包。"""
-    dataset_info = get_public_dataset_info(dataset_name)
-    if not dataset_info.is_available or dataset_info.train_path is None:
-        raise FileNotFoundError(f"公开数据集不可用: {dataset_name}")
-
-    raw_sequences = chunk_public_sequences(load_public_sequences(dataset_info.train_path), sequence_max_step=sequence_max_step)
-    if not raw_sequences:
-        raise ValueError(f"公开数据集没有可用样本: {dataset_name}")
-
-    raw_item_ids = sorted({item_id for item_sequence, _ in raw_sequences for item_id in item_sequence})
-    item_id_to_index = {item_id: index for index, item_id in enumerate(raw_item_ids)}
-    mapped_sequences: list[tuple[list[int], list[int], list[float]]] = []
+def map_public_sequences(
+    raw_sequences: list[tuple[list[int], list[int]]],
+    item_id_to_index: dict[int, int],
+) -> list[SequenceRecord]:
+    """将公开数据原始 item id 序列映射为模型内部连续索引。"""
+    mapped_sequences: list[SequenceRecord] = []
     for item_sequence, correct_sequence in raw_sequences:
         mapped_item_sequence = [item_id_to_index[item_id] for item_id in item_sequence if item_id in item_id_to_index]
         if len(mapped_item_sequence) != len(correct_sequence) or len(mapped_item_sequence) < 2:
             continue
         mapped_sequences.append((mapped_item_sequence, list(correct_sequence), [1.0 for _ in mapped_item_sequence]))
-    if not mapped_sequences:
+    return mapped_sequences
+
+
+def build_public_bundle(
+    dataset_name: str,
+    sequence_max_step: int = 64,
+    validation_ratio: float = 0.2,
+    seed: int = 42,
+) -> MEFKTTrainingBundle:
+    """从公开数据构建固定特征维度的训练包。"""
+    dataset_info = get_public_dataset_info(dataset_name)
+    if not dataset_info.is_available or dataset_info.train_path is None:
+        raise FileNotFoundError(f"公开数据集不可用: {dataset_name}")
+
+    raw_train_sequences = chunk_public_sequences(
+        load_public_sequences(dataset_info.train_path),
+        sequence_max_step=sequence_max_step,
+    )
+    raw_test_sequences = (
+        chunk_public_sequences(load_public_sequences(dataset_info.test_path), sequence_max_step=sequence_max_step)
+        if dataset_info.test_path and dataset_info.test_path.exists()
+        else []
+    )
+    if not raw_train_sequences:
+        raise ValueError(f"公开数据集没有可用样本: {dataset_name}")
+
+    raw_item_ids = sorted({
+        item_id
+        for item_sequence, _ in raw_train_sequences + raw_test_sequences
+        for item_id in item_sequence
+    })
+    item_id_to_index = {item_id: index for index, item_id in enumerate(raw_item_ids)}
+    mapped_train_sequences = map_public_sequences(raw_train_sequences, item_id_to_index)
+    mapped_test_sequences = map_public_sequences(raw_test_sequences, item_id_to_index)
+    train_sequences, validation_sequences = split_sequences(
+        mapped_train_sequences,
+        validation_ratio=validation_ratio,
+        seed=seed,
+    )
+    if not train_sequences:
         raise ValueError(f"公开数据集映射后没有可用样本: {dataset_name}")
 
     item_count = len(raw_item_ids)
-    sequence_items = [item_sequence for item_sequence, _, _ in mapped_sequences]
-    sequence_correct = [correct_sequence for _, correct_sequence, _ in mapped_sequences]
+    sequence_items = [item_sequence for item_sequence, _, _ in train_sequences]
+    sequence_correct = [correct_sequence for _, correct_sequence, _ in train_sequences]
     adjacency, predecessor_matrix, successor_matrix, occurrence_count = build_transition_matrices(sequence_items, item_count)
     difficulty_tensor = estimate_public_difficulty(sequence_items, sequence_correct, item_count)
     response_time_tensor = estimate_public_time_proxy(sequence_items, item_count)
@@ -254,7 +321,7 @@ def build_public_bundle(dataset_name: str, sequence_max_step: int = 64) -> MEFKT
         item_ids=raw_item_ids,
         item_names=[f"public_item_{item_id}" for item_id in raw_item_ids],
         type_mapping={key: value for key, value in QUESTION_TYPE_VOCAB.items()},
-        sequences=mapped_sequences,
+        sequences=train_sequences,
         node_feature_matrix=node_feature_matrix,
         relation_stats_matrix=relation_stats_matrix,
         adjacency_matrix=adjacency,
@@ -262,7 +329,34 @@ def build_public_bundle(dataset_name: str, sequence_max_step: int = 64) -> MEFKT
         response_time_vector=response_time_tensor,
         exercise_type_vector=torch.zeros(item_count, dtype=torch.long),
         training_mode="public_pretrain_question_online",
-        training_sources=[relative_to_project(dataset_info.train_path), f"sequence_max_step={sequence_max_step}"],
+        training_sources=[
+            relative_to_project(dataset_info.train_path),
+            *( [relative_to_project(dataset_info.test_path)] if dataset_info.test_path and dataset_info.test_path.exists() else [] ),
+            f"sequence_max_step={sequence_max_step}",
+        ],
+        validation_sequences=validation_sequences,
+        test_sequences=mapped_test_sequences,
+        split_policy={
+            "strategy": "sequence_level_train_validation_with_public_test_file",
+            "validation_ratio": validation_ratio,
+            "seed": seed,
+            "train_sequences": len(train_sequences),
+            "validation_sequences": len(validation_sequences),
+            "test_sequences": len(mapped_test_sequences),
+        },
+        graph_source="sequence_transition_plus_short_window_cooccurrence_proxy",
+        feature_coverage={
+            "real_response_time_ratio": 0.0,
+            "real_question_type_ratio": 0.0,
+            "difficulty_source": "train_error_rate",
+            "response_time_source": "revisit_distance_proxy",
+            "question_type_source": "unknown_default",
+            "item_count": item_count,
+        },
+        paper_reproduction_notes=[
+            "仓库内公开三行数据缺少显式题目-知识点矩阵，当前使用序列转移和短窗口共现代理习题关系图。",
+            "仓库内公开三行数据缺少真实响应时长和题型，相关属性使用代理特征并在元数据中标记。",
+        ],
     )
 
 
@@ -322,6 +416,7 @@ _load_three_line_sequences = load_three_line_sequences
 _load_csv_sequences = load_csv_sequences
 _load_public_sequences = load_public_sequences
 _chunk_public_sequences = chunk_public_sequences
+_map_public_sequences = map_public_sequences
 _build_transition_matrices = build_transition_matrices
 _estimate_public_difficulty = estimate_public_difficulty
 _estimate_public_time_proxy = estimate_public_time_proxy

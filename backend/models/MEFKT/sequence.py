@@ -156,45 +156,103 @@ class MEFKTSequenceModel(nn.Module):
         :return: `(预测概率, 有效位置掩码)`。
         """
         batch_size, sequence_length = sequence_item_indices.shape
-        prediction = torch.zeros(
-            batch_size,
-            sequence_length - 1,
-            device=sequence_item_indices.device,
+        if sequence_length <= 1:
+            empty_prediction = torch.zeros(batch_size, 0, device=sequence_item_indices.device)
+            empty_mask = torch.zeros(batch_size, 0, dtype=torch.bool, device=sequence_item_indices.device)
+            return empty_prediction, empty_mask
+
+        safe_item_indices = sequence_item_indices.clamp_min(0).long()
+        valid_positions = sequence_item_indices >= 0
+        item_embedding = self.item_embedding(safe_item_indices)
+        answer_embedding = self.answer_embedding(sequence_correct_flags.long().clamp(0, 1))
+        interaction_embedding = self.history_projection(
+            torch.cat([item_embedding, answer_embedding], dim=2)
         )
-        valid_mask = torch.zeros(
+        query_tensor = self.query_projection(item_embedding).view(
             batch_size,
-            sequence_length - 1,
-            dtype=torch.bool,
-            device=sequence_item_indices.device,
+            sequence_length,
+            self.num_heads,
+            self.head_dim,
+        )
+        key_tensor = self.key_projection(item_embedding).view(
+            batch_size,
+            sequence_length,
+            self.num_heads,
+            self.head_dim,
+        )
+        value_tensor = self.value_projection(interaction_embedding).view(
+            batch_size,
+            sequence_length,
+            self.num_heads,
+            self.head_dim,
         )
 
-        for batch_index in range(batch_size):
-            valid_positions = torch.nonzero(
-                sequence_item_indices[batch_index] >= 0,
-                as_tuple=False,
-            ).flatten()
-            if valid_positions.numel() <= 1:
-                continue
-            last_position = int(valid_positions[-1].item())
-            for target_position in range(1, last_position + 1):
-                history_indices = sequence_item_indices[batch_index, :target_position]
-                history_mask = history_indices >= 0
-                history_indices = history_indices[history_mask]
-                history_correct = sequence_correct_flags[batch_index, :target_position][history_mask]
-                history_time_gap = sequence_time_gaps[batch_index, :target_position][history_mask]
-                candidate_index = sequence_item_indices[
-                    batch_index,
-                    target_position : target_position + 1,
-                ]
-                probability = self.predict_candidate(
-                    history_item_indices=history_indices,
-                    history_correct_flags=history_correct,
-                    history_time_gaps=history_time_gap,
-                    candidate_item_indices=candidate_index,
-                )[0]
-                prediction[batch_index, target_position - 1] = probability
-                valid_mask[batch_index, target_position - 1] = True
-        return prediction, valid_mask
+        target_count = sequence_length - 1
+        history_query = query_tensor[:, :-1]
+        history_key = key_tensor[:, :-1]
+        history_value = value_tensor[:, :-1]
+        candidate_query = query_tensor[:, 1:]
+        candidate_embedding = item_embedding[:, 1:]
+        history_valid = valid_positions[:, :-1]
+        target_valid = valid_positions[:, 1:]
+
+        target_positions = torch.arange(target_count, device=sequence_item_indices.device)
+        history_positions = torch.arange(target_count, device=sequence_item_indices.device)
+        causal_mask = history_positions.unsqueeze(0) <= target_positions.unsqueeze(1)
+        valid_history_mask = (
+            history_valid.unsqueeze(1)
+            & target_valid.unsqueeze(2)
+            & causal_mask.unsqueeze(0)
+        )
+        valid_mask = target_valid & valid_history_mask.any(dim=2)
+        valid_history_float = valid_history_mask.float()
+
+        self_relevance = torch.sum(history_query * history_key, dim=3) / math.sqrt(self.head_dim)
+        masked_self_relevance = self_relevance.unsqueeze(1).masked_fill(
+            ~valid_history_mask.unsqueeze(3),
+            -1.0e9,
+        )
+        relevance_score = torch.softmax(masked_self_relevance, dim=2) * valid_history_float.unsqueeze(3)
+        cumulative_relevance = torch.flip(
+            torch.cumsum(torch.flip(relevance_score, dims=[2]), dim=2),
+            dims=[2],
+        )
+
+        history_gap = sequence_time_gaps[:, :-1].float().clamp_min(1.0)
+        masked_gap = history_gap.unsqueeze(1) * valid_history_float
+        cumulative_gap = torch.flip(
+            torch.cumsum(torch.flip(masked_gap, dims=[2]), dim=2),
+            dims=[2],
+        )
+        step_distance = (
+            target_positions.unsqueeze(1) - history_positions.unsqueeze(0) + 1
+        ).clamp_min(1).float()
+        perceived_distance = (
+            step_distance.unsqueeze(0).unsqueeze(3)
+            * cumulative_gap.unsqueeze(3)
+            * cumulative_relevance
+        )
+
+        raw_score = torch.einsum("bshd,bthd->btsh", history_key, candidate_query) / math.sqrt(self.head_dim)
+        theta = functional.softplus(self.theta_raw).view(1, 1, 1, self.num_heads) + 1e-4
+        decay_score = torch.exp(-theta * perceived_distance)
+        attention_logits = (raw_score * decay_score).masked_fill(
+            ~valid_history_mask.unsqueeze(3),
+            -1.0e9,
+        )
+        attention_weight = torch.softmax(attention_logits, dim=2) * valid_history_float.unsqueeze(3)
+        context_tensor = torch.sum(
+            attention_weight.unsqueeze(4) * history_value.unsqueeze(1),
+            dim=2,
+        ).reshape(batch_size, target_count, self.num_heads * self.head_dim)
+        output_input = torch.cat([context_tensor, candidate_embedding], dim=2)
+        prediction = torch.sigmoid(
+            self.output_layer(output_input.reshape(batch_size * target_count, -1)).view(
+                batch_size,
+                target_count,
+            )
+        )
+        return prediction * valid_mask.float(), valid_mask
 
 
 __all__ = ["MEFKTSequenceModel"]

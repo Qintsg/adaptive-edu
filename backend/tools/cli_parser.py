@@ -196,6 +196,19 @@ def build_parser() -> argparse.ArgumentParser:
     mefkt_parser.add_argument("--synthetic", action="store_true")
     mefkt_parser.add_argument("--synthetic-students", type=int, default=96)
     mefkt_parser.add_argument("--max-sequences", type=int, default=None)
+    mefkt_parser.add_argument("--sequence-max-step", type=int, default=64)
+    mefkt_parser.add_argument("--validation-ratio", type=float, default=0.2)
+    mefkt_parser.add_argument("--seed", type=int, default=42)
+    mefkt_parser.add_argument("--early-stopping-patience", type=int, default=12)
+    mefkt_parser.add_argument("--lr-decay", type=float, default=0.96)
+    mefkt_parser.add_argument("--num-heads", type=int, default=4)
+    mefkt_parser.add_argument("--head-dim", type=int, default=32)
+    mefkt_parser.add_argument(
+        "--profile",
+        choices=["smoke", "full", "paper", "course-finetune"],
+        default="full",
+    )
+    mefkt_parser.add_argument("--use-gpu", action="store_true")
     mefkt_parser.add_argument("--output", type=str, default=None)
 
     build_rag_parser = sub.add_parser("build-rag-index", help="构建 RAG 索引")
@@ -343,6 +356,15 @@ def _dispatch_training_commands(args: argparse.Namespace) -> bool:
             synthetic_students=args.synthetic_students,
             max_sequences=args.max_sequences,
             output_path=args.output,
+            use_gpu=args.use_gpu,
+            sequence_max_step=args.sequence_max_step,
+            validation_ratio=args.validation_ratio,
+            seed=args.seed,
+            early_stopping_patience=args.early_stopping_patience,
+            lr_decay=args.lr_decay,
+            num_heads=args.num_heads,
+            head_dim=args.head_dim,
+            profile=args.profile,
         )
     elif args.cmd == "build-rag-index":
         print("\n".join(build_rag_index(course_id=args.course_id)))

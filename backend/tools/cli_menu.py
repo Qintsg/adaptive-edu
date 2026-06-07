@@ -227,6 +227,11 @@ def _handle_kt_menu_choice(choice: str) -> bool | None:
         batch_size = int(input("批大小(默认32): ").strip() or "32")
         hidden_dim = int(input("隐藏维度(默认128): ").strip() or "128")
         align_dim = int(input("对齐维度(默认128): ").strip() or "128")
+        profile = input("训练画像(smoke/full/paper/course-finetune，默认full): ").strip() or "full"
+        num_heads = int(input("注意力头数(默认4，论文建议8): ").strip() or "4")
+        head_dim = int(input("单头维度(默认32，论文建议128): ").strip() or "32")
+        seed = int(input("随机种子(默认42): ").strip() or "42")
+        use_gpu = _prompt_yes_no("使用GPU训练(y/N): ", default=False)
         synthetic_enabled = _prompt_yes_no("启用合成轨迹辅助(y/N): ", default=False)
         synthetic_students = int(input("合成学生数(默认96): ").strip() or "96")
         max_sequences_text = input("最大序列数(留空不限制): ").strip()
@@ -238,11 +243,16 @@ def _handle_kt_menu_choice(choice: str) -> bool | None:
             batch_size=batch_size,
             hidden_dim=hidden_dim,
             align_dim=align_dim,
+            num_heads=num_heads,
+            head_dim=head_dim,
             public_dataset=public_dataset,
             use_synthetic=synthetic_enabled,
             synthetic_students=synthetic_students,
             max_sequences=int(max_sequences_text) if max_sequences_text else None,
             output_path=output_path,
+            use_gpu=use_gpu,
+            seed=seed,
+            profile=profile,
         )
         return True
     return None
