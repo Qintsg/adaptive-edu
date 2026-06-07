@@ -83,13 +83,14 @@ class LangChainAgentService:
 
             model_kwargs = {
                 "model": self.model_name,
-                "temperature": self.temperature,
                 "api_key": self.api_key,
                 "base_url": self.base_url,
                 "openai_proxy": self.proxy_url or None,
                 "request_timeout": self.request_timeout,
                 "max_retries": self.max_retries,
             }
+            if not self.reasoning_enabled:
+                model_kwargs["temperature"] = self.temperature
             if self.extra_body:
                 model_kwargs["extra_body"] = self.extra_body
             if self.reasoning_enabled and self.reasoning_effort:
@@ -244,8 +245,9 @@ def get_default_agent_service() -> LangChainAgentService:
     from ai_services.services.llm.service import LLMService, resolve_llm_proxy_for_base_url
 
     llm_service = LLMService()
+    parameter_plan = llm_service._resolve_call_parameter_plan("agent_orchestration")
     return get_agent_service(
-        model_name=llm_service.model_name,
+        model_name=parameter_plan.model_name,
         api_key=llm_service.resolved_api_key,
         base_url=llm_service.resolved_base_url,
         api_format=llm_service.api_format,
@@ -253,10 +255,10 @@ def get_default_agent_service() -> LangChainAgentService:
         request_timeout=int(getattr(settings, "LLM_REQUEST_TIMEOUT", 120) or 120),
         max_retries=int(getattr(settings, "LLM_MAX_RETRIES", 2) or 2),
         proxy_url=resolve_llm_proxy_for_base_url(llm_service.resolved_base_url),
-        reasoning_enabled=bool(getattr(settings, "LLM_REASONING_ENABLED", False)),
-        reasoning_effort=str(getattr(settings, "LLM_REASONING_EFFORT", "") or ""),
+        reasoning_enabled=parameter_plan.thinking_enabled,
+        reasoning_effort=parameter_plan.reasoning_effort,
         extra_body_json=json.dumps(
-            llm_service.resolved_extra_body,
+            parameter_plan.extra_body,
             ensure_ascii=False,
             sort_keys=True,
         ),

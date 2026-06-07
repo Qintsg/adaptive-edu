@@ -2,6 +2,18 @@
 
 ## 2026-06-07
 
+### Backend / LLM — DeepSeek V4 调用参数规划与配置收敛
+
+- LLM 默认全面转向 DeepSeek V4 调用策略，按任务在 `deepseek-v4-pro` 与 `deepseek-v4-flash` 间选择；运行时配置收敛为统一 OpenAI 兼容网关 `LLM_API_KEY`、可选 `LLM_BASE_URL` 和 `LLM_LOW_REASONING_MODE`，不再从 `.env` 读取其它厂商专用 Key、全局模型名或全局思考参数。
+- `LLMService` 新增调用级参数规划：画像、路径、反馈报告、KT 分析和 Agent 编排按内置策略使用 Pro 并启用 DeepSeek `thinking` 与 `reasoning_effort`，GraphRAG、聊天、资源推荐和题目选择等低延迟链路默认使用 Flash 并关闭思考。
+- 低思考/加速模式开启后会强制所有调用使用 Flash 并关闭思考；代码层仍保留其它 OpenAI 兼容模型名的识别能力，但统一复用 `LLM_API_KEY` 与 `LLM_BASE_URL`。
+
+### Backend / KT — 题目级在线模型业务调用契约修正
+
+- KT 业务历史统一支持 `knowledge_point_ids` 并在送入 MEFKT 前折叠按知识点展开的相邻记录，保留每题一次的题目级交互，同时不吞掉同题重复练习的时序信号。
+- 知识测评、学生端初测、路径生成/刷新、画像刷新、阶段测试、节点小测、作业提交和反馈报告生成均显式携带 `course_id`、题目级 `question_id` 历史与合理的目标知识点集合。
+- 作业提交与反馈报告生成在统计回退时只写回本次有直接证据覆盖的知识点，真实 `mefkt_question_online` 输出仍可保留题图推断结果。
+
 ### Backend / API — A3 Agent 学习包、路径绑定与反馈闭环
 
 - 新增学生端 Agent 学习包能力：`/api/student/agent/learning-package` 生成进度事件、质量报告、资源列表和路径绑定建议。

@@ -81,7 +81,7 @@ def test_llm_service():
     from ai_services.services import llm_service
 
     print('开始测试大模型服务...')
-    print(f"模型: {getattr(llm_service, 'model_name', 'unknown')}, "
+    print(f"模型策略: {getattr(llm_service, 'planned_model_family', getattr(llm_service, 'model_name', 'unknown'))}, "
           f"可用: {getattr(llm_service, 'is_available', False)}")
 
     out = llm_service.generate_resource_reason(

@@ -8,53 +8,42 @@ from django.test import SimpleTestCase, override_settings
 
 
 class LLMProviderConfigTests(SimpleTestCase):
-    """Validate multi-provider LLM configuration resolution."""
+    """Validate unified OpenAI-compatible LLM configuration resolution."""
 
     @override_settings(
-        LLM_PROVIDER="doubao",
-        LLM_MODEL="ByteDance-Seed-1.8",
-        LLM_API_FORMAT="openai-compatible",
-        LLM_BASE_URL="",
-        ARK_API_KEY="ark-demo-key",
-        DOUBAO_API_KEY="",
-        DOUBAO_BASE_URL="https://ark.example.com/api/v3",
+        LLM_BASE_URL="https://llm-gateway.example.edu/v1",
+        LLM_API_KEY="gateway-demo-key",
     )
-    def test_llm_service_should_resolve_explicit_doubao_provider(self):
-        """Explicit provider settings should prefer provider-specific keys and URLs."""
+    def test_llm_service_should_default_to_deepseek_v4_policy_with_unified_gateway(self):
+        """Default service should use DeepSeek V4 policy and the unified OpenAI-compatible gateway."""
         from ai_services.services.llm.service import LLMService
 
         service = LLMService()
 
-        self.assertEqual(service.provider_name, "doubao")
-        self.assertEqual(service.resolved_api_key, "ark-demo-key")
-        self.assertEqual(service.resolved_base_url, "https://ark.example.com/api/v3")
+        self.assertEqual(service.provider_name, "deepseek")
+        self.assertEqual(service.planned_model_family, "deepseek-v4-pro/flash")
+        self.assertEqual(service.resolved_api_key, "gateway-demo-key")
+        self.assertEqual(service.resolved_base_url, "https://llm-gateway.example.edu/v1")
         self.assertEqual(service.api_format, "openai-compatible")
 
     @override_settings(
-        LLM_PROVIDER="custom",
-        LLM_MODEL="campus-private-chat",
-        LLM_API_FORMAT="chat-completions",
-        LLM_BASE_URL="",
-        LLM_API_KEY="",
-        CUSTOM_LLM_API_KEY="custom-demo-key",
-        CUSTOM_LLM_BASE_URL="https://llm.example.edu/v1",
+        LLM_BASE_URL="https://llm-gateway.example.edu/v1",
+        LLM_API_KEY="gateway-demo-key",
     )
-    def test_llm_service_should_resolve_custom_gateway_fields(self):
-        """Custom provider should use dedicated custom gateway credentials when shared fields are blank."""
+    def test_llm_service_should_keep_other_models_in_code_on_unified_gateway(self):
+        """Code-level model overrides should not require provider-specific env keys."""
         from ai_services.services.llm.service import LLMService
 
-        service = LLMService()
+        service = LLMService(model_name="ByteDance-Seed-1.8")
 
-        self.assertEqual(service.provider_name, "custom")
-        self.assertEqual(service.resolved_api_key, "custom-demo-key")
-        self.assertEqual(service.resolved_base_url, "https://llm.example.edu/v1")
-        self.assertEqual(service.api_format, "chat-completions")
+        self.assertEqual(service.provider_name, "doubao")
+        self.assertEqual(service.resolved_api_key, "gateway-demo-key")
+        self.assertEqual(service.resolved_base_url, "https://llm-gateway.example.edu/v1")
+        self.assertEqual(service.api_format, "openai-compatible")
 
     @override_settings(
-        LLM_PROVIDER="deepseek",
-        LLM_MODEL="deepseek-chat",
-        DEEPSEEK_API_KEY="deepseek-demo-key",
-        DEEPSEEK_BASE_URL="https://api.deepseek.com",
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
         LLM_HTTP_PROXY="http://127.0.0.1:8080",
         LLM_HTTPS_PROXY="http://127.0.0.1:8443",
         HTTP_PROXY="http://127.0.0.1:8080",
@@ -80,22 +69,16 @@ class LLMProviderConfigTests(SimpleTestCase):
         )
 
     @override_settings(
-        LLM_PROVIDER="deepseek",
-        LLM_MODEL="deepseek-v4-flash",
-        LLM_API_FORMAT="openai-compatible",
-        LLM_BASE_URL="",
-        DEEPSEEK_API_KEY="deepseek-demo-key",
-        DEEPSEEK_BASE_URL="https://api.deepseek.com",
-        LLM_REASONING_ENABLED=False,
-        LLM_REASONING_EFFORT="",
-        LLM_EXTRA_BODY={},
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=False,
     )
     @patch("ai_services.services.llm.service.import_module")
-    def test_llm_service_should_default_deepseek_v4_to_non_thinking_mode(
+    def test_llm_service_should_use_flash_for_default_non_thinking_mode(
         self,
         mock_import_module,
     ):
-        """DeepSeek v4 default client should send the non-thinking gateway flag."""
+        """Default low-latency calls should use Flash and send the non-thinking gateway flag."""
         from ai_services.services.llm.service import LLMService
 
         chat_openai_class = Mock(return_value=Mock())
@@ -105,23 +88,79 @@ class LLMProviderConfigTests(SimpleTestCase):
         service._create_llm_client(request_timeout=12, max_retries=0)
 
         self.assertEqual(service.provider_name, "deepseek")
-        self.assertEqual(service.model_name, "deepseek-v4-flash")
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-flash")
         self.assertEqual(
             chat_openai_class.call_args.kwargs["extra_body"],
-            {"enable_thinking": False},
+            {"thinking": {"type": "disabled"}},
         )
+        self.assertEqual(chat_openai_class.call_args.kwargs["temperature"], 0.3)
         self.assertNotIn("reasoning_effort", chat_openai_class.call_args.kwargs)
 
     @override_settings(
-        LLM_PROVIDER="deepseek",
-        LLM_MODEL="deepseek-v4-flash",
-        LLM_API_FORMAT="openai-compatible",
-        LLM_BASE_URL="",
-        DEEPSEEK_API_KEY="deepseek-demo-key",
-        DEEPSEEK_BASE_URL="https://api.deepseek.com",
-        LLM_REASONING_ENABLED=False,
-        LLM_REASONING_EFFORT="",
-        LLM_EXTRA_BODY={},
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=False,
+    )
+    @patch("ai_services.services.llm.service.import_module")
+    def test_high_reasoning_call_should_enable_thinking_and_depth(
+        self,
+        mock_import_module,
+    ):
+        """Reasoning-heavy business calls should use Pro and enable DeepSeek thinking."""
+        from ai_services.services.llm.service import LLMService
+
+        chat_openai_class = Mock(return_value=Mock())
+        mock_import_module.return_value = SimpleNamespace(ChatOpenAI=chat_openai_class)
+
+        service = LLMService()
+        service._create_llm_client(
+            request_timeout=12,
+            max_retries=0,
+            call_type="profile_analysis",
+        )
+
+        self.assertEqual(
+            chat_openai_class.call_args.kwargs["extra_body"],
+            {"thinking": {"type": "enabled"}},
+        )
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-pro")
+        self.assertEqual(chat_openai_class.call_args.kwargs["reasoning_effort"], "high")
+        self.assertNotIn("temperature", chat_openai_class.call_args.kwargs)
+
+    @override_settings(
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=True,
+    )
+    @patch("ai_services.services.llm.service.import_module")
+    def test_low_reasoning_mode_should_disable_all_thinking(
+        self,
+        mock_import_module,
+    ):
+        """Global acceleration mode should use Flash and close thinking even for reasoning-heavy calls."""
+        from ai_services.services.llm.service import LLMService
+
+        chat_openai_class = Mock(return_value=Mock())
+        mock_import_module.return_value = SimpleNamespace(ChatOpenAI=chat_openai_class)
+
+        service = LLMService()
+        service._create_llm_client(
+            request_timeout=12,
+            max_retries=0,
+            call_type="profile_analysis",
+        )
+
+        self.assertEqual(
+            chat_openai_class.call_args.kwargs["extra_body"],
+            {"thinking": {"type": "disabled"}},
+        )
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-flash")
+        self.assertNotIn("reasoning_effort", chat_openai_class.call_args.kwargs)
+
+    @override_settings(
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=False,
     )
     @patch("ai_services.services.llm.service.import_module")
     def test_external_resource_recommendation_should_enable_provider_web_search(
@@ -152,7 +191,7 @@ class LLMProviderConfigTests(SimpleTestCase):
         self.assertEqual(result["resources"][0]["url"], "https://example.com/array")
         self.assertEqual(
             chat_openai_class.call_args.kwargs["extra_body"],
-            {"enable_thinking": False, "enable_search": True},
+            {"enable_search": True, "thinking": {"type": "disabled"}},
         )
 
     def test_llm_json_parser_should_ignore_think_blocks(self):
@@ -184,7 +223,7 @@ class LLMServiceRoutingTests(SimpleTestCase):
         mock_llm.invoke.return_value = SimpleNamespace(
             content='{"summary": "直连LLM结果"}'
         )
-        service._get_llm = Mock(return_value=mock_llm)
+        service._get_llm_for_policy = Mock(return_value=mock_llm)
         service._get_agent_service = Mock(
             return_value=Mock(
                 is_available=True,
@@ -199,6 +238,7 @@ class LLMServiceRoutingTests(SimpleTestCase):
         )
 
         service._get_agent_service.assert_not_called()
+        service._get_llm_for_policy.assert_called_once()
         mock_llm.invoke.assert_called_once()
         self.assertEqual(result["summary"], "直连LLM结果")
 
@@ -208,7 +248,7 @@ class LLMServiceRoutingTests(SimpleTestCase):
         agent_service = Mock(is_available=True)
         agent_service.invoke_json.return_value = {"summary": "agent结果"}
         service._get_agent_service = Mock(return_value=agent_service)
-        service._get_llm = Mock()
+        service._get_llm_for_policy = Mock()
 
         result = service.call_with_fallback(
             prompt="请规划多工具任务",
@@ -217,7 +257,7 @@ class LLMServiceRoutingTests(SimpleTestCase):
         )
 
         service._get_agent_service.assert_called_once()
-        service._get_llm.assert_not_called()
+        service._get_llm_for_policy.assert_not_called()
         self.assertEqual(result["summary"], "agent结果")
 
 
@@ -349,10 +389,9 @@ class LangChainAgentProxyTests(SimpleTestCase):
     """Ensure the thin agent wrapper reuses the same proxy settings as LLMService."""
 
     @override_settings(
-        LLM_PROVIDER="deepseek",
-        LLM_MODEL="deepseek-chat",
-        DEEPSEEK_API_KEY="deepseek-demo-key",
-        DEEPSEEK_BASE_URL="https://api.deepseek.com",
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=False,
         LLM_HTTP_PROXY="http://127.0.0.1:8080",
         LLM_HTTPS_PROXY="http://127.0.0.1:8443",
         HTTP_PROXY="http://127.0.0.1:8080",
@@ -370,6 +409,12 @@ class LangChainAgentProxyTests(SimpleTestCase):
             mock_chat_openai.call_args.kwargs["openai_proxy"],
             "http://127.0.0.1:8443",
         )
+        self.assertEqual(
+            mock_chat_openai.call_args.kwargs["extra_body"],
+            {"thinking": {"type": "enabled"}},
+        )
+        self.assertEqual(mock_chat_openai.call_args.kwargs["reasoning_effort"], "max")
+        self.assertNotIn("temperature", mock_chat_openai.call_args.kwargs)
 
     def test_agent_graphrag_tool_should_call_public_payload_builder(self):
         """GraphRAG tool wiring should not reference the old private helper name."""

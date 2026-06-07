@@ -193,23 +193,23 @@ class AppConfig:
     # LLM 配置
     @staticmethod
     def llm_provider() -> str:
-        """返回默认的大模型提供方标识。"""
-        return get_config('llm', 'provider', 'deepseek').strip().lower() or 'deepseek'
+        """返回固定的大模型提供方标识。"""
+        return 'deepseek'
 
     @staticmethod
     def llm_model() -> str:
-        """返回默认的大模型名称。"""
-        return get_config('llm', 'model', 'deepseek-v4-flash').strip() or 'deepseek-v4-flash'
+        """返回固定的大模型名称。"""
+        return 'deepseek-v4-flash'
 
     @staticmethod
     def llm_api_format() -> str:
-        """返回默认的兼容接口格式。"""
-        return get_config('llm', 'api_format', 'openai-compatible').strip().lower() or 'openai-compatible'
+        """返回固定的兼容接口格式。"""
+        return 'openai-compatible'
 
     @staticmethod
     def llm_base_url() -> str:
         """返回配置文件中的统一 LLM 网关地址。"""
-        return get_config('llm', 'base_url', '').strip()
+        return get_config('llm', 'base_url', 'https://api.deepseek.com').strip() or 'https://api.deepseek.com'
 
     @staticmethod
     def llm_request_timeout() -> int:
@@ -220,6 +220,11 @@ class AppConfig:
     def llm_max_retries() -> int:
         """返回 LLM 客户端的最大重试次数。"""
         return get_config_int('llm', 'max_retries', 2)
+
+    @staticmethod
+    def llm_low_reasoning_mode() -> bool:
+        """返回是否开启全局低思考/加速模式。"""
+        return get_config_bool('llm', 'low_reasoning_mode', False)
 
     # GraphRAG 配置
     @staticmethod

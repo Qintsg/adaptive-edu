@@ -18,15 +18,6 @@ from tools.common import BASE_DIR, COURSE_RESOURCES_DIR
 DEPENDENCY_PACKAGES = ("pandas", "openpyxl", "torch", "neo4j", "langchain", "requests")
 LLM_KEY_ENV_NAMES = (
     "LLM_API_KEY",
-    "CUSTOM_LLM_API_KEY",
-    "DASHSCOPE_API_KEY",
-    "DEEPSEEK_API_KEY",
-    "ARK_API_KEY",
-    "DOUBAO_API_KEY",
-    "ZAI_API_KEY",
-    "ZHIPU_API_KEY",
-    "MOONSHOT_API_KEY",
-    "KIMI_API_KEY",
 )
 
 
@@ -134,12 +125,9 @@ def _print_llm_section() -> None:
 
     print("\n[API密钥]")
     print(f"  LLM API Key: {'✓ 已配置' if llm_key else '✗ 未配置'}")
-    print(f'  LLM_PROVIDER: {os.environ.get("LLM_PROVIDER", "deepseek") or "deepseek"}')
-    print(f'  LLM_MODEL: {os.environ.get("LLM_MODEL", "deepseek-v4-flash") or "deepseek-v4-flash"}')
-    print(
-        "  LLM_API_FORMAT: "
-        f'{os.environ.get("LLM_API_FORMAT", "openai-compatible") or "openai-compatible"}'
-    )
+    print("  LLM_MODEL_POLICY: deepseek-v4-pro/flash")
+    print(f'  LLM_BASE_URL: {os.environ.get("LLM_BASE_URL", "https://api.deepseek.com") or "https://api.deepseek.com"}')
+    print(f'  LLM_LOW_REASONING_MODE: {os.environ.get("LLM_LOW_REASONING_MODE", "False") or "False"}')
 
 
 def _first_configured_env(env_names: Iterable[str]) -> str:

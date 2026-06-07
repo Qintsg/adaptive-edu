@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Any, TypedDict
 
 class ModelProviderConfig(TypedDict, total=False):
     """Describe the provider-level settings used to initialize the LLM client."""
@@ -26,6 +26,20 @@ class LLMExecutionPolicy:
     max_prompt_chars: int
 
 
+@dataclass(frozen=True)
+class LLMCallParameterPlan:
+    """Describe model and reasoning parameters selected for one LLM call."""
+
+    model_name: str
+    thinking_enabled: bool
+    reasoning_effort: str
+    extra_body: dict[str, Any]
+
+
+DEEPSEEK_FLASH_MODEL = "deepseek-v4-flash"
+DEEPSEEK_PRO_MODEL = "deepseek-v4-pro"
+DEFAULT_OPENAI_COMPATIBLE_BASE_URL = "https://api.deepseek.com"
+
 # 支持的模型配置。当前统一走 OpenAI 兼容接口，因此只要提供方具备兼容
 # base_url + api_key + model 的调用方式，就可以接入 LangChain ChatOpenAI。
 MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
@@ -43,8 +57,8 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
             "qwen3-coder-plus",
             "qwq-plus",
         ],
-        "env_keys": ["DASHSCOPE_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["QWEN_BASE_URL"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
         "model_prefixes": ["qwen", "qwq"],
         "api_format": "openai-compatible",
     },
@@ -53,12 +67,13 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
         "base_url": "https://api.deepseek.com",
         "models": [
             "deepseek-v4-flash",
+            "deepseek-v4-pro",
             "deepseek-chat",
             "deepseek-reasoner",
             "deepseek-coder",
         ],
-        "env_keys": ["DEEPSEEK_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["DEEPSEEK_BASE_URL"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
         "model_prefixes": ["deepseek"],
         "api_format": "openai-compatible",
     },
@@ -70,17 +85,17 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
             "doubao-seed-1.6-thinking",
             "ByteDance-Seed-1.8",
         ],
-        "env_keys": ["ARK_API_KEY", "DOUBAO_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["DOUBAO_BASE_URL"],
-        "model_prefixes": ["doubao", "seed", "ark"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
+        "model_prefixes": ["bytedance", "doubao", "seed", "ark"],
         "api_format": "openai-compatible",
     },
     "zhipu": {
         "display_name": "智谱 / GLM",
         "base_url": "https://open.bigmodel.cn/api/paas/v4/",
         "models": ["glm-5", "glm-4.7", "glm-4.6", "glm-4.6v"],
-        "env_keys": ["ZAI_API_KEY", "ZHIPU_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["ZHIPU_BASE_URL"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
         "model_prefixes": ["glm", "zhipu"],
         "api_format": "openai-compatible",
     },
@@ -95,8 +110,8 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
             "moonshot-v1-128k",
             "moonshot-v1-auto",
         ],
-        "env_keys": ["MOONSHOT_API_KEY", "KIMI_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["KIMI_BASE_URL"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
         "model_prefixes": ["kimi", "moonshot"],
         "api_format": "openai-compatible",
     },
@@ -104,8 +119,8 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
         "display_name": "自定义兼容服务",
         "base_url": "",
         "models": [],
-        "env_keys": ["CUSTOM_LLM_API_KEY", "LLM_API_KEY"],
-        "base_url_env_keys": ["CUSTOM_LLM_BASE_URL"],
+        "env_keys": ["LLM_API_KEY"],
+        "base_url_env_keys": [],
         "model_prefixes": ["custom"],
         "api_format": "openai-compatible",
     },
@@ -122,6 +137,15 @@ AGENT_ENABLED_CALL_TYPES = frozenset({
     "agent_planning",
     "agent_orchestration",
 })
+
+HIGH_REASONING_CALL_TYPES = frozenset({
+    "feedback_report",
+    "kt_analysis",
+    "path_planning",
+    "profile_analysis",
+})
+
+PRO_MODEL_CALL_TYPES = HIGH_REASONING_CALL_TYPES | AGENT_ENABLED_CALL_TYPES
 
 FAST_FAIL_CALL_TYPES = frozenset({
     "path_planning",

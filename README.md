@@ -36,7 +36,7 @@ Supported by the Shanghai Undergraduate Training Program on Innovation and Entre
   - Python 3.12、Django、Django REST Framework、Channels。
   - PostgreSQL 保存用户、课程、题目、学习记录、测评、任务与日志等事务数据。
   - Neo4j 保存知识点、概念、依赖、先修和路径推理等图结构数据。
-  - Qdrant、Neo4j GraphRAG、LangChain、DeepSeek / 通义千问兼容客户端支撑 AI 能力。
+  - Qdrant、Neo4j GraphRAG、LangChain、DeepSeek V4 与统一 OpenAI 兼容端点支撑 AI 能力。
   - `backend/platform_ai` 汇聚 RAG、LLM、KT、搜索与 Agent 边界实现。
 - 文档与契约：`docs/`
   - API 契约源以 `docs/openapi/openapi.yaml` 为准，`docs/api.yaml` 为 Redocly CLI 打包产物。

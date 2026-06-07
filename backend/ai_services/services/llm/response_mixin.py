@@ -336,7 +336,11 @@ Write directly for the student, keep the response concise, and do not output JSO
         if agent_result is not None:
             return agent_result
 
-        llm = self._get_llm_for_policy(execution_policy, extra_body_overrides)
+        llm = self._get_llm_for_policy(
+            execution_policy,
+            call_type=call_type,
+            extra_body_overrides=extra_body_overrides,
+        )
         if llm is None:
             logger.debug(
                 build_log_message(
@@ -403,7 +407,11 @@ Write directly for the student, keep the response concise, and do not output JSO
             prompt,
             call_type,
         )
-        llm = self._get_llm_for_policy(execution_policy, extra_body_overrides)
+        llm = self._get_llm_for_policy(
+            execution_policy,
+            call_type=call_type,
+            extra_body_overrides=extra_body_overrides,
+        )
         if llm is None:
             if fallback_text:
                 yield fallback_text

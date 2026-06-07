@@ -113,17 +113,8 @@ def _load_llm_settings(
     config_json_dict: ConfigJsonDict,
     debug: bool,
 ) -> dict[str, object]:
-    """加载 LLM provider、代理、重试和密钥 settings。"""
+    """加载 DeepSeek V4、统一网关、代理、重试和密钥 settings。"""
     values: dict[str, object] = {
-        "LLM_PROVIDER": os.getenv(
-            "LLM_PROVIDER", config_value("llm", "provider", "deepseek")
-        ).strip().lower() or "deepseek",
-        "LLM_MODEL": os.getenv(
-            "LLM_MODEL", config_value("llm", "model", "deepseek-v4-flash")
-        ).strip() or "deepseek-v4-flash",
-        "LLM_API_FORMAT": os.getenv(
-            "LLM_API_FORMAT", config_value("llm", "api_format", "openai-compatible")
-        ).strip().lower() or "openai-compatible",
         "LLM_REQUEST_TIMEOUT": _int_setting(
             "LLM_REQUEST_TIMEOUT",
             "llm",
@@ -135,53 +126,20 @@ def _load_llm_settings(
             "LLM_MAX_RETRIES", "llm", "max_retries", 2, config_int
         ),
         "LLM_BASE_URL": os.getenv(
-            "LLM_BASE_URL", config_value("llm", "base_url", "")
-        ).strip(),
-        "LLM_REASONING_ENABLED": env_config_bool(
-            "LLM_REASONING_ENABLED", "llm", "reasoning_enabled", False
+            "LLM_BASE_URL", config_value("llm", "base_url", "https://api.deepseek.com")
+        ).strip()
+        or "https://api.deepseek.com",
+        "LLM_LOW_REASONING_MODE": env_config_bool(
+            "LLM_LOW_REASONING_MODE", "llm", "low_reasoning_mode", False
         ),
-        "LLM_REASONING_EFFORT": os.getenv(
-            "LLM_REASONING_EFFORT", config_value("llm", "reasoning_effort", "")
-        ).strip().lower(),
-        "LLM_EXTRA_BODY": config_json_dict("LLM_EXTRA_BODY_JSON", "llm", "extra_body_json"),
         "LLM_HTTP_PROXY": os.getenv("LLM_HTTP_PROXY", os.getenv("HTTP_PROXY", "")).strip(),
         "LLM_HTTPS_PROXY": os.getenv("LLM_HTTPS_PROXY", os.getenv("HTTPS_PROXY", "")).strip(),
         "LLM_API_KEY": os.getenv("LLM_API_KEY", ""),
-        "CUSTOM_LLM_API_KEY": os.getenv("CUSTOM_LLM_API_KEY", ""),
-        "CUSTOM_LLM_BASE_URL": os.getenv("CUSTOM_LLM_BASE_URL", ""),
-        "DASHSCOPE_API_KEY": os.getenv("DASHSCOPE_API_KEY", ""),
-        "QWEN_BASE_URL": os.getenv("QWEN_BASE_URL", ""),
-        "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
-        "DEEPSEEK_BASE_URL": os.getenv("DEEPSEEK_BASE_URL", ""),
-        "ARK_API_KEY": os.getenv("ARK_API_KEY", ""),
-        "ZAI_API_KEY": os.getenv("ZAI_API_KEY", ""),
-        "ZAI_BASE_URL": os.getenv("ZAI_BASE_URL", ""),
-        "MOONSHOT_API_KEY": os.getenv("MOONSHOT_API_KEY", ""),
-        "MOONSHOT_BASE_URL": os.getenv("MOONSHOT_BASE_URL", ""),
     }
-    values["DOUBAO_API_KEY"] = os.getenv("DOUBAO_API_KEY", str(values["ARK_API_KEY"]))
-    values["DOUBAO_BASE_URL"] = os.getenv("DOUBAO_BASE_URL", "")
-    values["ZHIPU_API_KEY"] = os.getenv("ZHIPU_API_KEY", str(values["ZAI_API_KEY"]))
-    values["ZHIPU_BASE_URL"] = os.getenv("ZHIPU_BASE_URL", "")
-    values["KIMI_API_KEY"] = os.getenv("KIMI_API_KEY", str(values["MOONSHOT_API_KEY"]))
-    values["KIMI_BASE_URL"] = os.getenv("KIMI_BASE_URL", "")
 
-    llm_key = (
-        values["LLM_API_KEY"]
-        or values["CUSTOM_LLM_API_KEY"]
-        or values["DASHSCOPE_API_KEY"]
-        or values["DEEPSEEK_API_KEY"]
-        or values["ARK_API_KEY"]
-        or values["DOUBAO_API_KEY"]
-        or values["ZAI_API_KEY"]
-        or values["ZHIPU_API_KEY"]
-        or values["MOONSHOT_API_KEY"]
-        or values["KIMI_API_KEY"]
-    )
-    if not debug and not llm_key:
+    _ = config_json_dict
+    if not debug and not values["LLM_API_KEY"]:
         logging.warning("未配置LLM API密钥，AI功能将使用Mock响应。")
-        logging.warning(
-            "请设置 LLM_API_KEY，或配置 DASHSCOPE_API_KEY / DEEPSEEK_API_KEY / ARK_API_KEY / ZAI_API_KEY / MOONSHOT_API_KEY。"
-        )
+        logging.warning("请在 backend/.env 中设置统一 OpenAI 兼容网关密钥 LLM_API_KEY。")
 
     return values

@@ -160,7 +160,7 @@
             <h2>项目概述</h2>
             <p>
                 自适应学习系统是一个知识图谱驱动的个性化自适应学习系统，采用前后端分离架构。后端使用Python + Django + Django REST Framework构建，
-                数据库采用PostgreSQL存储关系数据，Neo4j存储知识图谱数据。系统通过LangChain框架集成大语言模型（通义千问/DeepSeek），
+                数据库采用PostgreSQL存储关系数据，Neo4j存储知识图谱数据。系统通过LangChain框架集成DeepSeek V4与统一OpenAI兼容端点，
                 实现智能化的学习者画像分析和学习路径推荐。
             </p>
 
@@ -170,7 +170,7 @@
                 <li><strong>后端框架:</strong> Python 3.12 + Django 5.2 + Django REST Framework</li>
                 <li><strong>数据库:</strong> PostgreSQL（关系数据）+ Neo4j（知识图谱，完全存储）</li>
                 <li><strong>认证:</strong> JWT (djangorestframework-simplejwt)</li>
-                <li><strong>AI框架:</strong> LangChain (支持通义千问/DeepSeek)</li>
+                <li><strong>AI框架:</strong> LangChain (DeepSeek V4 / OpenAI兼容协议)</li>
                 <li><strong>API文档:</strong> drf-spectacular (OpenAPI 3.0)</li>
             </ul>
 
@@ -461,8 +461,8 @@ cp .env.example .env
 # 编辑.env文件，配置数据库和AI服务
 # DB_NAME=adaptive_edu
 # DB_USER=adaptive
-# LLM_MODEL=qwen-plus
-# DASHSCOPE_API_KEY=your_api_key</code></pre>
+# LLM_API_KEY=your_deepseek_key
+# LLM_BASE_URL=https://api.deepseek.com</code></pre>
 
             <h3>数据库迁移</h3>
             <pre><code>uv run python manage.py migrate</code></pre>

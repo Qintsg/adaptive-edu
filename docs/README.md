@@ -38,7 +38,7 @@
 - 后端依赖由 `backend/pyproject.toml` 与 `backend/uv.lock` 管理，使用 `uv sync` 创建或更新 `backend/.venv`。
 - 前端本地开发默认通过 `frontend/vite.config.ts` 代理 `/api`、`/media`、`/static`、`/ws` 到 `http://127.0.0.1:8000`，并监听 `0.0.0.0:3000`。
 - 前端生产构建默认走同域 `/api`、`/media`、`/static`、`/ws`；确需直连其他后端入口时使用 `VITE_BACKEND_ORIGIN` 后重新构建。
-- 默认 LLM 提供方为 `deepseek`，默认模型为 `deepseek-v4-flash`，并通过 `LLM_EXTRA_BODY_JSON={"enable_thinking":false}` 关闭兼容网关的思考输出。
+- 默认 LLM 使用 DeepSeek V4 调用策略，按任务在 `deepseek-v4-pro` 与 `deepseek-v4-flash` 间选择；`.env` 只配置统一 OpenAI 兼容网关 `LLM_API_KEY`、可选 `LLM_BASE_URL` 和 `LLM_LOW_REASONING_MODE`；思考模式与深度由代码按画像、路径、反馈、KT、Agent、GraphRAG、聊天等调用类型规划。
 - API 契约源以 `docs/openapi/openapi.yaml` 为准，路径项按业务模块拆分在 `docs/openapi/paths/`，通用参数与响应分别汇总到 `docs/openapi/components/parameters.yaml` 和 `docs/openapi/components/responses.yaml`；`docs/api.yaml` 为打包产物，后端运行态 Schema 地址为 `http://127.0.0.1:8000/api/schema/`。
 - GraphRAG 课程索引默认位于 `backend/runtime_logs/rag/course_{course_id}.json`。
 - GraphRAG 本地向量库默认位于 `backend/runtime_logs/rag/qdrant/`。
