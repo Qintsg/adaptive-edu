@@ -9,6 +9,7 @@ from django.db import models, transaction
 from assessments.models import AnswerHistory
 from ai_services.services.kt.prediction_support import (
     answered_point_ids,
+    compact_answer_history,
     is_mefkt_prediction,
     normalize_prediction_map,
 )
@@ -106,7 +107,7 @@ def _update_mastery_from_answer_history(*, user: User, course_id: CourseId) -> N
         )
 
 
-def _build_kt_history(*, user: User, course_id: CourseId) -> list[dict[str, int | None]]:
+def _build_kt_history(*, user: User, course_id: CourseId) -> list[dict[str, object]]:
     """读取课程答题历史并转换为 KT 服务输入结构。"""
     answer_records = (
         AnswerHistory.objects.filter(user=user, course_id=course_id)
@@ -116,14 +117,16 @@ def _build_kt_history(*, user: User, course_id: CourseId) -> list[dict[str, int 
     if not answer_records.exists():
         return []
 
-    return [
-        {
-            "question_id": record["question_id"],
-            "knowledge_point_id": record["knowledge_point_id"],
-            "correct": 1 if record["is_correct"] else 0,
-        }
-        for record in answer_records
-    ]
+    return compact_answer_history(
+        [
+            {
+                "question_id": record["question_id"],
+                "knowledge_point_id": record["knowledge_point_id"],
+                "correct": 1 if record["is_correct"] else 0,
+            }
+            for record in answer_records
+        ]
+    )
 
 
 def _load_course_point_ids(course_id: CourseId) -> list[int]:

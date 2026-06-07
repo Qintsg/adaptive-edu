@@ -293,6 +293,7 @@ class KnowledgeAssessmentMasteryTests(APITestCase):
             {
                 'question_id': unbound_question.id,
                 'knowledge_point_id': None,
+                'knowledge_point_ids': [],
                 'correct': 1,
             },
             answer_history,
@@ -305,6 +306,64 @@ class KnowledgeAssessmentMasteryTests(APITestCase):
                 knowledge_point__isnull=True,
                 source='initial',
             ).exists()
+        )
+
+    @patch('assessments.api.knowledge.threading.Thread')
+    @patch('ai_services.services.kt.service.kt_service.predict_mastery')
+    def test_knowledge_assessment_should_compact_multi_point_question_for_kt(
+        self,
+        mock_predict_mastery,
+        _mock_thread,
+    ):
+        """一题多知识点应以单条 question_id 历史调用题目级 MEFKT。"""
+        second_point = KnowledgePoint.objects.create(
+            course=self.course,
+            name='同题第二知识点',
+            order=4,
+            is_published=True,
+        )
+        self.pre_question.knowledge_points.add(second_point)
+        mock_predict_mastery.return_value = {
+            'predictions': {
+                self.pre_point.id: 0.58,
+                second_point.id: 0.62,
+            },
+            'confidence': 0.8,
+            'model_type': 'mefkt_question_online',
+            'answer_count': 2,
+        }
+
+        response = self.client.post(
+            '/api/student/assessments/initial/knowledge/submit',
+            {
+                'course_id': self.course.id,
+                'answers': [
+                    {'question_id': self.pre_question.id, 'answer': 'A'},
+                    {'question_id': self.post_question.id, 'answer': 'A'},
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        answer_history = mock_predict_mastery.call_args.kwargs['answer_history']
+        pre_records = [
+            item for item in answer_history
+            if item['question_id'] == self.pre_question.id
+        ]
+        self.assertEqual(len(pre_records), 1)
+        self.assertEqual(
+            sorted(pre_records[0]['knowledge_point_ids']),
+            sorted([self.pre_point.id, second_point.id]),
+        )
+        self.assertEqual(
+            AnswerHistory.objects.filter(
+                user=self.student,
+                course=self.course,
+                question=self.pre_question,
+                source='initial',
+            ).count(),
+            2,
         )
 
     @patch('assessments.api.knowledge.threading.Thread')

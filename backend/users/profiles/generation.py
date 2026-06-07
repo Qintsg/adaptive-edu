@@ -14,6 +14,7 @@ from assessments.services.initial_mastery import (
 )
 from ai_services.services.kt.prediction_support import (
     answered_point_ids,
+    compact_answer_history,
     is_mefkt_prediction,
     normalize_prediction_map,
 )
@@ -197,14 +198,16 @@ def refresh_mastery_with_kt(user: User, course_id: int) -> Dict[str, Any]:
     if not answer_records.exists():
         return {}
 
-    answer_history = [
-        {
-            'question_id': record['question_id'],
-            'knowledge_point_id': record['knowledge_point_id'],
-            'correct': 1 if record['is_correct'] else 0
-        }
-        for record in answer_records
-    ]
+    answer_history = compact_answer_history(
+        [
+            {
+                'question_id': record['question_id'],
+                'knowledge_point_id': record['knowledge_point_id'],
+                'correct': 1 if record['is_correct'] else 0
+            }
+            for record in answer_records
+        ]
+    )
     predictor = (
         kt_service_module
         if callable(getattr(kt_service_module, 'predict_mastery', None))

@@ -11,6 +11,11 @@ from django.utils import timezone
 
 from common.core.logging_utils import build_log_message
 from common.domain.utils import extract_answer_value, score_questions, serialize_answer_payload
+from ai_services.services.kt.prediction_support import (
+    answered_point_ids,
+    is_mefkt_prediction,
+    normalize_prediction_map,
+)
 
 from exams.models import Exam, ExamQuestion, ExamSubmission, FeedbackReport
 from exams.api.student.helpers import (
@@ -132,7 +137,7 @@ def build_answer_history_batch(
     user,
     answers: dict[str, Any],
     context: ExamSubmissionContext,
-) -> tuple[list[Any], list[dict[str, int]]]:
+) -> tuple[list[Any], list[dict[str, object]]]:
     """构建考试答题历史批量写入对象和 KT 输入记录。"""
     from assessments.models import AnswerHistory
 
@@ -140,7 +145,7 @@ def build_answer_history_batch(
         str(mistake["question_id"]) for mistake in context.grading["mistakes"]
     }
     history_models: list[AnswerHistory] = []
-    answer_history_records: list[dict[str, int]] = []
+    answer_history_records: list[dict[str, object]] = []
     for question in context.questions:
         question_id = str(question.id)
         result = context.question_result_map.get(question_id, {})
@@ -150,7 +155,9 @@ def build_answer_history_batch(
             extract_answer_value(question.answer),
         )
         is_correct = result.get("is_correct", question_id not in mistake_question_ids)
-        knowledge_point = question.knowledge_points.first()
+        knowledge_points = list(question.knowledge_points.all())
+        knowledge_point = knowledge_points[0] if knowledge_points else None
+        knowledge_point_ids = [int(point.id) for point in knowledge_points]
         history_models.append(
             AnswerHistory(
                 user=user,
@@ -171,14 +178,14 @@ def build_answer_history_batch(
                 exam_id=exam.id,
             )
         )
-        if knowledge_point:
-            answer_history_records.append(
-                {
-                    "question_id": question.id,
-                    "knowledge_point_id": knowledge_point.id,
-                    "correct": 1 if is_correct else 0,
-                }
-            )
+        answer_history_records.append(
+            {
+                "question_id": question.id,
+                "knowledge_point_id": knowledge_point.id if knowledge_point else None,
+                "knowledge_point_ids": knowledge_point_ids,
+                "correct": 1 if is_correct else 0,
+            }
+        )
     return history_models, answer_history_records
 
 
@@ -194,16 +201,10 @@ def capture_mastery_snapshot_from_records(
     *,
     user,
     course_id: int,
-    answer_history_records: list[dict[str, int]],
+    answer_history_records: list[dict[str, object]],
 ) -> dict[int, float]:
     """基于本次考试涉及的知识点读取掌握度快照。"""
-    tracked_point_ids = sorted(
-        {
-            int(item["knowledge_point_id"])
-            for item in answer_history_records
-            if item.get("knowledge_point_id")
-        }
-    )
+    tracked_point_ids = sorted(answered_point_ids(answer_history_records))
     return snapshot_mastery_for_points(user, course_id, tracked_point_ids)
 
 
@@ -211,7 +212,7 @@ def refresh_exam_kt_analysis(
     *,
     user,
     exam: Exam,
-    answer_history_records: list[dict[str, int]],
+    answer_history_records: list[dict[str, object]],
 ) -> dict[str, Any]:
     """刷新考试后的 KT 预测并回写掌握度。"""
     kt_analysis: dict[str, Any] = {}
@@ -222,12 +223,23 @@ def refresh_exam_kt_analysis(
         if not answer_history_records:
             return kt_analysis
 
+        target_point_ids = sorted(answered_point_ids(answer_history_records))
+        if not target_point_ids:
+            return kt_analysis
+
         kt_result = kt_service.predict_mastery(
             user_id=user.id,
             course_id=exam.course_id,
             answer_history=answer_history_records,
+            knowledge_points=target_point_ids,
         )
-        kt_predictions = kt_result.get("predictions") or {}
+        kt_predictions = normalize_prediction_map(kt_result.get("predictions"))
+        if not is_mefkt_prediction(kt_result):
+            kt_predictions = {
+                point_id: mastery_rate
+                for point_id, mastery_rate in kt_predictions.items()
+                if point_id in target_point_ids
+            }
         if kt_predictions:
             for knowledge_point_id, mastery_rate in kt_predictions.items():
                 try:

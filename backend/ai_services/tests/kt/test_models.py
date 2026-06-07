@@ -8,7 +8,10 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
-from ai_services.services.kt.prediction_support import is_mefkt_prediction
+from ai_services.services.kt.prediction_support import (
+    compact_answer_history,
+    is_mefkt_prediction,
+)
 from assessments.services.assessment_helpers import INITIAL_MASTERY_PRIOR_MEAN
 from tools.kt_synthetic import _build_kp_profiles, _simulate_student_sequence
 
@@ -415,6 +418,68 @@ class KTServiceRegressionTests(SimpleTestCase):
         self.assertGreater(predictions[402], 0.5)
         self.assertEqual(predictions[403], INITIAL_MASTERY_PRIOR_MEAN)
         self.assertEqual(result["model_type"], "builtin")
+
+    def test_builtin_prediction_should_count_multi_point_question_once_per_point(self):
+        """一题多知识点记录应在统计回退中覆盖所有关联知识点。"""
+        from ai_services.services.kt.service import KnowledgeTracingService
+
+        service = KnowledgeTracingService(enabled_models=[], prediction_mode="single")
+
+        result = service.predict_mastery(
+            user_id=12,
+            course_id=12,
+            answer_history=[
+                {
+                    "question_id": 1,
+                    "knowledge_point_id": 501,
+                    "knowledge_point_ids": [501, 502],
+                    "correct": 1,
+                }
+            ],
+            knowledge_points=[501, 502, 503],
+        )
+
+        predictions = cast(dict[int, float], result["predictions"])
+        self.assertGreater(predictions[501], 0.5)
+        self.assertEqual(predictions[502], predictions[501])
+        self.assertEqual(predictions[503], INITIAL_MASTERY_PRIOR_MEAN)
+        self.assertEqual(result["knowledge_point_count"], 2)
+
+    def test_compact_answer_history_should_merge_adjacent_expanded_point_rows(self):
+        """同一次作答被按知识点展开时，应折叠成单条题目级历史。"""
+        history = compact_answer_history(
+            [
+                {"question_id": 11, "knowledge_point_id": 601, "correct": 1},
+                {"question_id": 11, "knowledge_point_id": 602, "correct": 1},
+                {"question_id": 12, "knowledge_point_id": 603, "correct": 0},
+            ]
+        )
+
+        self.assertEqual(len(history), 2)
+        self.assertEqual(history[0]["question_id"], 11)
+        self.assertEqual(history[0]["knowledge_point_ids"], [601, 602])
+
+    def test_compact_answer_history_should_keep_repeated_attempts(self):
+        """同一题的多次作答应保留为多条时序交互。"""
+        history = compact_answer_history(
+            [
+                {
+                    "question_id": 11,
+                    "knowledge_point_id": 601,
+                    "correct": 0,
+                    "timestamp": "2026-01-01T10:00:00",
+                },
+                {
+                    "question_id": 11,
+                    "knowledge_point_id": 601,
+                    "correct": 1,
+                    "timestamp": "2026-01-02T10:00:00",
+                },
+            ]
+        )
+
+        self.assertEqual(len(history), 2)
+        self.assertEqual([item["correct"] for item in history], [0, 1])
 
     def test_mefkt_detection_should_accept_real_mefkt_inside_fusion_only(self):
         """Fusion wrapper should still be recognized when every child result is real MEFKT."""

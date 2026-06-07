@@ -6,6 +6,7 @@
 """
 
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import Any, Dict, List, Optional
 
 from assessments.services.assessment_helpers import (
@@ -17,6 +18,26 @@ from assessments.services.assessment_helpers import (
 
 class KTPredictionStatsMixin:
     """提供 KT 预测结果整理与内置统计算法。"""
+
+    @staticmethod
+    def _iter_record_point_ids(record: Dict[str, Any]) -> Iterable[int]:
+        """从单条答题记录中提取一个或多个知识点 ID。"""
+        point_ids_raw = record.get("knowledge_point_ids")
+        if isinstance(point_ids_raw, (list, tuple, set)):
+            yielded = False
+            for point_id_raw in point_ids_raw:
+                point_id = KTPredictionStatsMixin._coerce_int_identifier(point_id_raw)
+                if point_id:
+                    yielded = True
+                    yield point_id
+            if yielded:
+                return
+
+        point_id = KTPredictionStatsMixin._coerce_int_identifier(
+            record.get("knowledge_point_id")
+        )
+        if point_id:
+            yield point_id
 
     def _attach_prediction_metadata(
         self,
@@ -31,9 +52,9 @@ class KTPredictionStatsMixin:
         payload["answer_count"] = len(answer_history or [])
         payload["knowledge_point_count"] = len(
             {
-                record.get("knowledge_point_id")
+                point_id
                 for record in (answer_history or [])
-                if record.get("knowledge_point_id")
+                for point_id in self._iter_record_point_ids(record)
             }
         )
         return payload
@@ -48,9 +69,9 @@ class KTPredictionStatsMixin:
         total_answers = len(answer_history or [])
         unique_points = len(
             {
-                record.get("knowledge_point_id")
+                point_id
                 for record in (answer_history or [])
-                if record.get("knowledge_point_id")
+                for point_id in self._iter_record_point_ids(record)
             }
         )
         if total_answers <= 0:
@@ -120,19 +141,16 @@ class KTPredictionStatsMixin:
         unobserved_baseline = round(INITIAL_MASTERY_PRIOR_MEAN, 4)
 
         for index, record in enumerate(answer_history):
-            point_id = record.get("knowledge_point_id", 0)
             correct = record.get("correct", 0)
-            if not point_id:
-                continue
-
-            weight = decay_factor ** (answer_count - 1 - index)
-            point_stats[point_id]["total"] += 1
-            point_stats[point_id]["correct"] += correct
-            point_stats[point_id]["weighted_sum"] += correct * weight
-            point_stats[point_id]["weight_total"] += weight
-            if index >= max(0, answer_count - 6):
-                point_stats[point_id]["recent_correct"] += correct
-                point_stats[point_id]["recent_total"] += 1
+            for point_id in self._iter_record_point_ids(record):
+                weight = decay_factor ** (answer_count - 1 - index)
+                point_stats[point_id]["total"] += 1
+                point_stats[point_id]["correct"] += correct
+                point_stats[point_id]["weighted_sum"] += correct * weight
+                point_stats[point_id]["weight_total"] += weight
+                if index >= max(0, answer_count - 6):
+                    point_stats[point_id]["recent_correct"] += correct
+                    point_stats[point_id]["recent_total"] += 1
 
         predictions = {}
         for point_id, stats in point_stats.items():
@@ -176,7 +194,9 @@ class KTPredictionStatsMixin:
         question_ids = [answer.get("question_id", 0) for answer in answer_history]
         correct_flags = [answer.get("correct", 0) for answer in answer_history]
         knowledge_point_ids = [
-            answer.get("knowledge_point_id", 0) for answer in answer_history
+            list(KTPredictionStatsMixin._iter_record_point_ids(answer))
+            or [answer.get("knowledge_point_id", 0)]
+            for answer in answer_history
         ]
         timestamps = [answer.get("timestamp") for answer in answer_history]
 

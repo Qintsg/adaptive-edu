@@ -12,6 +12,7 @@ from assessments.services.initial_mastery import (
 )
 from ai_services.services.kt.prediction_support import (
     answered_point_ids,
+    compact_answer_history,
     is_mefkt_prediction,
     normalize_prediction_map,
 )
@@ -60,14 +61,16 @@ def sync_course_mastery(
         .order_by("answered_at")
         .values("question_id", "knowledge_point_id", "is_correct")
     )
-    kt_history = [
-        {
-            "question_id": record["question_id"],
-            "knowledge_point_id": record["knowledge_point_id"],
-            "correct": 1 if record["is_correct"] else 0,
-        }
-        for record in answer_records
-    ]
+    kt_history = compact_answer_history(
+        [
+            {
+                "question_id": record["question_id"],
+                "knowledge_point_id": record["knowledge_point_id"],
+                "correct": 1 if record["is_correct"] else 0,
+            }
+            for record in answer_records
+        ]
+    )
     mastery_dict, uses_mefkt = predict_course_mastery_with_metadata(
         user=user,
         course_id=course_id,
@@ -110,7 +113,7 @@ def predict_course_mastery(
     user: "User",
     course_id: int,
     course_point_ids: list[int],
-    kt_history: list[dict[str, int | None]],
+    kt_history: list[dict[str, object]],
 ) -> dict[int, float]:
     """调用 KT 服务预测课程知识点掌握度。"""
     mastery_dict, _ = predict_course_mastery_with_metadata(
@@ -127,7 +130,7 @@ def predict_course_mastery_with_metadata(
     user: "User",
     course_id: int,
     course_point_ids: list[int],
-    kt_history: list[dict[str, int | None]],
+    kt_history: list[dict[str, object]],
 ) -> tuple[dict[int, float], bool]:
     """调用 KT 服务预测课程知识点掌握度，并返回是否为真实 MEFKT。"""
     from ai_services.services import kt_service

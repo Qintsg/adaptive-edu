@@ -8,6 +8,11 @@ from typing import Any
 from django.db import DatabaseError
 
 from common.core.logging_utils import build_log_message
+from ai_services.services.kt.prediction_support import (
+    answered_point_ids,
+    is_mefkt_prediction,
+    normalize_prediction_map,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -37,11 +42,11 @@ def load_report_with_dependencies(report_id: int):
 def build_answer_history_records(
     exam_questions,
     submission_answers: dict[str, Any],
-) -> list[dict[str, int]]:
-    """按题目与知识点展开答题轨迹。"""
+) -> list[dict[str, object]]:
+    """按题目生成一次作答轨迹，并附带该题覆盖的知识点。"""
     from common.domain.utils import check_answer
 
-    answer_history_records: list[dict[str, int]] = []
+    answer_history_records: list[dict[str, object]] = []
     for exam_question in exam_questions:
         question = exam_question.question
         student_answer = submission_answers.get(str(question.id))
@@ -50,14 +55,16 @@ def build_answer_history_records(
             student_answer,
             question.answer,
         )
-        for knowledge_point in question.knowledge_points.all():
-            answer_history_records.append(
-                {
-                    "question_id": question.id,
-                    "knowledge_point_id": knowledge_point.id,
-                    "correct": 1 if is_correct else 0,
-                }
-            )
+        knowledge_points = list(question.knowledge_points.all())
+        knowledge_point_ids = [int(point.id) for point in knowledge_points]
+        answer_history_records.append(
+            {
+                "question_id": question.id,
+                "knowledge_point_id": knowledge_point_ids[0] if knowledge_point_ids else None,
+                "knowledge_point_ids": knowledge_point_ids,
+                "correct": 1 if is_correct else 0,
+            }
+        )
     return answer_history_records
 
 
@@ -97,7 +104,7 @@ def refresh_kt_analysis(
     report,
     exam,
     user,
-    answer_history_records: list[dict[str, int]],
+    answer_history_records: list[dict[str, object]],
 ) -> dict[str, Any]:
     """刷新 KT 预测并回写掌握度。"""
     kt_analysis: dict[str, Any] = {}
@@ -107,12 +114,23 @@ def refresh_kt_analysis(
         if not answer_history_records:
             return kt_analysis
 
+        target_point_ids = sorted(answered_point_ids(answer_history_records))
+        if not target_point_ids:
+            return kt_analysis
+
         kt_result = kt_service.predict_mastery(
             user_id=user.id,
             course_id=exam.course_id,
             answer_history=answer_history_records,
+            knowledge_points=target_point_ids,
         )
-        kt_predictions = kt_result.get("predictions") or {}
+        kt_predictions = normalize_prediction_map(kt_result.get("predictions"))
+        if not is_mefkt_prediction(kt_result):
+            kt_predictions = {
+                point_id: mastery_rate
+                for point_id, mastery_rate in kt_predictions.items()
+                if point_id in target_point_ids
+            }
         if kt_predictions:
             persist_kt_predictions(
                 report=report,

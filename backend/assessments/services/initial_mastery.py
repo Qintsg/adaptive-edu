@@ -22,7 +22,7 @@ from assessments.services.knowledge_assessment_logic import (
     load_initial_course_point_ids,
     resolve_initial_kt_weight,
 )
-from ai_services.services.kt.prediction_support import answered_point_ids
+from ai_services.services.kt.prediction_support import answered_point_ids, compact_answer_history
 from learning.paths.rules import apply_prerequisite_caps
 
 
@@ -30,7 +30,7 @@ from learning.paths.rules import apply_prerequisite_caps
 class InitialMasteryEvidence:
     """初始知识测评直接作答证据。"""
 
-    answer_history_records: list[dict[str, int | None]]
+    answer_history_records: list[dict[str, object]]
     point_stats: dict[int, dict[str, object]]
     mastery_map: dict[int, float]
 
@@ -47,12 +47,12 @@ def load_initial_mastery_evidence(*, user_id: int, course_id: int) -> InitialMas
         .order_by("answered_at", "id")
         .values("question_id", "knowledge_point_id", "knowledge_point__name", "is_correct")
     )
-    answer_history_records: list[dict[str, int | None]] = []
+    raw_history_records: list[dict[str, object]] = []
     point_stats: dict[int, dict[str, object]] = {}
     for row in rows:
         point_id = int(row["knowledge_point_id"]) if row["knowledge_point_id"] else None
         is_correct = 1 if row["is_correct"] else 0
-        answer_history_records.append(
+        raw_history_records.append(
             {
                 "question_id": int(row["question_id"]),
                 "knowledge_point_id": point_id,
@@ -80,7 +80,7 @@ def load_initial_mastery_evidence(*, user_id: int, course_id: int) -> InitialMas
         for point_id, stats in point_stats.items()
     }
     return InitialMasteryEvidence(
-        answer_history_records=answer_history_records,
+        answer_history_records=compact_answer_history(raw_history_records),
         point_stats=point_stats,
         mastery_map=mastery_map,
     )

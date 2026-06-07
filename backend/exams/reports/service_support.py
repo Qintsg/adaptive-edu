@@ -17,7 +17,7 @@ class ReportGenerationContext:
     correct_count: int
     total_count: int
     accuracy: float
-    answer_history_records: list[dict[str, int]]
+    answer_history_records: list[dict[str, object]]
     kt_analysis: dict[str, Any]
     detailed_mistakes: list[dict[str, Any]]
     ability_data: dict[str, Any]

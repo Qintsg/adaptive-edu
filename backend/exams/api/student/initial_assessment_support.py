@@ -12,6 +12,7 @@ from django.db import DatabaseError
 
 from ai_services.services.kt.prediction_support import (
     answered_point_ids,
+    compact_answer_history,
     is_mefkt_prediction,
     normalize_prediction_map,
 )
@@ -293,21 +294,23 @@ def normalize_initial_kt_predictions(
     }
 
 
-def build_initial_kt_history(*, user: User, course: Course) -> list[dict[str, int | None]]:
+def build_initial_kt_history(*, user: User, course: Course) -> list[dict[str, object]]:
     """读取当前学生课程历史并转换为 KT 服务输入。"""
     all_history = list(
         AnswerHistory.objects.filter(user=user, course=course)
         .order_by("answered_at")
         .values("question_id", "knowledge_point_id", "is_correct")
     )
-    return [
-        {
-            "question_id": item["question_id"],
-            "knowledge_point_id": item["knowledge_point_id"],
-            "correct": 1 if item["is_correct"] else 0,
-        }
-        for item in all_history
-    ]
+    return compact_answer_history(
+        [
+            {
+                "question_id": item["question_id"],
+                "knowledge_point_id": item["knowledge_point_id"],
+                "correct": 1 if item["is_correct"] else 0,
+            }
+            for item in all_history
+        ]
+    )
 
 
 def persist_kt_predictions(

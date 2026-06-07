@@ -10,6 +10,7 @@ import logging
 
 from ai_services.services.kt.prediction_support import (
     answered_point_ids,
+    compact_answer_history,
     is_mefkt_prediction,
     normalize_prediction_map,
 )
@@ -43,7 +44,7 @@ class KnowledgeAssessmentEvaluation:
     total_question_count: int
     point_stats: dict[int, dict[str, object]]
     question_details: list[dict[str, object]]
-    answer_history_records: list[dict[str, int | None]]
+    answer_history_records: list[dict[str, object]]
     answer_history_models: list[AnswerHistory]
     mastery_map: dict[int, float]
 
@@ -138,9 +139,9 @@ def build_answer_history_models(
     student_answer_raw: object,
     correct_answer_raw: object,
     is_correct: bool,
-) -> tuple[list[dict[str, int | None]], list[AnswerHistory]]:
+) -> tuple[list[dict[str, object]], list[AnswerHistory]]:
     """构建 KT 预测记录和批量落库所需的答题历史模型。"""
-    history_records: list[dict[str, int | None]] = []
+    raw_history_records: list[dict[str, object]] = []
     history_models: list[AnswerHistory] = []
     serialized_student_answer = serialize_answer_payload(question.question_type, student_answer_raw)
     serialized_correct_answer = serialize_answer_payload(question.question_type, correct_answer_raw)
@@ -150,7 +151,7 @@ def build_answer_history_models(
 
     for point in history_points:
         point_id = point.id if point is not None else None
-        history_records.append(
+        raw_history_records.append(
             {
                 'question_id': question.id,
                 'knowledge_point_id': point_id,
@@ -170,7 +171,7 @@ def build_answer_history_models(
                 source='initial',
             )
         )
-    return history_records, history_models
+    return compact_answer_history(raw_history_records), history_models
 
 
 def evaluate_knowledge_answers(
@@ -186,7 +187,7 @@ def evaluate_knowledge_answers(
     correct_count = 0
     point_stats: dict[int, dict[str, object]] = {}
     question_details: list[dict[str, object]] = []
-    answer_history_records: list[dict[str, int | None]] = []
+    answer_history_records: list[dict[str, object]] = []
     answer_history_models: list[AnswerHistory] = []
 
     for question in questions:
@@ -250,7 +251,7 @@ def blend_mastery_with_kt(
     course_id: int | str,
     mastery_map: dict[int, float],
     point_stats: dict[int, dict[str, object]],
-    answer_history_records: list[dict[str, int | None]],
+    answer_history_records: list[dict[str, object]],
 ) -> dict[int, float]:
     """结合 KT 预测结果对知识测评基线掌握度做保守融合。"""
     course_point_ids = load_initial_course_point_ids(

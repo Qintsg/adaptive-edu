@@ -8,6 +8,10 @@
 def test_kt_service():
     """测试知识追踪(KT)服务的预测功能。"""
     from ai_services.services import kt_service
+    from ai_services.services.kt.prediction_support import (
+        answered_point_ids,
+        compact_answer_history,
+    )
     from assessments.models import AnswerHistory, Question
 
     print('开始测试知识追踪服务...')
@@ -59,11 +63,15 @@ def test_kt_service():
                     }
                 )
 
+    history = compact_answer_history(history)
+    knowledge_points = sorted(answered_point_ids(history))
+
     print(f"测试课程: course_id={course_id}, user_id={user_id}, history={len(history)}")
     result = kt_service.predict_mastery(
         user_id=user_id,
         course_id=course_id,
-        answer_history=history
+        answer_history=history,
+        knowledge_points=knowledge_points if knowledge_points else None,
     )
     print(f"预测结果: {result.get('predictions', {})}")
 

@@ -15,6 +15,7 @@ from common.domain.utils import (
     serialize_answer_payload,
 )
 from exams.models import ExamQuestion, ExamSubmission
+from ai_services.services.kt.prediction_support import compact_answer_history
 from knowledge.models import KnowledgeMastery
 from learning.models import NodeProgress, PathNode
 from learning.api.helpers import _build_exam_score_map, _coerce_string_list
@@ -166,11 +167,11 @@ def update_node_exam_progress(*, node: PathNode, progress: NodeProgress, exam_id
     progress.save()
 
 
-def persist_node_exam_histories(*, user, node: PathNode, answers: dict[str, Any], questions, question_result_map: dict[str, dict[str, Any]]) -> list[dict[str, int]]:
+def persist_node_exam_histories(*, user, node: PathNode, answers: dict[str, Any], questions, question_result_map: dict[str, dict[str, Any]]) -> list[dict[str, object]]:
     """记录节点考试答题历史，并返回 KT 所需的答题轨迹。"""
     from assessments.models import AnswerHistory
 
-    answer_history_records: list[dict[str, int]] = []
+    answer_history_records: list[dict[str, object]] = []
     for question in questions:
         # 每题持久化一条 AnswerHistory，后续 KT 使用全量课程轨迹而不是单次提交。
         question_id = str(question.id)
@@ -201,7 +202,7 @@ def persist_node_exam_histories(*, user, node: PathNode, answers: dict[str, Any]
     return answer_history_records
 
 
-def load_node_kt_history(context: NodeExamMasteryRefresh) -> list[dict[str, int]]:
+def load_node_kt_history(context: NodeExamMasteryRefresh) -> list[dict[str, object]]:
     """加载当前课程下已记录的 KT 答题轨迹。"""
     from assessments.models import AnswerHistory
 
@@ -210,14 +211,16 @@ def load_node_kt_history(context: NodeExamMasteryRefresh) -> list[dict[str, int]
         .order_by("answered_at")
         .values("question_id", "knowledge_point_id", "is_correct")
     )
-    return [
-        {
-            "question_id": history["question_id"],
-            "knowledge_point_id": history["knowledge_point_id"],
-            "correct": 1 if history["is_correct"] else 0,
-        }
-        for history in all_history
-    ]
+    return compact_answer_history(
+        [
+            {
+                "question_id": history["question_id"],
+                "knowledge_point_id": history["knowledge_point_id"],
+                "correct": 1 if history["is_correct"] else 0,
+            }
+            for history in all_history
+        ]
+    )
 
 
 def resolve_node_knowledge_point_ids(context: NodeExamMasteryRefresh) -> list[int]:

@@ -7,6 +7,7 @@ import logging
 from django.db import transaction
 
 from assessments.models import AnswerHistory
+from ai_services.services.kt.prediction_support import compact_answer_history
 from common.core.logging_utils import build_log_message
 from knowledge.models import KnowledgeMastery
 from learning.models import NodeProgress, PathNode
@@ -102,16 +103,18 @@ def predict_stage_mastery(
     """汇总课程作答历史并调用 KT 服务。"""
     from ai_services.services.kt.service import kt_service
 
-    kt_history = [
-        {
-            "question_id": history["question_id"],
-            "knowledge_point_id": history["knowledge_point_id"],
-            "correct": 1 if history["is_correct"] else 0,
-        }
-        for history in AnswerHistory.objects.filter(user=user, course=node.path.course)
-        .order_by("answered_at")
-        .values("question_id", "knowledge_point_id", "is_correct")
-    ]
+    kt_history = compact_answer_history(
+        [
+            {
+                "question_id": history["question_id"],
+                "knowledge_point_id": history["knowledge_point_id"],
+                "correct": 1 if history["is_correct"] else 0,
+            }
+            for history in AnswerHistory.objects.filter(user=user, course=node.path.course)
+            .order_by("answered_at")
+            .values("question_id", "knowledge_point_id", "is_correct")
+        ]
+    )
     kt_result = kt_service.predict_mastery(
         user_id=user.id,
         course_id=node.path.course_id,

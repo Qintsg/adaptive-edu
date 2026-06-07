@@ -12,9 +12,13 @@ from users.models import User
 from courses.models import Course
 from assessments.models import Question
 from exams.models import Exam, ExamQuestion, ExamSubmission, FeedbackReport
+from exams.reports.generation_support import (
+    build_answer_history_records,
+    refresh_kt_analysis,
+)
 from exams.serializers import ExamCreateSerializer
 from common.domain.utils import build_answer_display, decorate_question_options
-from knowledge.models import KnowledgePoint
+from knowledge.models import KnowledgeMastery, KnowledgePoint
 
 
 def _api_client(test_case: APITestCase) -> APIClient:
@@ -320,7 +324,91 @@ class ExamAsyncFeedbackTests(APITestCase):
         report = FeedbackReport.objects.get(exam=self.exam, user=self.student)
         self.assertEqual(report.status, 'pending')
         self.assertEqual(report.overview['kt_analysis']['answer_count'], 1)
+        called_kwargs = mock_predict_mastery.call_args.kwargs
+        self.assertEqual(called_kwargs["course_id"], _model_id(self.course))
+        self.assertEqual(called_kwargs["knowledge_points"], [_model_id(self.point)])
+        self.assertEqual(called_kwargs["answer_history"][0]["question_id"], _model_id(self.question))
         mock_enqueue.assert_called_once_with(_model_id(report), force=True)
+
+    @patch('exams.reports.service.enqueue_feedback_report_on_commit')
+    @patch('ai_services.services.kt.service.kt_service.predict_mastery')
+    def test_submit_should_use_question_level_history_for_question_online_kt(
+        self,
+        mock_predict_mastery,
+        _mock_enqueue,
+    ):
+        """考试提交应保留每题一次的 question_id 历史，并显式传入目标知识点。"""
+        second_point = KnowledgePoint.objects.create(
+            course=self.course,
+            name='第二知识点',
+        )
+        unrelated_point = KnowledgePoint.objects.create(
+            course=self.course,
+            name='非本次考试知识点',
+        )
+        self.question.knowledge_points.add(second_point)
+        unbound_question = Question.objects.create(
+            course=self.course,
+            content='未绑定知识点但应进入 MEFKT 历史的题目',
+            question_type='single_choice',
+            options=[
+                {'label': 'A', 'content': '正确'},
+                {'label': 'B', 'content': '错误'},
+            ],
+            answer={'answer': 'A'},
+            score=10,
+            is_visible=True,
+            created_by=self.teacher,
+        )
+        ExamQuestion.objects.create(
+            exam=self.exam,
+            question=unbound_question,
+            score=10,
+            order=1,
+        )
+        mock_predict_mastery.return_value = {
+            'predictions': {
+                _model_id(self.point): 0.66,
+                _model_id(second_point): 0.71,
+                _model_id(unrelated_point): 0.2,
+            },
+            'confidence': 0.72,
+            'model_type': 'builtin',
+        }
+
+        response = cast(Response, _api_client(self).post(
+            f'/api/student/exams/{_model_id(self.exam)}/submit',
+            {
+                'answers': {
+                    str(_model_id(self.question)): 'A',
+                    str(_model_id(unbound_question)): 'B',
+                }
+            },
+            format='json',
+        ))
+
+        self.assertEqual(response.status_code, 200)
+        called_kwargs = mock_predict_mastery.call_args.kwargs
+        self.assertEqual(
+            called_kwargs['knowledge_points'],
+            [_model_id(self.point), _model_id(second_point)],
+        )
+        answer_history = called_kwargs['answer_history']
+        self.assertEqual(len(answer_history), 2)
+        self.assertEqual(answer_history[0]['question_id'], _model_id(self.question))
+        self.assertEqual(
+            answer_history[0]['knowledge_point_ids'],
+            [_model_id(self.point), _model_id(second_point)],
+        )
+        self.assertEqual(answer_history[1]['question_id'], _model_id(unbound_question))
+        self.assertIsNone(answer_history[1]['knowledge_point_id'])
+        self.assertEqual(answer_history[1]['knowledge_point_ids'], [])
+        persisted_predictions = FeedbackReport.objects.get(
+            exam=self.exam,
+            user=self.student,
+        ).overview['kt_analysis']['predictions']
+        self.assertNotIn(_model_id(unrelated_point), persisted_predictions)
+        self.assertNotIn(str(_model_id(unrelated_point)), persisted_predictions)
 
     def test_get_feedback_should_return_pending_state(self):
         submission = ExamSubmission.objects.create(
@@ -355,3 +443,133 @@ class ExamAsyncFeedbackTests(APITestCase):
         self.assertEqual(payload['status'], 'pending')
         self.assertTrue(payload['pending'])
         self.assertEqual(len(payload['question_details']), 1)
+
+
+class FeedbackReportKTContractTests(APITestCase):
+    """验证后台反馈报告中的 KT 调用契约。"""
+
+    def setUp(self):
+        """构造报告生成支持函数的最小考试上下文。"""
+        self.student = User.objects.create_user(
+            username='report_kt_student',
+            password='pass123456',
+            role='student',
+        )
+        self.teacher = User.objects.create_user(
+            username='report_kt_teacher',
+            password='pass123456',
+            role='teacher',
+        )
+        self.course = Course.objects.create(
+            name='报告 KT 课程',
+            created_by=self.teacher,
+        )
+        self.point_a = KnowledgePoint.objects.create(
+            course=self.course,
+            name='报告知识点A',
+        )
+        self.point_b = KnowledgePoint.objects.create(
+            course=self.course,
+            name='报告知识点B',
+        )
+        self.unrelated_point = KnowledgePoint.objects.create(
+            course=self.course,
+            name='报告未观测知识点',
+        )
+        self.question = Question.objects.create(
+            course=self.course,
+            content='报告一题多点',
+            question_type='single_choice',
+            options=[
+                {'label': 'A', 'content': '正确'},
+                {'label': 'B', 'content': '错误'},
+            ],
+            answer={'answer': 'A'},
+            score=10,
+            is_visible=True,
+            created_by=self.teacher,
+        )
+        self.question.knowledge_points.add(self.point_a, self.point_b)
+        self.exam = Exam.objects.create(
+            course=self.course,
+            title='报告 KT 考试',
+            exam_type='chapter',
+            status='published',
+            pass_score=60,
+            total_score=100,
+            created_by=self.teacher,
+        )
+        self.exam_question = ExamQuestion.objects.create(
+            exam=self.exam,
+            question=self.question,
+            score=10,
+            order=0,
+        )
+        self.submission = ExamSubmission.objects.create(
+            exam=self.exam,
+            user=self.student,
+            answers={str(_model_id(self.question)): 'A'},
+            score=100,
+            is_passed=True,
+        )
+        self.report = FeedbackReport.objects.create(
+            user=self.student,
+            exam=self.exam,
+            exam_submission=self.submission,
+            status='pending',
+        )
+
+    def test_report_history_should_keep_one_record_per_question(self):
+        """后台报告 KT 历史不应把一题多知识点展开成重复题目。"""
+        answer_history = build_answer_history_records(
+            [self.exam_question],
+            self.submission.answers,
+        )
+
+        self.assertEqual(len(answer_history), 1)
+        self.assertEqual(answer_history[0]['question_id'], _model_id(self.question))
+        self.assertEqual(
+            answer_history[0]['knowledge_point_ids'],
+            [_model_id(self.point_a), _model_id(self.point_b)],
+        )
+
+    @patch('ai_services.services.kt.service.kt_service.predict_mastery')
+    def test_report_refresh_should_filter_builtin_unobserved_predictions(
+        self,
+        mock_predict_mastery,
+    ):
+        """后台报告统计回退不能写入本次考试未覆盖的知识点。"""
+        answer_history = build_answer_history_records(
+            [self.exam_question],
+            self.submission.answers,
+        )
+        mock_predict_mastery.return_value = {
+            'predictions': {
+                _model_id(self.point_a): 0.61,
+                _model_id(self.point_b): 0.62,
+                _model_id(self.unrelated_point): 0.3,
+            },
+            'confidence': 0.5,
+            'model_type': 'builtin',
+        }
+
+        kt_analysis = refresh_kt_analysis(
+            self.report,
+            self.exam,
+            self.student,
+            answer_history,
+        )
+
+        called_kwargs = mock_predict_mastery.call_args.kwargs
+        self.assertEqual(
+            called_kwargs['knowledge_points'],
+            [_model_id(self.point_a), _model_id(self.point_b)],
+        )
+        self.assertNotIn(_model_id(self.unrelated_point), kt_analysis['predictions'])
+        self.assertFalse(
+            KnowledgeMastery.objects.filter(
+                user=self.student,
+                course=self.course,
+                knowledge_point=self.unrelated_point,
+            ).exists()
+        )
