@@ -399,6 +399,34 @@ def build_torch_runtime_metadata(components: MEFKTModelComponents) -> dict[str, 
     }
 
 
+def count_state_parameters(state_dict: dict[str, Tensor]) -> int:
+    """统计 state_dict 中张量参数量。"""
+    return sum(int(value.numel()) for value in state_dict.values())
+
+
+def build_parameter_count_metadata(
+    *,
+    components: MEFKTModelComponents,
+    sequence_result: MEFKTSequenceTrainingResult,
+) -> dict[str, object]:
+    """统计 MEFKT 各组件与总参数量。"""
+    graph_count = sum(int(parameter.numel()) for parameter in components.graph_encoder.parameters())
+    attribute_count = sum(int(parameter.numel()) for parameter in components.attribute_encoder.parameters())
+    fusion_count = sum(int(parameter.numel()) for parameter in components.fusion_layer.parameters())
+    sequence_count = count_state_parameters(sequence_result.best_sequence_state)
+    total_count = graph_count + attribute_count + fusion_count + sequence_count
+    return {
+        "model_parameter_count": total_count,
+        "parameter_count": {
+            "total": total_count,
+            "graph_encoder": graph_count,
+            "attribute_encoder": attribute_count,
+            "fusion_layer": fusion_count,
+            "sequence_model": sequence_count,
+        },
+    }
+
+
 def build_mefkt_metadata(
     *,
     bundle: MEFKTTrainingBundle,
@@ -411,6 +439,10 @@ def build_mefkt_metadata(
     """构造 MEFKT 运行时元数据。"""
     reproduction_summary = build_reproduction_summary(bundle, config)
     torch_runtime_metadata = build_torch_runtime_metadata(components)
+    parameter_count_metadata = build_parameter_count_metadata(
+        components=components,
+        sequence_result=sequence_result,
+    )
     return {
         "model_name": "MEFKT",
         "paper_title": PAPER_TITLE,
@@ -442,6 +474,7 @@ def build_mefkt_metadata(
         "lr_decay": config.lr_decay,
         "training_profile": config.profile,
         **torch_runtime_metadata,
+        **parameter_count_metadata,
         "training_sources": bundle.training_sources,
         "split_policy": bundle.split_policy,
         "graph_source": bundle.graph_source,
