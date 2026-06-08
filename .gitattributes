@@ -74,3 +74,5 @@ LICENSE     text eol=crlf
 # --- Git LFS 资源（保留原有规则） ---
 *.mov filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
+backend/models/MEFKT/mefkt_model.big.pt filter=lfs diff=lfs merge=lfs -text
+backend/models/MEFKT/mefkt_model.big.pt.bak filter=lfs diff=lfs merge=lfs -text
