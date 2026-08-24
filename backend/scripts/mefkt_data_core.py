@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from array import array
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -19,7 +20,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 SPLITS = ("train", "validation", "test")
-PREPROCESS_VERSION = 4
+PREPROCESS_VERSION = 6
 
 
 @dataclass
@@ -34,8 +35,12 @@ class SplitBuffer:
     target_starts: array
 
     @classmethod
-    def create(cls) -> "SplitBuffer":
-        """创建空的切分缓冲区。"""
+    def create(cls) -> SplitBuffer:
+        """
+        创建空的切分缓冲区。
+
+        :returns: 新的空缓冲区。
+        """
         return cls(array("i"), bytearray(), array("f"), array("f"), array("q", [0]), array("i"))
 
     def append(
@@ -54,6 +59,7 @@ class SplitBuffer:
         :param gaps: 当前交互距离上一交互的小时数。
         :param response_times: 当前题目答题耗时，单位为秒。
         :param target_start: 当前窗口中开始计算损失的相对位置。
+        :returns: None。
         """
         if len(items) < 2 or len(items) != len(correct) or len(items) != len(gaps) or len(items) != len(response_times):
             return
@@ -67,7 +73,11 @@ class SplitBuffer:
         self.target_starts.append(target_start)
 
     def __len__(self) -> int:
-        """返回已经追加的序列数量。"""
+        """
+        返回已经追加的序列数量。
+
+        :returns: 序列数量。
+        """
         return max(len(self.offsets) - 1, 0)
 
 
@@ -110,6 +120,7 @@ class SequenceStore:
 
         :param root: 预处理数据目录。
         :param split: train、validation 或 test。
+        :returns: None。
         """
         if split not in SPLITS:
             raise ValueError(f"未知数据切分: {split}")
@@ -122,7 +133,11 @@ class SequenceStore:
         self.target_starts = np.load(root / f"{split}_target_starts.npy", mmap_mode="r")
 
     def __len__(self) -> int:
-        """返回序列数量。"""
+        """
+        返回序列数量。
+
+        :returns: 序列数量。
+        """
         return max(int(self.offsets.shape[0]) - 1, 0)
 
     def get(self, index: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
@@ -141,14 +156,29 @@ class SequenceIndexDataset(Dataset[int]):
     """DataLoader 使用的轻量序列索引数据集。"""
 
     def __init__(self, store: SequenceStore) -> None:
+        """
+        初始化序列索引数据集。
+
+        :param store: 提供序列数量和内容的 mmap 存储。
+        :returns: None。
+        """
         self.store = store
 
     def __len__(self) -> int:
-        """返回序列数量。"""
+        """
+        返回序列数量。
+
+        :returns: 序列数量。
+        """
         return len(self.store)
 
     def __getitem__(self, index: int) -> int:
-        """返回序列索引。"""
+        """
+        返回序列索引。
+
+        :param index: DataLoader 请求的索引。
+        :returns: 原样返回的序列索引。
+        """
         return index
 
 

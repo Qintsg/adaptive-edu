@@ -16,16 +16,20 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-
-from mefkt_data_core import PREPROCESS_VERSION, PreparedDataset, SPLITS
+from mefkt_data_core import PREPROCESS_VERSION, SPLITS, PreparedDataset
 from mefkt_lite_data import (
+    SplitBuffer,
     _append_user_sequences,
     _normalize_features,
     _parse_response_time,
-    _save_prepared,
     _safe_float,
+    _save_prepared,
     _split_for_user,
-    SplitBuffer,
+)
+from mefkt_open_world import (
+    append_content_features,
+    content_embeddings_metadata,
+    load_content_embeddings,
 )
 
 
@@ -44,19 +48,29 @@ def _parse_timestamp(value: object) -> float:
         return numeric / 1000.0 if numeric > 10_000_000_000 else numeric
     except ValueError:
         try:
-            return datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp()
+            return datetime.fromisoformat(text).timestamp()
         except ValueError:
             return 0.0
 
 
 def _split_tokens(value: object) -> list[str]:
-    """兼容分号、逗号和空格分隔的知识点字段。"""
+    """
+    兼容分号、逗号和空格分隔的知识点字段。
+
+    :param value: 原始知识点字段。
+    :returns: 去空白后的知识点列表。
+    """
     text = str(value or "").replace(",", ";").replace(" ", ";")
     return [token.strip() for token in text.split(";") if token.strip()]
 
 
 def _parse_correct(row: dict[str, str]) -> int:
-    """解析 canonical 正确性或答案字段。"""
+    """
+    解析 canonical 正确性或答案字段。
+
+    :param row: canonical 交互行。
+    :returns: 0/1 正确性标签。
+    """
     value = str(row.get("correct", "")).strip().lower()
     if value in {"1", "true", "yes", "correct", "right"}:
         return 1
@@ -77,6 +91,7 @@ def prepare_canonical_csv(
     min_length: int,
     context_length: int,
     force: bool,
+    content_embeddings_file: Path | None = None,
 ) -> PreparedDataset:
     """
     从按 user_id、timestamp 排序的 canonical CSV 构建通用训练缓存。
@@ -98,6 +113,7 @@ def prepare_canonical_csv(
     if not events_file.is_file():
         raise FileNotFoundError(f"找不到 canonical CSV: {events_file}")
     cache_root = root.resolve() / "processed"
+    content_metadata = content_embeddings_metadata(content_embeddings_file)
     expected = {
         "dataset": "canonical-csv",
         "preprocess_version": PREPROCESS_VERSION,
@@ -108,6 +124,7 @@ def prepare_canonical_csv(
         "max_sequence_length": max_length,
         "min_sequence_length": min_length,
         "window_context_length": context_length,
+        **content_metadata,
     }
     if not force and (cache_root / "manifest.json").exists():
         metadata = json.loads((cache_root / "manifest.json").read_text(encoding="utf-8"))
@@ -159,7 +176,7 @@ def prepare_canonical_csv(
     gap_elapsed = np.zeros(len(item_ids), dtype=np.float32)
     response_elapsed = np.zeros(len(item_ids), dtype=np.float32)
     current_user: str | None = None
-    previous_timestamp = 0.0
+    previous_timestamp: float | None = None
     items: list[int] = []
     correct: list[int] = []
     gaps: list[float] = []
@@ -168,7 +185,11 @@ def prepare_canonical_csv(
     selected_interactions = 0
 
     def flush_user() -> None:
-        """写入当前学习者序列并更新训练集统计。"""
+        """
+        写入当前学习者序列并更新训练集统计。
+
+        :returns: None。
+        """
         nonlocal selected_users, selected_interactions
         if current_user is None or len(items) < min_length:
             return
@@ -207,9 +228,9 @@ def prepare_canonical_csv(
                     break
                 current_user = user_id
                 items, correct, gaps, response_times = [], [], [], []
-                previous_timestamp = 0.0
+                previous_timestamp = None
             timestamp = _parse_timestamp(row.get("timestamp"))
-            gap = 1.0 if previous_timestamp <= 0 else max((timestamp - previous_timestamp) / 3600.0, 1.0 / 3600.0)
+            gap = 1.0 if previous_timestamp is None else max((timestamp - previous_timestamp) / 3600.0, 1.0 / 3600.0)
             items.append(item_to_index[item_id])
             correct.append(_parse_correct(row))
             gaps.append(min(gap, 24.0 * 365.0))
@@ -221,6 +242,9 @@ def prepare_canonical_csv(
     if len(buffers["train"]) == 0:
         raise RuntimeError("canonical CSV 预处理后没有训练序列")
     features = _normalize_features(raw, attempts, correct_counts, gap_elapsed, response_elapsed)
+    if content_embeddings_file is not None:
+        content_features = load_content_embeddings(content_embeddings_file, item_ids)
+        features = append_content_features(features, content_features)
     metadata = {
         **expected,
         "selected_users": selected_users,

@@ -22,12 +22,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-import torch.distributed as distributed
-import torch.nn.functional as functional
-from torch import Tensor, nn
-from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data import DataLoader, DistributedSampler, SequentialSampler
-
+from mefkt_canonical_data import prepare_canonical_csv
 from mefkt_lite_data import (
     PreparedDataset,
     SequenceIndexDataset,
@@ -36,9 +31,11 @@ from mefkt_lite_data import (
     prepare_ednet,
     prepare_synthetic,
 )
-from mefkt_canonical_data import prepare_canonical_csv
-from mefkt_models import BaseMEFKT, SequenceState, build_model
-
+from mefkt_models import BaseMEFKT, build_model
+from torch import distributed, nn
+from torch.nn import functional
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader, DistributedSampler, SequentialSampler
 
 LOGGER = logging.getLogger("mefkt.train")
 
@@ -54,12 +51,40 @@ class DistributedContext:
 
     @property
     def is_main(self) -> bool:
-        """判断当前进程是否是 rank 0。"""
+        """
+        判断当前进程是否是 rank 0。
+
+        :returns: 当前进程是否负责日志、评估和保存。
+        """
         return self.rank == 0
 
 
+def _average_ranks(values: np.ndarray) -> np.ndarray:
+    """
+    为可能包含并列值的预测分配一基平均秩。
+
+    :param values: 一维预测值。
+    :returns: 与输入顺序一致的平均秩。
+    """
+    order = np.argsort(values, kind="mergesort")
+    sorted_values = values[order]
+    ranks = np.empty(len(values), dtype=np.float64)
+    start = 0
+    while start < len(values):
+        end = start + 1
+        while end < len(values) and sorted_values[end] == sorted_values[start]:
+            end += 1
+        ranks[order[start:end]] = (start + 1 + end) / 2.0
+        start = end
+    return ranks
+
+
 def _init_distributed() -> DistributedContext:
-    """初始化 torchrun 提供的分布式环境。"""
+    """
+    初始化 torchrun 提供的分布式环境。
+
+    :returns: 当前 rank、world size 和设备上下文。
+    """
     world_size = int(os.environ.get("WORLD_SIZE", "1"))
     rank = int(os.environ.get("RANK", "0"))
     local_rank = int(os.environ.get("LOCAL_RANK", "0"))
@@ -74,13 +99,24 @@ def _init_distributed() -> DistributedContext:
 
 
 def _finish_distributed(context: DistributedContext) -> None:
-    """销毁分布式进程组。"""
+    """
+    销毁分布式进程组。
+
+    :param context: 当前分布式上下文。
+    :returns: None。
+    """
     if context.world_size > 1 and distributed.is_initialized():
         distributed.destroy_process_group()
 
 
 def _seed_everything(seed: int, rank: int) -> None:
-    """固定训练随机性。"""
+    """
+    固定训练随机性。
+
+    :param seed: 基础随机种子。
+    :param rank: 分布式 rank，用于生成进程独立种子。
+    :returns: None。
+    """
     actual_seed = seed + rank
     random.seed(actual_seed)
     np.random.seed(actual_seed)
@@ -90,7 +126,13 @@ def _seed_everything(seed: int, rank: int) -> None:
 
 
 def _prepare_dataset(args: argparse.Namespace, context: DistributedContext) -> PreparedDataset:
-    """由 rank 0 准备数据，其余 rank 等待缓存完成。"""
+    """
+    由 rank 0 准备数据，其余 rank 等待缓存完成。
+
+    :param args: 训练命令行参数。
+    :param context: 当前分布式上下文。
+    :returns: 已完成预处理的数据集描述。
+    """
     root = Path(args.data_root)
     if context.is_main or context.world_size == 1:
         if args.dataset == "synthetic":
@@ -113,6 +155,9 @@ def _prepare_dataset(args: argparse.Namespace, context: DistributedContext) -> P
                 min_length=args.min_sequence_length,
                 context_length=args.window_context_length,
                 force=args.force_preprocess,
+                content_embeddings_file=Path(args.content_embeddings_file).resolve()
+                if args.content_embeddings_file
+                else None,
             )
         else:
             prepared = prepare_canonical_csv(
@@ -124,6 +169,9 @@ def _prepare_dataset(args: argparse.Namespace, context: DistributedContext) -> P
                 min_length=args.min_sequence_length,
                 context_length=args.window_context_length,
                 force=args.force_preprocess,
+                content_embeddings_file=Path(args.content_embeddings_file).resolve()
+                if args.content_embeddings_file
+                else None,
             )
     else:
         prepared = None
@@ -150,6 +198,9 @@ def _prepare_dataset(args: argparse.Namespace, context: DistributedContext) -> P
                     min_length=args.min_sequence_length,
                     context_length=args.window_context_length,
                     force=False,
+                    content_embeddings_file=Path(args.content_embeddings_file).resolve()
+                    if args.content_embeddings_file
+                    else None,
                 )
             else:
                 prepared = prepare_canonical_csv(
@@ -161,6 +212,9 @@ def _prepare_dataset(args: argparse.Namespace, context: DistributedContext) -> P
                     min_length=args.min_sequence_length,
                     context_length=args.window_context_length,
                     force=False,
+                    content_embeddings_file=Path(args.content_embeddings_file).resolve()
+                    if args.content_embeddings_file
+                    else None,
                 )
     assert prepared is not None
     return prepared
@@ -174,7 +228,17 @@ def _make_loader(
     workers: int,
     train: bool,
 ) -> tuple[DataLoader, DistributedSampler | None]:
-    """创建训练或评估 DataLoader。"""
+    """
+    创建训练或评估 DataLoader。
+
+    :param store: mmap 序列存储。
+    :param context: 当前分布式上下文。
+    :param batch_size: batch 大小。
+    :param sequence_length: 序列截断长度。
+    :param workers: DataLoader worker 数量。
+    :param train: 是否为训练 loader。
+    :returns: DataLoader 和可选的分布式 sampler。
+    """
     dataset = SequenceIndexDataset(store)
     sampler: DistributedSampler | SequentialSampler
     if context.world_size > 1 and train:
@@ -194,7 +258,13 @@ def _make_loader(
 
 
 def _metrics(probabilities: list[float], targets: list[int]) -> dict[str, float]:
-    """计算 AUC、ACC、Brier、ECE 和标签比例。"""
+    """
+    计算 AUC、ACC、Brier、ECE 和标签比例。
+
+    :param probabilities: 答对预测概率。
+    :param targets: 真实 0/1 标签。
+    :returns: 评估指标字典。
+    """
     if not targets:
         return {"auc": 0.5, "acc": 0.0, "brier": 0.0, "ece": 0.0, "samples": 0.0, "positive_rate": 0.0}
     prediction = np.asarray(probabilities, dtype=np.float64)
@@ -202,9 +272,7 @@ def _metrics(probabilities: list[float], targets: list[int]) -> dict[str, float]
     positive = int(gold.sum())
     negative = len(gold) - positive
     if positive and negative:
-        order = np.argsort(prediction, kind="mergesort")
-        ranks = np.empty_like(order, dtype=np.float64)
-        ranks[order] = np.arange(1, len(order) + 1, dtype=np.float64)
+        ranks = _average_ranks(prediction)
         auc = float((ranks[gold == 1].sum() - positive * (positive + 1) / 2) / (positive * negative))
     else:
         auc = 0.5
@@ -226,7 +294,15 @@ def _metrics(probabilities: list[float], targets: list[int]) -> dict[str, float]
 
 
 def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device, max_batches: int = 0) -> dict[str, float]:
-    """在一个切分上评估每次交互的答对预测。"""
+    """
+    在一个切分上评估每次交互的答对预测。
+
+    :param model: 待评估模型。
+    :param loader: 评估 DataLoader。
+    :param device: 评估设备。
+    :param max_batches: 最大 batch 数，0 表示不限制。
+    :returns: 评估指标字典。
+    """
     model.eval()
     probabilities: list[float] = []
     targets: list[int] = []
@@ -249,7 +325,16 @@ def _train_epoch(
     device: torch.device,
     amp: bool,
 ) -> float:
-    """训练一个 epoch。"""
+    """
+    训练一个 epoch。
+
+    :param model: 待训练模型。
+    :param loader: 训练 DataLoader。
+    :param optimizer: 优化器。
+    :param device: 训练设备。
+    :param amp: 是否在 CUDA 上启用 bfloat16 autocast。
+    :returns: 平均 batch loss。
+    """
     model.train()
     total_loss = 0.0
     batches = 0
@@ -275,7 +360,12 @@ def _train_epoch(
 
 
 def _unwrap(model: nn.Module) -> BaseMEFKT:
-    """取出 DDP 包装内的模型。"""
+    """
+    取出 DDP 包装内的模型。
+
+    :param model: 原始或 DDP 包装模型。
+    :returns: 基础 MEFKT 模型。
+    """
     return model.module if isinstance(model, DistributedDataParallel) else model  # type: ignore[return-value]
 
 
@@ -286,7 +376,16 @@ def _save_checkpoint(
     epoch: int,
     metadata: dict[str, object],
 ) -> None:
-    """原子保存可恢复 checkpoint。"""
+    """
+    原子保存可恢复 checkpoint。
+
+    :param path: checkpoint 输出路径。
+    :param model: 待保存模型。
+    :param optimizer: 待保存优化器。
+    :param epoch: 当前 epoch。
+    :param metadata: 模型、数据与指标元数据。
+    :returns: None。
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     torch.save(
@@ -309,7 +408,17 @@ def _runtime_validate(
     max_gpu_memory_gb: float,
     sequence_length: int,
 ) -> dict[str, object]:
-    """验证 CPU 加载推理，并在有 CUDA 时检查 GPU 峰值显存。"""
+    """
+    验证 CPU 加载推理，并在有 CUDA 时检查 GPU 峰值显存。
+
+    :param model: 已训练模型。
+    :param prepared: 预处理数据集。
+    :param threads: CPU 推理线程数。
+    :param max_parameters: 参数量上限。
+    :param max_gpu_memory_gb: GPU 峰值显存上限。
+    :param sequence_length: 验证序列长度。
+    :returns: 运行时门禁结果。
+    """
     parameters = sum(parameter.numel() for parameter in model.parameters())
     original_threads = torch.get_num_threads()
     torch.set_num_threads(max(1, threads))
@@ -369,11 +478,20 @@ def _runtime_validate(
 
 
 def _parse_args() -> argparse.Namespace:
-    """解析训练命令行参数。"""
+    """
+    解析训练命令行参数。
+
+    :returns: 命令行参数命名空间。
+    """
     parser = argparse.ArgumentParser(description="MEFKT / MEFKT-Lite 统一训练器")
     parser.add_argument("--profile", choices=("full", "lite"), default="full")
     parser.add_argument("--dataset", choices=("ednet-kt1", "canonical-csv", "synthetic"), default="ednet-kt1")
     parser.add_argument("--events-file", default="", help="canonical-csv 数据文件")
+    parser.add_argument(
+        "--content-embeddings-file",
+        default="",
+        help="可选的题目内容向量 .npz/.json；新课程冷启动依赖固定内容编码",
+    )
     parser.add_argument("--data-root", default="runtime_data/ednet-kt1")
     parser.add_argument("--output-dir", default="models/MEFKT/mefkt_v3")
     parser.add_argument("--epochs", type=int, default=12)
@@ -402,7 +520,11 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """执行数据准备、训练、评估、checkpoint 和运行时验证。"""
+    """
+    执行数据准备、训练、评估、checkpoint 和运行时验证。
+
+    :returns: 进程退出码。
+    """
     args = _parse_args()
     if args.profile == "lite" and args.max_parameters == 50_000_000:
         args.max_parameters = 5_000_000

@@ -18,13 +18,12 @@ import random
 import shutil
 import urllib.request
 import zipfile
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import torch
-
 from mefkt_data_core import (
     PREPROCESS_VERSION,
     SPLITS,
@@ -35,7 +34,11 @@ from mefkt_data_core import (
     SplitBuffer,
     collate_sequence_indices,
 )
-
+from mefkt_open_world import (
+    append_content_features,
+    content_embeddings_metadata,
+    load_content_embeddings,
+)
 
 LOGGER = logging.getLogger("mefkt_lite.data")
 EDNET_KT1_URL = (
@@ -52,6 +55,7 @@ def _download_file(url: str, destination: Path) -> None:
 
     :param url: 下载地址。
     :param destination: 目标文件。
+    :returns: None。
     """
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists() and destination.stat().st_size > 0:
@@ -78,7 +82,13 @@ def _download_file(url: str, destination: Path) -> None:
 
 
 def _extract_zip(zip_path: Path, target: Path) -> None:
-    """安全解压公开数据压缩包。"""
+    """
+    安全解压公开数据压缩包。
+
+    :param zip_path: 输入 ZIP 文件。
+    :param target: 解压目标目录。
+    :returns: None。
+    """
     marker = target / ".extracted"
     if marker.exists():
         return
@@ -94,7 +104,13 @@ def _extract_zip(zip_path: Path, target: Path) -> None:
 
 
 def _first_file(root: Path, name: str) -> Path:
-    """在数据根目录下定位指定文件。"""
+    """
+    在数据根目录下定位指定文件。
+
+    :param root: 搜索根目录。
+    :param name: 目标文件名。
+    :returns: 第一个匹配文件。
+    """
     matches = sorted(root.rglob(name))
     if not matches:
         raise FileNotFoundError(f"找不到数据文件: root={root} name={name}")
@@ -102,7 +118,13 @@ def _first_file(root: Path, name: str) -> Path:
 
 
 def _safe_float(value: object, default: float = 0.0) -> float:
-    """安全解析数值字段。"""
+    """
+    安全解析数值字段。
+
+    :param value: 原始值。
+    :param default: 解析失败时的默认值。
+    :returns: 浮点数。
+    """
     try:
         return float(str(value or "").strip())
     except (TypeError, ValueError):
@@ -170,7 +192,7 @@ def _parse_deployed_at(value: object) -> float:
         return max(float(text), 0.0)
     except ValueError:
         try:
-            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+            parsed = datetime.fromisoformat(text)
         except ValueError:
             return 0.0
         return max(parsed.timestamp(), 0.0)
@@ -192,7 +214,12 @@ def _parse_response_time(value: object) -> float:
 
 
 def _split_for_user(user_id: str) -> str:
-    """按照稳定 hash 进行学习者级切分。"""
+    """
+    按照稳定 hash 进行学习者级切分。
+
+    :param user_id: 学习者 ID。
+    :returns: train、validation 或 test。
+    """
     digest = hashlib.blake2b(user_id.encode("utf-8"), digest_size=2).digest()
     bucket = int.from_bytes(digest, "big") % 10
     return "train" if bucket < 8 else "validation" if bucket == 8 else "test"
@@ -205,9 +232,19 @@ def _normalize_features(
     gap_elapsed: np.ndarray,
     response_elapsed: np.ndarray,
 ) -> np.ndarray:
-    """用训练集统计构造不泄漏的题目多视角属性。"""
+    """
+    用训练集统计构造不泄漏的题目多视角属性。
+
+    :param raw: 题目静态原始特征。
+    :param attempts: 训练切分作答次数。
+    :param correct: 训练切分答对次数。
+    :param gap_elapsed: 训练切分累计时间间隔。
+    :param response_elapsed: 训练切分累计答题耗时。
+    :returns: 归一化后的七维题目特征。
+    """
     train_attempts = np.maximum(attempts, 1.0)
-    difficulty = 1.0 - correct / train_attempts
+    observed_difficulty = 1.0 - correct / train_attempts
+    difficulty = np.where(attempts > 0, observed_difficulty, 0.5)
     mean_gap = np.log1p(gap_elapsed / train_attempts)
     mean_response = np.log1p(response_elapsed / train_attempts)
     frequency = np.log1p(attempts)
@@ -234,7 +271,20 @@ def _append_user_sequences(
     min_length: int,
     context_length: int,
 ) -> None:
-    """将学习者序列切成带重叠历史上下文的模型窗口。"""
+    """
+    将学习者序列切成带重叠历史上下文的模型窗口。
+
+    :param buffers: 各数据切分的输出缓冲区。
+    :param split: 当前用户所属切分。
+    :param items: 题目索引序列。
+    :param correct: 正确性序列。
+    :param gaps: 时间间隔序列。
+    :param response_times: 答题耗时序列。
+    :param max_length: 单窗口最大长度。
+    :param min_length: 最短有效窗口长度。
+    :param context_length: 相邻窗口重叠历史长度。
+    :returns: None。
+    """
     context_length = min(max(context_length, 0), max_length - 1)
     stride = max(max_length - context_length, 1)
     target_starts = [0]
@@ -258,7 +308,14 @@ def _append_user_sequences(
 
 
 def _write_buffer(root: Path, split: str, buffer: SplitBuffer) -> None:
-    """将内存缓冲区写为 mmap 友好的 numpy 文件。"""
+    """
+    将内存缓冲区写为 mmap 友好的 numpy 文件。
+
+    :param root: 输出目录。
+    :param split: 数据切分名称。
+    :param buffer: 待写出的序列缓冲区。
+    :returns: None。
+    """
     np.save(root / f"{split}_items.npy", np.frombuffer(buffer.items, dtype=np.int32))
     np.save(root / f"{split}_correct.npy", np.frombuffer(buffer.correct, dtype=np.uint8))
     np.save(root / f"{split}_gaps.npy", np.frombuffer(buffer.gaps, dtype=np.float32))
@@ -279,7 +336,21 @@ def _save_prepared(
     skill_vocab: Iterable[str],
     context_length: int,
 ) -> PreparedDataset:
-    """持久化预处理数据并返回描述。"""
+    """
+    持久化预处理数据并返回描述。
+
+    :param root: 预处理输出目录。
+    :param features: 题目特征矩阵。
+    :param buffers: 各切分序列缓冲区。
+    :param metadata: 数据来源和预处理元数据。
+    :param item_ids: 题目词表。
+    :param item_subjects: 每道题的学科索引。
+    :param item_skills: 每道题的知识点索引。
+    :param subject_vocab: 学科词表。
+    :param skill_vocab: 知识点词表。
+    :param context_length: 窗口重叠上下文长度。
+    :returns: 可供训练器加载的数据集描述。
+    """
     root.mkdir(parents=True, exist_ok=True)
     np.save(root / "item_features.npy", features)
     for split, buffer in buffers.items():
@@ -304,7 +375,17 @@ def _save_prepared(
         "item_count": int(features.shape[0]),
         "feature_dim": int(features.shape[1]),
         "item_vocab_file": "item_vocab.json",
-        "feature_names": ["difficulty", "mean_gap", "mean_response_time", "frequency", "part", "tag_count", "deployed_at"],
+        "feature_names": [
+            "difficulty",
+            "mean_gap",
+            "mean_response_time",
+            "frequency",
+            "part",
+            "tag_count",
+            "deployed_at",
+            *[f"content_embedding_{index:03d}" for index in range(max(features.shape[1] - 7, 0))],
+        ],
+        "content_embedding_dim": max(int(features.shape[1]) - 7, 0),
         "subject_count": len(subject_vocab),
         "skill_count": len(skill_vocab),
         "max_item_skills": int(item_skills.shape[1]),
@@ -380,7 +461,19 @@ def prepare_synthetic(
     max_length: int | None = None,
     min_length: int = 2,
 ) -> PreparedDataset:
-    """生成本机 smoke test 使用的可重复数据。"""
+    """
+    生成本机 smoke test 使用的可重复数据。
+
+    :param root: 输出数据目录。
+    :param users: 模拟学习者数。
+    :param items: 模拟题目数。
+    :param sequence_length: 每名学习者交互长度。
+    :param seed: 随机种子。
+    :param context_length: 相邻窗口重叠历史长度。
+    :param max_length: 单窗口最大长度。
+    :param min_length: 最短有效窗口长度。
+    :returns: 可供训练器加载的数据集描述。
+    """
     max_length = max_length or sequence_length
     expected = {
         "dataset": "synthetic",
@@ -452,6 +545,7 @@ def prepare_ednet(
     min_length: int,
     context_length: int,
     force: bool,
+    content_embeddings_file: Path | None = None,
     kt1_url: str = EDNET_KT1_URL,
     content_url: str = EDNET_CONTENT_URL,
 ) -> PreparedDataset:
@@ -468,6 +562,7 @@ def prepare_ednet(
     """
     root = root.resolve()
     cache_root = root / "processed"
+    content_metadata = content_embeddings_metadata(content_embeddings_file)
     expected_metadata = {
         "dataset": "ednet-kt1",
         "preprocess_version": PREPROCESS_VERSION,
@@ -476,6 +571,7 @@ def prepare_ednet(
         "max_sequence_length": max_length,
         "min_sequence_length": min_length,
         "window_context_length": context_length,
+        **content_metadata,
     }
     if not force:
         cached = _load_prepared(cache_root, expected_metadata)
@@ -558,6 +654,9 @@ def prepare_ednet(
     if not buffers["train"].offsets or len(buffers["train"]) < 1:
         raise RuntimeError("EdNet 预处理后没有训练序列，请检查下载文件和参数")
     features = _normalize_features(raw, attempts, correct_count, gap_elapsed, response_elapsed)
+    if content_embeddings_file is not None:
+        content_features = load_content_embeddings(content_embeddings_file, item_ids)
+        features = append_content_features(features, content_features)
     metadata = {
         **expected_metadata,
         "license": "CC BY-NC 4.0",
