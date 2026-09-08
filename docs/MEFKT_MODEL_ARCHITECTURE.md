@@ -3,7 +3,7 @@ MEFKT / MEFKT-Lite 模型架构与输入输出说明
 @Project : adaptive-edu
 @File : MEFKT_MODEL_ARCHITECTURE.md
 @Author : Qintsg
-@Date : 2026-08-24
+@Date : 2026-08-25
 -->
 
 # MEFKT / MEFKT-Lite 模型架构
@@ -14,7 +14,7 @@ MEFKT / MEFKT-Lite 模型架构与输入输出说明
 
 当前方案的目标是“足够好用、可训练、可部署”，不要求对某一篇论文做逐层严格复现。更重要的约束是：基础模型训练完成后，新课程可以直接接入；如果有少量新课程交互数据，只允许做小规模参数高效校准，不重新训练整个基础模型。
 
-代码实现位于 [mefkt_models.py](../backend/scripts/mefkt_models.py)、[mefkt_encoders.py](../backend/scripts/mefkt_encoders.py) 和 [mefkt_model_config.py](../backend/scripts/mefkt_model_config.py)，统一训练入口位于 [mefkt_train.py](../backend/scripts/mefkt_train.py)，数据适配说明位于 [MEFKT_TRAINING.md](../backend/scripts/MEFKT_TRAINING.md)。
+代码实现位于 [mefkt_models.py](../backend/scripts/mefkt_models.py)、[mefkt_encoders.py](../backend/scripts/mefkt_encoders.py) 和 [mefkt_model_config.py](../backend/scripts/mefkt_model_config.py)，统一训练入口位于 [mefkt_train.py](../backend/scripts/mefkt_train.py)，数据适配说明位于 [MEFKT_TRAINING.md](../backend/scripts/MEFKT_TRAINING.md)。已有 checkpoint 还可以使用 [validate_mefkt_checkpoint.py](../backend/scripts/validate_mefkt_checkpoint.py) 单独执行 CPU/GPU 运行时门禁，无需重新训练。
 
 ## 2. 设计目标与边界
 
@@ -108,7 +108,7 @@ Transformer 的输入是每个时间步的 GRU 状态，而不是题干 token。
 | attention heads | 8 |
 | Transformer FFN | 1536 |
 | 跨窗口 memory | 64 个状态向量 |
-| dropout | 0.15 |
+| dropout | 0.20（当前 Full 默认；用于抑制题目 ID 记忆） |
 | 冻结内容向量输入 | 384 |
 
 ## 5. MEFKT-Lite 轻量模型
@@ -376,9 +376,53 @@ item_vocab.json
 subject_vocab.json
 skill_vocab.json
 runtime_validation.json
+run_config.json
+training_metrics.jsonl
+training_metrics.csv
+train.log（集群提交器持久化）
 ```
 
 checkpoint 中同时保存模型配置、参数量、数据清单、验证集指标和测试集指标。恢复训练时使用 `last.pt`；部署优先使用 `best.pt`。
+
+训练器同时保留 `best_auc.pt` 与 `best_loss.pt`。`best.pt` 是兼容现有部署的 AUC 最优别名；若业务更重视概率校准、期望 loss 或后续阈值决策，可以单独验证并选择 `best_loss.pt`。
+
+v3 训练器默认使用 3 轮线性 warmup，峰值学习率 `6e-5`、中段 `3e-5`、末段 `1e-5`，AdamW weight decay 为 `5e-4`。validation loss 连续 60 轮没有至少 `2e-4` 的实质改善时按平台期停止；显著上升趋势仍作为更快的保护。短程消融确认 v3 在 `6e-5` 时优于 v2，而 `1e-4` 会令 v3 的校准迅速恶化，因此 Full v3 不应沿用 v2 的峰值学习率。
+
+## 11.4 MEFKT v3 显式知识追踪
+
+v3 在保留自适应遗忘 GRU 和 Full 因果 Transformer 的同时，增加三条结构化通道：
+
+```text
+logit(correct)
+  = domain_scale × (student_ability - item_difficulty)
+  + domain_bias
+  + 0.25 × bounded_temporal_residual
+```
+
+- `student_ability`：全局时序上下文、相关 skill memory 与在线行为统计共同生成；
+- `item_difficulty`：题目 ID、学科、知识点、数值属性和内容向量共同生成；
+- `domain_scale/domain_bias`：每个训练学科两个轻量校准参数；未知课程回退共享未知槽；
+- `bounded_temporal_residual`：只允许提供有限幅度的时序修正，避免黑盒残差吞掉 IRT 主关系。
+
+每名学习者额外维护按 skill 寻址的状态：
+
+```text
+skill_memory       [B, known_skills + external_slots, skill_memory_dim]
+skill_attempts     [B, slots]
+skill_successes    [B, slots]
+skill_last_seen    [B, slots]
+elapsed_hours      [B]
+positive_streak    [B]
+negative_streak    [B]
+session_steps      [B]
+last_items         [B]
+```
+
+Full 的 `skill_memory_dim=32`，Lite 为 16。题目只读写自己关联的 skill 槽，未访问槽保持不变。新课程可以为未知题目传入课程内稳定的 `sequence_skill_indices` / `candidate_skill_indices`；这些索引映射到开放课程状态槽，不需要修改基础训练词表。
+
+训练阶段以 35% 概率屏蔽已知题目的 ID embedding，但仍保留内容、skill、subject 和数值属性，迫使共享主干具备对新题目的可迁移能力。推理阶段不随机屏蔽。
+
+为避免语言领域的数据量压制数学领域，训练 loss 默认是普通逐事件 BCE 与等学科 BCE 的 50/50 混合；validation/test 同时保留总体和分学科指标。
 
 ### 11.2 质量门槛
 
@@ -402,7 +446,7 @@ checkpoint 中同时保存模型配置、参数量、数据清单、验证集指
 
 ## 12. 当前验证结论
 
-截至 2026-08-24，代码层面已经验证：
+截至 2026-09-08，代码层面已经验证：
 
 - Full 和 Lite 能由同一训练入口构建；
 - Full 和 Lite 都包含固定 384 维内容向量适配分支，且不会增加在线文本模型依赖；
@@ -411,7 +455,12 @@ checkpoint 中同时保存模型配置、参数量、数据清单、验证集指
 - checkpoint 可以保存和加载；
 - `SequenceState` 可以跨窗口传递；Full memory 已回归验证不会因 padding 与 causal mask 组合产生 NaN；
 - 重叠窗口的 target mask 不会把上下文重复计入 loss；
-- 有 CUDA 时可以执行 8 GiB 显存上限检查；当前本机没有 CUDA，因此该项尚未实测。
+- Windows 项目环境已通过 CUDA 源锁定 `torch 2.11.0+cu130`，`uv sync` 后 CUDA 可用；
+- 现有 Full checkpoint 的 GPU 推理门禁通过，峰值保留显存为 0.1016 GiB，峰值已分配显存为 0.0903 GiB，低于 8 GiB 上限；同时 CPU 2 线程门禁通过；
+- Full CUDA 训练 smoke 已完成 1 轮，训练 loss 为 0.44755，验证/测试 AUC 为 0.7172/0.7301，训练后运行时门禁通过，峰值保留显存为 0.3008 GiB。
+- v3 Full 参数量约 15.60M，RTX 3050 本机 200 步推理峰值保留显存约 0.316 GiB；Lite 约 0.26M 参数；均满足部署门槛。
+- v3 当前答案和当前答题耗时因果性、只更新关联 skill、外部 skill 槽、IRT 单调性、旧 v2 checkpoint 加载、分段学习率和领域平衡 loss 均有自动回归测试。
+- 同数据同配置 6 轮短程消融中，v3 第 3 轮 validation loss/AUC 为 `0.50880/0.76686`，优于 v2 同轮的 `0.51408/0.76032`；v3 在 `1e-4` 出现不稳定，默认峰值已修正为 `6e-5`。
 
 本机已完成 1,098,343 条语言与数学混合交互的 Lite 单轮训练，验证/测试 AUC 为 0.7843/0.7785；仅使用语言课程训练后，把数学课程全部题目作为 OOV 的真正课程留出评估中，Lite AUC 为 0.6191。后者说明内容分支具备可测的零样本信号，但距离“任意课程均足够好用”仍有明显差距。最终结论必须等待集群上的多轮 Full/Lite 训练、更多领域数据和业务回放。
 

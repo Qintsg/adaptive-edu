@@ -16,7 +16,7 @@ from pathlib import Path
 
 import torch
 from mefkt_lite_data import _load_prepared
-from mefkt_models import build_model
+from mefkt_models import build_model, model_config_from_checkpoint
 
 
 def _parse_args() -> argparse.Namespace:
@@ -44,11 +44,13 @@ def validate(profile: str, data_root: Path, checkpoint_path: Path, cpu_threads: 
     :returns: 可写入日志的验证结果。
     :raises RuntimeError: 数据、checkpoint 或前向输出不符合契约时抛出。
     """
-    prepared = _load_prepared(data_root / "processed")
+    prepared = _load_prepared(data_root / "processed") or _load_prepared(data_root)
     if prepared is None:
         raise RuntimeError(f"找不到有效预处理缓存: {data_root / 'processed'}")
     if prepared.item_count < 3 or prepared.item_features.size(1) < 391:
         raise RuntimeError("开放世界验证需要至少 3 道题和 7+384 维题目特征")
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    config = model_config_from_checkpoint(checkpoint, profile)
     model = build_model(
         profile,
         prepared.item_count,
@@ -57,8 +59,8 @@ def validate(profile: str, data_root: Path, checkpoint_path: Path, cpu_threads: 
         prepared.item_skills,
         len(prepared.subject_vocab),
         len(prepared.skill_vocab),
+        config,
     )
-    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     torch.set_num_threads(max(cpu_threads, 1))

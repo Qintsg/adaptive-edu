@@ -1,0 +1,3132 @@
+<!--
+自适应学习前端设计高保真原型。
+@Project : adaptive-edu
+@File : prototype.html
+@Author : Qintsg
+@Date : 2026-07-18
+-->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="知识图谱驱动的个性化自适应学习系统前端设计原型"
+    />
+    <title>自适应学习 · 前端设计原型</title>
+    <link rel="stylesheet" href="./prototype.css" />
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="i-today" viewBox="0 0 24 24">
+        <path
+          d="M5 4.8h14v14.4H5zM8 2.8v4M16 2.8v4M5 9h14M8.2 13h3.2M8.2 16h6.5"
+        />
+      </symbol>
+      <symbol id="i-route" viewBox="0 0 24 24">
+        <circle cx="6" cy="18" r="2.2" />
+        <circle cx="18" cy="6" r="2.2" />
+        <path d="M8.2 18h2.3a3 3 0 0 0 3-3v-6a3 3 0 0 1 3-3h.9" />
+      </symbol>
+      <symbol id="i-knowledge" viewBox="0 0 24 24">
+        <circle cx="6" cy="12" r="2.2" />
+        <circle cx="18" cy="6" r="2.2" />
+        <circle cx="18" cy="18" r="2.2" />
+        <path d="m8 11 7.8-4M8 13l7.8 4" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12.5 4.2 4.2L19.5 6.5" />
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <path
+          d="M4.5 5.5a4 4 0 0 1 4-2H12v16H8.5a4 4 0 0 0-4 2zM19.5 5.5a4 4 0 0 0-4-2H12v16h3.5a4 4 0 0 1 4 2z"
+        />
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path d="M4 5.5h16v11H9l-5 4zM8 10h8M8 13h5" />
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24">
+        <path d="M5 19V9M10 19V5M15 19v-7M20 19V3" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="5.5" />
+        <path d="m15 15 5 5" />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24">
+        <circle cx="9" cy="8" r="3" />
+        <circle cx="17" cy="9" r="2.2" />
+        <path d="M3.5 19a5.5 5.5 0 0 1 11 0M14 15.5a4.2 4.2 0 0 1 6.5 3.5" />
+      </symbol>
+      <symbol id="i-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1" />
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="19" cy="12" r="1" />
+      </symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24">
+        <path d="m13 2-2 7 6-2-7 15 2-9-6 2z" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h13M14 7l5 5-5 5" />
+      </symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24">
+        <path d="M4 6h16M7 12h10M10 18h4" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 3 2.8 20h18.4zM12 9v5M12 17.5v.2" />
+      </symbol>
+    </svg>
+
+    <div class="prototype-note" role="note">
+      <span>设计评审原型</span>
+      <strong>自适应学习</strong>
+      <span class="prototype-note__hint">使用右下角面板切换角色与页面</span>
+    </div>
+
+    <div class="app-shell" id="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <a class="brand" href="#" aria-label="自适应学习首页">
+          <span class="brand__mark"><i></i><i></i><i></i></span>
+          <span><b>自适应学习</b><small>知识图谱驱动</small></span>
+        </a>
+
+        <div class="role-chip">
+          <span class="role-chip__dot"></span
+          ><span id="role-name">学生工作台</span>
+        </div>
+
+        <nav class="side-nav" id="side-nav">
+          <div class="nav-group" data-roles="student">
+            <p>今天</p>
+            <button class="nav-item is-active" data-view="student-home">
+              <svg><use href="#i-today" /></svg><span>学习工作台</span>
+            </button>
+            <button class="nav-item" data-view="student-path">
+              <svg><use href="#i-route" /></svg><span>学习路径</span
+              ><em>8/15</em>
+            </button>
+          </div>
+          <div class="nav-group" data-roles="student">
+            <p>学习</p>
+            <button class="nav-item" data-view="student-task">
+              <svg><use href="#i-book" /></svg><span>当前任务</span>
+            </button>
+            <button class="nav-item" data-view="student-assessment">
+              <svg><use href="#i-check" /></svg><span>测评</span>
+            </button>
+            <button class="nav-item" data-view="student-assignments">
+              <svg><use href="#i-chart" /></svg><span>作业</span><em>2</em>
+            </button>
+            <button class="nav-item" data-view="student-resources">
+              <svg><use href="#i-book" /></svg><span>课程资源</span>
+            </button>
+            <button class="nav-item" data-view="student-graph">
+              <svg><use href="#i-knowledge" /></svg><span>知识图谱</span>
+            </button>
+          </div>
+          <div class="nav-group" data-roles="student">
+            <p>智能支持</p>
+            <button class="nav-item" data-view="student-ai">
+              <svg><use href="#i-chat" /></svg><span>AI 学习助手</span>
+            </button>
+            <button class="nav-item" data-view="student-agent">
+              <svg><use href="#i-spark" /></svg><span>个性化智能体</span>
+            </button>
+          </div>
+          <div class="nav-group" data-roles="student">
+            <p>我的</p>
+            <button class="nav-item" data-view="student-courses">
+              <svg><use href="#i-book" /></svg><span>课程与班级</span>
+            </button>
+            <button class="nav-item" data-view="student-profile">
+              <svg><use href="#i-chart" /></svg><span>学习画像</span>
+            </button>
+            <button class="nav-item" data-view="student-settings">
+              <svg><use href="#i-users" /></svg><span>个人设置</span>
+            </button>
+          </div>
+
+          <div class="nav-group" data-roles="teacher">
+            <p>课程</p>
+            <button class="nav-item is-active" data-view="teacher-workspace">
+              <svg><use href="#i-book" /></svg><span>课程工作空间</span>
+            </button>
+            <button class="nav-item" data-view="teacher-content">
+              <svg><use href="#i-knowledge" /></svg><span>内容工作区</span>
+            </button>
+            <button class="nav-item" data-view="teacher-classroom">
+              <svg><use href="#i-users" /></svg><span>班级与学生</span
+              ><em>42</em>
+            </button>
+          </div>
+          <div class="nav-group" data-roles="teacher">
+            <p>待处理</p>
+            <button class="nav-item">
+              <svg><use href="#i-alert" /></svg><span>风险与反馈</span
+              ><em class="nav-alert">3</em>
+            </button>
+          </div>
+
+          <div class="nav-group" data-roles="admin">
+            <p>治理</p>
+            <button class="nav-item is-active" data-view="admin-governance">
+              <svg><use href="#i-chart" /></svg><span>系统概览</span>
+            </button>
+            <button class="nav-item" data-view="admin-content">
+              <svg><use href="#i-book" /></svg><span>课程与班级</span>
+            </button>
+            <button class="nav-item" data-view="admin-access">
+              <svg><use href="#i-users" /></svg><span>访问与审计</span>
+            </button>
+          </div>
+        </nav>
+
+        <div class="sidebar__footer">
+          <span class="avatar" id="sidebar-avatar">S</span>
+          <span
+            ><b id="sidebar-user">student1</b
+            ><small>查看账户与设置</small></span
+          >
+          <svg><use href="#i-more" /></svg>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <span class="brand__mark"><i></i><i></i><i></i></span
+            ><b>自适应学习</b>
+          </div>
+          <button class="course-context" type="button">
+            <span class="course-context__glyph"
+              ><svg><use href="#i-book" /></svg
+            ></span>
+            <span><small>当前课程</small><b>大数据技术与应用</b></span>
+            <span class="course-context__arrow">⌄</span>
+          </button>
+          <div class="topbar__actions">
+            <label class="global-search"
+              ><svg><use href="#i-search" /></svg
+              ><input
+                aria-label="全局搜索"
+                placeholder="搜索知识点、任务或学生"
+            /></label>
+            <button class="icon-button" aria-label="更多通知">
+              <span class="notification-dot"></span>⌁
+            </button>
+            <button class="user-button">
+              <span class="avatar" id="top-avatar">S</span
+              ><span id="top-user">student1</span><span>⌄</span>
+            </button>
+          </div>
+        </header>
+
+        <main class="main-content" id="main-content">
+          <section
+            class="view is-active"
+            id="student-home"
+            data-role="student"
+            aria-labelledby="student-home-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">7 月 18 日 · 下午好</p>
+                <h1 id="student-home-title">今天，从这一站继续</h1>
+                <p>你的路径已根据最近一次阶段测评更新。</p>
+              </div>
+              <button class="quiet-button">
+                <svg><use href="#i-chart" /></svg>查看本周学习回顾
+              </button>
+            </div>
+
+            <section class="learning-trail" aria-label="当前学习轨迹">
+              <div class="trail-copy">
+                <p>学习轨迹 · 第 9 / 15 项</p>
+                <h2>Spark SQL 原理与特征</h2>
+                <span
+                  >因“执行计划”掌握不足，本任务被提前；完成后进入间隔复习。</span
+                >
+              </div>
+              <div class="trail-map" aria-hidden="true">
+                <div class="trail-line">
+                  <span class="trail-line__done"></span>
+                </div>
+                <div class="trail-node is-done">
+                  <i
+                    ><svg><use href="#i-check" /></svg></i
+                  ><span>基础建立<small>7 项已完成</small></span>
+                </div>
+                <div class="trail-node is-current">
+                  <i
+                    ><svg><use href="#i-spark" /></svg></i
+                  ><span>当前任务<small>预计 35 分钟</small></span>
+                </div>
+                <div class="trail-node">
+                  <i>9</i><span>阶段测试<small>完成后解锁</small></span>
+                </div>
+              </div>
+              <button class="primary-button trail-action">
+                继续学习 <svg><use href="#i-arrow" /></svg>
+              </button>
+            </section>
+
+            <div class="metric-strip" aria-label="本周学习指标">
+              <div>
+                <span>53%</span><small>路径完成度</small
+                ><em>8 / 15 项已完成</em>
+              </div>
+              <div>
+                <span>6h 20m</span><small>专注学习</small><em>目标还差 40m</em>
+              </div>
+              <div>
+                <span>+2</span><small>新掌握知识点</small><em>1 项需要巩固</em>
+              </div>
+              <div>
+                <span>3</span><small>待完成事项</small><em>最近截止：明天</em>
+              </div>
+            </div>
+
+            <div class="dashboard-grid">
+              <article class="panel current-task">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">当前任务</p>
+                    <h2>理解 Spark SQL 执行计划</h2>
+                  </div>
+                  <span class="status status--current">学习中</span>
+                </div>
+                <p class="task-summary">
+                  完成一段 12 分钟讲解和 3
+                  道检查题，能够从执行计划中识别扫描、交换与聚合步骤。
+                </p>
+                <div class="task-progress">
+                  <div><span style="width: 38%"></span></div>
+                  <b>38%</b>
+                </div>
+                <ul class="task-checklist">
+                  <li class="is-complete">
+                    <svg><use href="#i-check" /></svg>阅读：Spark SQL 架构总览
+                    <small>已完成</small>
+                  </li>
+                  <li>
+                    <svg><use href="#i-book" /></svg>视频：如何阅读执行计划
+                    <small>12 分钟</small>
+                  </li>
+                  <li>
+                    <svg><use href="#i-today" /></svg>检查题：定位性能瓶颈
+                    <small>3 题</small>
+                  </li>
+                </ul>
+                <div class="panel-actions">
+                  <button class="primary-button">开始本节</button
+                  ><button class="text-button js-reason">
+                    为什么推荐给我？
+                  </button>
+                </div>
+                <div class="reason-note" hidden>
+                  <b>推荐依据</b>
+                  <p>
+                    你在阶段测评的执行计划题组中答对 2/5 题，且最近学习的 Spark
+                    核心计算模型与本节存在直接先修关系。
+                  </p>
+                </div>
+              </article>
+
+              <aside class="panel evidence-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">本周证据</p>
+                    <h2>掌握度正在上升</h2>
+                  </div>
+                  <button class="text-button">完整画像</button>
+                </div>
+                <div class="mastery-ring">
+                  <div><strong>74</strong><span>综合掌握度</span></div>
+                </div>
+                <div class="evidence-list">
+                  <div>
+                    <span class="evidence-icon evidence-icon--up">↗</span>
+                    <p><b>HDFS 工作原理</b><small>连续 3 次练习正确</small></p>
+                    <em>已掌握</em>
+                  </div>
+                  <div>
+                    <span class="evidence-icon evidence-icon--warn">!</span>
+                    <p>
+                      <b>Spark 执行计划</b><small>阶段测试正确率 40%</small>
+                    </p>
+                    <em>需巩固</em>
+                  </div>
+                  <div>
+                    <span class="evidence-icon evidence-icon--note">✦</span>
+                    <p>
+                      <b>教师反馈</b><small>建议结合案例理解 shuffle</small>
+                    </p>
+                    <em>新反馈</em>
+                  </div>
+                </div>
+              </aside>
+
+              <article class="panel todo-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">接下来</p>
+                    <h2>待办与截止日期</h2>
+                  </div>
+                  <button class="text-button">查看全部</button>
+                </div>
+                <div class="todo-list">
+                  <div>
+                    <time><b>19</b><span>7 月</span></time>
+                    <p>
+                      <b>第 9 章 · 逻辑回归</b><small>课程作业 · 10 题</small>
+                    </p>
+                    <span class="status status--gold">明天截止</span>
+                  </div>
+                  <div>
+                    <time><b>22</b><span>7 月</span></time>
+                    <p>
+                      <b>Spark 阶段测试</b><small>完成当前任务后解锁</small>
+                    </p>
+                    <span class="status">未解锁</span>
+                  </div>
+                  <div>
+                    <time><b>25</b><span>7 月</span></time>
+                    <p>
+                      <b>综合实践报告</b><small>教师任务 · 预计 45 分钟</small>
+                    </p>
+                    <span class="status status--blue">进行中</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel feedback-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">最近反馈</p>
+                    <h2>让建议回到学习现场</h2>
+                  </div>
+                </div>
+                <blockquote>
+                  “你的概念理解很扎实，下一步试着用执行计划解释一次查询为什么变慢。”
+                </blockquote>
+                <div class="feedback-source">
+                  <span class="avatar avatar--teacher">T</span>
+                  <p><b>王老师</b><small>来自第 7 章 Spark 作业</small></p>
+                  <button class="text-button">查看作业</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-path"
+            data-role="student"
+            aria-labelledby="student-path-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">个性化路径 · 2026 春</p>
+                <h1 id="student-path-title">从基础建立到综合实践</h1>
+                <p>
+                  展开当前阶段，已完成内容收拢为摘要，未来阶段只显示解锁条件。
+                </p>
+              </div>
+              <button class="quiet-button">查看调整记录</button>
+            </div>
+            <div class="path-layout">
+              <div class="path-stages">
+                <article class="stage is-complete">
+                  <button>
+                    <span class="stage-marker"
+                      ><svg><use href="#i-check" /></svg></span
+                    ><span
+                      ><small>阶段 1</small><b>基础建立</b
+                      ><em>5 / 5 已完成</em></span
+                    ><strong>收起摘要</strong>
+                  </button>
+                </article>
+                <article class="stage is-open">
+                  <button>
+                    <span class="stage-marker">2</span
+                    ><span
+                      ><small>阶段 2</small><b>Spark 能力</b
+                      ><em>3 / 7 · 当前阶段</em></span
+                    ><strong>43%</strong>
+                  </button>
+                  <div class="unit-guide">
+                    <span
+                      ><svg><use href="#i-book" /></svg
+                    ></span>
+                    <p>
+                      <b>本章指南</b
+                      ><small>目标、知识结构、完成条件与预计用时</small>
+                    </p>
+                    <button>打开指南</button>
+                  </div>
+                  <div class="stage-nodes">
+                    <div class="stage-node is-done is-guide">
+                      <i
+                        ><svg><use href="#i-check" /></svg
+                      ></i>
+                      <p>
+                        <b>阅读本章指南</b
+                        ><small>了解 7 项活动及完成条件</small>
+                      </p>
+                      <span>已完成</span>
+                    </div>
+                    <div class="stage-node is-done">
+                      <i
+                        ><svg><use href="#i-check" /></svg
+                      ></i>
+                      <p>
+                        <b>Spark 核心计算模型</b><small>练习正确率 82%</small>
+                      </p>
+                      <span>已完成</span>
+                    </div>
+                    <div class="stage-node is-done">
+                      <i
+                        ><svg><use href="#i-check" /></svg
+                      ></i>
+                      <p>
+                        <b>RDD 转换与行动算子</b><small>练习正确率 76%</small>
+                      </p>
+                      <span>已完成</span>
+                    </div>
+                    <div class="stage-node is-current">
+                      <i
+                        ><svg><use href="#i-spark" /></svg
+                      ></i>
+                      <p>
+                        <b>Spark SQL 原理与特征</b
+                        ><small>因执行计划薄弱点提前</small>
+                      </p>
+                      <span>当前</span>
+                    </div>
+                    <div class="stage-node is-locked is-review">
+                      <i>复</i>
+                      <p>
+                        <b>间隔复习：RDD × DataFrame</b
+                        ><small>当前任务完成后解锁 · 约 12 分钟</small>
+                      </p>
+                      <span>复习</span>
+                    </div>
+                    <div class="stage-node is-locked is-assignment">
+                      <i>作</i>
+                      <p>
+                        <b>第 9 章应用作业</b
+                        ><small>12 道题 · 正确率达到 70%</small>
+                      </p>
+                      <span>作业</span>
+                    </div>
+                    <div class="stage-node is-locked">
+                      <i>测</i>
+                      <p>
+                        <b>Spark 阶段测试</b
+                        ><small>完成本阶段前 6 项后解锁</small>
+                      </p>
+                      <span>未解锁</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="stage">
+                  <button>
+                    <span class="stage-marker">3</span
+                    ><span
+                      ><small>阶段 3</small><b>综合实践</b
+                      ><em>0 / 3 · 完成阶段测试后解锁</em></span
+                    ><strong>未开始</strong>
+                  </button>
+                </article>
+              </div>
+              <aside class="panel path-detail">
+                <p class="eyebrow">当前节点 · 必修</p>
+                <h2>Spark SQL 原理与特征</h2>
+                <p>
+                  理解结构化查询如何转换为可执行计划，并能定位常见性能瓶颈。
+                </p>
+                <dl>
+                  <div>
+                    <dt>预计用时</dt>
+                    <dd>35 分钟</dd>
+                  </div>
+                  <div>
+                    <dt>完成条件</dt>
+                    <dd>5 项</dd>
+                  </div>
+                  <div>
+                    <dt>解锁</dt>
+                    <dd>间隔复习</dd>
+                  </div>
+                </dl>
+                <div class="why-card">
+                  <b>为什么现在学？</b>
+                  <p>
+                    你的阶段测评暴露了执行计划薄弱点；前置知识“S​park
+                    核心模型”已达到掌握标准。
+                  </p>
+                </div>
+                <button class="primary-button">继续当前任务</button
+                ><button class="text-button">查看相关知识图谱</button>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-graph"
+            data-role="student"
+            aria-labelledby="student-graph-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">知识图谱</p>
+                <h1 id="student-graph-title">第 9 章 · Spark SQL</h1>
+                <p>18 / 74 个知识点 · 5 个已掌握 · 3 个需要巩固</p>
+              </div>
+              <div class="segmented">
+                <button class="is-active">当前章节</button
+                ><button>一跳邻域</button><button>薄弱点</button
+                ><button>全局地图</button>
+              </div>
+            </div>
+            <div class="graph-layout">
+              <section
+                class="graph-panel"
+                aria-label="Spark SQL 当前章节知识图谱"
+              >
+                <div class="graph-toolbar">
+                  <label
+                    ><svg><use href="#i-search" /></svg
+                    ><input
+                      placeholder="例如：执行计划有哪些先修知识？" /></label
+                  ><button>
+                    <svg><use href="#i-knowledge" /></svg>视角：学生学习</button
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>关系：全部</button
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>掌握状态：全部
+                  </button>
+                  <div>
+                    <button aria-label="放大">＋</button
+                    ><button aria-label="缩小">－</button
+                    ><button aria-label="适合画布">适合画布</button>
+                  </div>
+                </div>
+                <div class="graph-perspective-bar">
+                  <span>当前视图</span>
+                  <p>
+                    <b>学生学习视角</b
+                    ><small>大数据技术与应用 / 第 9 章 / Spark SQL</small>
+                  </p>
+                  <em>18 个节点 · 12 条关系</em><button>保存当前视图</button>
+                </div>
+                <svg
+                  class="knowledge-graph"
+                  viewBox="0 0 980 620"
+                  role="img"
+                  aria-label="包含 18 个知识节点的 Spark SQL 章节图谱"
+                >
+                  <defs>
+                    <marker
+                      id="graph-arrow"
+                      viewBox="0 0 10 10"
+                      refX="8"
+                      refY="5"
+                      markerWidth="5"
+                      markerHeight="5"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 0 L 10 5 L 0 10 z" />
+                    </marker>
+                  </defs>
+                  <g class="graph-lines">
+                    <path
+                      class="relation-prerequisite"
+                      d="M145 150 C240 150 265 230 445 285M130 315 C245 315 315 300 445 300M210 465 C310 465 355 390 455 325M355 510 C410 470 450 405 485 350"
+                    />
+                    <path
+                      class="relation-part"
+                      d="M510 250 385 175M520 250 500 115M545 255 645 155M555 285 745 260M535 340 490 425M555 330 645 450"
+                    />
+                    <path
+                      class="relation-detail"
+                      d="M675 140 685 70M690 160 855 115M755 280 845 420M685 465 785 520M690 470 900 500M680 450 875 330"
+                    />
+                    <path
+                      class="relation-follow"
+                      d="M545 345 C565 450 545 515 520 555M760 280 C840 280 870 300 885 320"
+                    />
+                  </g>
+                  <g
+                    class="graph-node is-mastered"
+                    transform="translate(115 145)"
+                  >
+                    <circle r="34" />
+                    <text text-anchor="middle" y="-3">分布式</text>
+                    <text text-anchor="middle" y="13">计算基础</text>
+                    <text class="node-status" text-anchor="middle" y="53">
+                      82%
+                    </text>
+                  </g>
+                  <g
+                    class="graph-node is-mastered"
+                    transform="translate(100 315)"
+                  >
+                    <circle r="34" />
+                    <text text-anchor="middle" y="-3">RDD</text>
+                    <text text-anchor="middle" y="13">计算模型</text>
+                    <text class="node-status" text-anchor="middle" y="53">
+                      78%
+                    </text>
+                  </g>
+                  <g
+                    class="graph-node is-mastered"
+                    transform="translate(180 470)"
+                  >
+                    <circle r="36" />
+                    <text text-anchor="middle" y="-3">DataFrame</text>
+                    <text text-anchor="middle" y="13">基础操作</text>
+                    <text class="node-status" text-anchor="middle" y="56">
+                      74%
+                    </text>
+                  </g>
+                  <g
+                    class="graph-node is-mastered"
+                    transform="translate(340 525)"
+                  >
+                    <circle r="32" />
+                    <text text-anchor="middle" y="5">SparkSession</text>
+                    <text class="node-status" text-anchor="middle" y="50">
+                      80%
+                    </text>
+                  </g>
+                  <g
+                    class="graph-node is-current"
+                    transform="translate(510 300)"
+                  >
+                    <circle r="52" />
+                    <text text-anchor="middle" y="-4">Spark SQL</text>
+                    <text text-anchor="middle" y="15">原理与特征</text>
+                    <text class="node-status" text-anchor="middle" y="76">
+                      当前 · 62%
+                    </text>
+                  </g>
+                  <g class="graph-node" transform="translate(365 170)">
+                    <circle r="37" />
+                    <text text-anchor="middle" y="-3">Catalyst</text>
+                    <text text-anchor="middle" y="13">优化器</text>
+                    <text class="node-status" text-anchor="middle" y="57">
+                      55%
+                    </text>
+                  </g>
+                  <g
+                    class="graph-node is-mastered"
+                    transform="translate(500 95)"
+                  >
+                    <circle r="33" />
+                    <text text-anchor="middle" y="-3">逻辑计划</text>
+                    <text text-anchor="middle" y="13">生成</text>
+                    <text class="node-status" text-anchor="middle" y="51">
+                      71%
+                    </text>
+                  </g>
+                  <g class="graph-node is-weak" transform="translate(665 140)">
+                    <circle r="38" />
+                    <text text-anchor="middle" y="-3">物理计划</text>
+                    <text text-anchor="middle" y="13">选择</text>
+                    <text class="node-status" text-anchor="middle" y="58">
+                      41%
+                    </text>
+                  </g>
+                  <g class="graph-node is-weak" transform="translate(770 260)">
+                    <circle r="40" />
+                    <text text-anchor="middle" y="-3">执行计划</text>
+                    <text text-anchor="middle" y="13">阅读</text>
+                    <text class="node-status" text-anchor="middle" y="60">
+                      38%
+                    </text>
+                  </g>
+                  <g class="graph-node" transform="translate(490 440)">
+                    <circle r="34" />
+                    <text text-anchor="middle" y="-3">SQL 解析</text>
+                    <text text-anchor="middle" y="13">与绑定</text>
+                    <text class="node-status" text-anchor="middle" y="53">
+                      未检测
+                    </text>
+                  </g>
+                  <g class="graph-node is-weak" transform="translate(665 465)">
+                    <circle r="36" />
+                    <text text-anchor="middle" y="-3">Join</text>
+                    <text text-anchor="middle" y="13">策略选择</text>
+                    <text class="node-status" text-anchor="middle" y="55">
+                      43%
+                    </text>
+                  </g>
+                  <g class="graph-node is-minor" transform="translate(685 55)">
+                    <circle r="28" />
+                    <text text-anchor="middle" y="-2">成本优化</text>
+                    <text class="node-status" text-anchor="middle" y="42">
+                      CBO
+                    </text>
+                  </g>
+                  <g class="graph-node is-minor" transform="translate(865 105)">
+                    <circle r="29" />
+                    <text text-anchor="middle" y="-3">分区裁剪</text>
+                    <text text-anchor="middle" y="12">Pruning</text>
+                  </g>
+                  <g class="graph-node is-minor" transform="translate(810 535)">
+                    <circle r="30" />
+                    <text text-anchor="middle" y="-3">Broadcast</text>
+                    <text text-anchor="middle" y="12">Hash Join</text>
+                  </g>
+                  <g class="graph-node is-minor" transform="translate(925 500)">
+                    <circle r="31" />
+                    <text text-anchor="middle" y="-3">Sort Merge</text>
+                    <text text-anchor="middle" y="12">Join</text>
+                  </g>
+                  <g class="graph-node is-minor" transform="translate(855 430)">
+                    <circle r="29" />
+                    <text text-anchor="middle" y="-3">Shuffle</text>
+                    <text text-anchor="middle" y="12">边界</text>
+                  </g>
+                  <g class="graph-node" transform="translate(900 320)">
+                    <circle r="34" />
+                    <text text-anchor="middle" y="-3">自适应查询</text>
+                    <text text-anchor="middle" y="13">AQE</text>
+                    <text class="node-status" text-anchor="middle" y="52">
+                      未学习
+                    </text>
+                  </g>
+                  <g class="graph-node" transform="translate(525 575)">
+                    <circle r="34" />
+                    <text text-anchor="middle" y="-3">SQL 性能</text>
+                    <text text-anchor="middle" y="13">综合实践</text>
+                    <text class="node-status" text-anchor="middle" y="52">
+                      未学习
+                    </text>
+                  </g>
+                </svg>
+                <div class="graph-legend">
+                  <span><i class="legend-mastered"></i>已掌握</span
+                  ><span><i class="legend-current"></i>当前</span
+                  ><span><i class="legend-weak"></i>需巩固</span
+                  ><span><i></i>未学习</span><em></em
+                  ><span><b class="line-prerequisite"></b>先修</span
+                  ><span><b class="line-part"></b>组成</span
+                  ><span><b class="line-follow"></b>后续</span>
+                </div>
+                <div class="graph-count">
+                  <b>18</b><span>当前章节节点</span
+                  ><small>点击节点聚焦一跳关系</small>
+                </div>
+              </section>
+              <aside class="panel node-detail">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">KP-09-01 · 必修</p>
+                    <h2>Spark SQL 原理与特征</h2>
+                  </div>
+                  <span class="status status--current">熟练 · 路径当前项</span>
+                </div>
+                <p>
+                  Spark SQL 把结构化查询转换为逻辑计划，经 Catalyst
+                  优化后选择物理计划并分布式执行。
+                </p>
+                <div class="mastery-bar">
+                  <span><i class="mastery-62"></i></span><b>熟练 · 62%</b
+                  ><small>证据可信度：高</small>
+                </div>
+                <div class="node-facts">
+                  <span><b>4</b><small>先修</small></span
+                  ><span><b>6</b><small>组成</small></span
+                  ><span><b>2</b><small>后续</small></span
+                  ><span><b>8</b><small>资源</small></span>
+                </div>
+                <div class="relation-list">
+                  <b>关系与学习意义</b>
+                  <p>
+                    <span>先修</span>DataFrame 是结构化查询入口；Spark Core
+                    解释执行模型。
+                  </p>
+                  <p>
+                    <span>组成</span>逻辑计划、物理计划和 Join
+                    策略共同决定查询成本。
+                  </p>
+                  <p><span>后续</span>掌握后进入 AQE 与性能综合实践。</p>
+                </div>
+                <div class="node-evidence">
+                  <b>最近掌握证据</b>
+                  <ol>
+                    <li>
+                      <i class="evidence-up">+9</i>
+                      <p>节点检测 5 / 6 题正确<small>今天 16:32</small></p>
+                    </li>
+                    <li>
+                      <i class="evidence-up">+6</i>
+                      <p>完成 Join 策略实验<small>昨天 19:18</small></p>
+                    </li>
+                    <li>
+                      <i class="evidence-down">−4</i>
+                      <p>执行计划题连续答错<small>7 月 15 日</small></p>
+                    </li>
+                  </ol>
+                </div>
+                <div class="node-resource-list">
+                  <b>关联资源 · 8</b>
+                  <div>
+                    <span>讲义</span>
+                    <p><b>Spark SQL 查询优化</b><small>已学习 65%</small></p>
+                  </div>
+                  <div>
+                    <span>实验</span>
+                    <p>
+                      <b>比较三种 Join 策略</b><small>推荐 · 18 分钟</small>
+                    </p>
+                  </div>
+                  <div>
+                    <span>视频</span>
+                    <p>
+                      <b>从 SQL 到物理计划</b><small>未开始 · 14 分钟</small>
+                    </p>
+                  </div>
+                  <button class="text-button">查看全部 8 项资源</button>
+                </div>
+                <div class="node-actions">
+                  <button class="primary-button">继续学习</button
+                  ><button class="quiet-button">询问 AI</button>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-ai"
+            data-role="student"
+            aria-labelledby="student-ai-title"
+          >
+            <div class="page-heading page-heading--compact">
+              <div>
+                <p class="eyebrow">AI 学习助手</p>
+                <h1 id="student-ai-title">围绕当前任务提问，并保留证据</h1>
+              </div>
+              <span class="evidence-mode"><i></i>课程证据模式</span>
+            </div>
+            <div class="ai-layout">
+              <aside class="panel ai-context">
+                <p class="eyebrow">当前上下文</p>
+                <h2>Spark SQL 原理与特征</h2>
+                <span class="status status--current">路径第 9 / 15 项</span>
+                <div class="context-section">
+                  <b>本节目标</b>
+                  <p>能够阅读执行计划，并识别查询性能瓶颈。</p>
+                </div>
+                <div class="context-section">
+                  <b>需要巩固</b><a href="#">执行计划与优化</a>
+                </div>
+                <button class="quiet-button">切换上下文</button>
+              </aside>
+              <section class="chat-panel">
+                <div class="chat-history">
+                  <div class="chat-message chat-message--assistant">
+                    <span class="assistant-mark">A</span>
+                    <div>
+                      <p>
+                        你正在学习 Spark
+                        SQL。可以从下面的问题开始，或者直接描述你不理解的地方。
+                      </p>
+                      <div class="prompt-chips">
+                        <button>执行计划怎么看？</button
+                        ><button>为什么会发生 shuffle？</button
+                        ><button>给我一道检查题</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chat-message chat-message--user">
+                    <div>
+                      <p>为什么两个看起来一样的 SQL，执行速度会差很多？</p>
+                    </div>
+                    <span class="avatar">S</span>
+                  </div>
+                  <div class="chat-message chat-message--assistant">
+                    <span class="assistant-mark">A</span>
+                    <div>
+                      <p>
+                        即使 SQL 结果相同，Catalyst
+                        生成的物理计划也可能不同。最常见的差异来自<strong
+                          >数据分区、连接策略和 shuffle</strong
+                        >。
+                      </p>
+                      <ol>
+                        <li>先比较两条 SQL 的 `explain` 输出。</li>
+                        <li>
+                          检查是否出现 Exchange 节点，它通常意味着 shuffle。
+                        </li>
+                        <li>
+                          观察 Join 类型；BroadcastHashJoin 往往比 SortMergeJoin
+                          少一次全量交换。
+                        </li>
+                      </ol>
+                      <button class="inline-action">
+                        把检查步骤加入当前任务
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <form class="chat-composer">
+                  <textarea
+                    aria-label="向 AI 学习助手提问"
+                    placeholder="围绕当前课程提问；Shift + Enter 换行"
+                  ></textarea>
+                  <div>
+                    <span>回答将优先引用当前课程资料</span
+                    ><button class="primary-button" type="button">
+                      发送问题 <svg><use href="#i-arrow" /></svg>
+                    </button>
+                  </div>
+                </form>
+              </section>
+              <aside class="panel citation-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">证据与引用</p>
+                    <h2>本次回答使用 3 条证据</h2>
+                  </div>
+                </div>
+                <article>
+                  <span>课程讲义 · 1</span><b>Spark SQL 查询优化</b>
+                  <p>“物理计划选择会受到统计信息、分区和连接策略影响……”</p>
+                  <button class="text-button">定位原文</button>
+                </article>
+                <article>
+                  <span>知识图谱 · 2</span><b>执行计划与优化</b>
+                  <p>与当前知识点为“后续深化”关系，掌握度 38。</p>
+                  <button class="text-button">在图谱中查看</button>
+                </article>
+                <div class="citation-note">
+                  <i></i>
+                  <p>
+                    <b>课程证据回答</b
+                    ><small
+                      >内容来自当前课程资料与知识图谱，不包含外部搜索。</small
+                    >
+                  </p>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-task"
+            data-role="student"
+            aria-labelledby="student-task-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">学习路径 · 第 9 / 15 项</p>
+                <h1 id="student-task-title">Spark SQL 原理与特征</h1>
+                <p>预计 35 分钟 · 自动保存学习进度</p>
+              </div>
+              <span class="save-state"><i></i>进度已保存</span>
+            </div>
+            <div class="task-layout">
+              <section class="panel task-outline">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">完成条件</p>
+                    <h2>完成 4 项资源与节点检测</h2>
+                  </div>
+                  <span class="status status--blue">1 / 5</span>
+                </div>
+                <ol class="resource-steps">
+                  <li class="is-done">
+                    <i
+                      ><svg><use href="#i-check" /></svg
+                    ></i>
+                    <p>
+                      <b>理解 Catalyst 优化流程</b
+                      ><small
+                        >讲义 · 阅读到末尾并通过 2 道检查题 · 已完成</small
+                      >
+                    </p>
+                    <button>复习</button>
+                  </li>
+                  <li class="is-current">
+                    <i>2</i>
+                    <p>
+                      <b>比较三种 Join 策略</b
+                      ><small>实验 · 完成 6 个步骤并提交运行结果 · 40%</small>
+                    </p>
+                    <button class="primary-button">继续</button>
+                  </li>
+                  <li>
+                    <i>3</i>
+                    <p>
+                      <b>从 SQL 到物理计划</b
+                      ><small>视频 · 有效观看达到 90% · 14 分钟</small>
+                    </p>
+                    <button>开始</button>
+                  </li>
+                  <li>
+                    <i>4</i>
+                    <p>
+                      <b>Explain 与 SQL UI 分析</b
+                      ><small>Notebook · 完成全部 6 个步骤 · 约 20 分钟</small>
+                    </p>
+                    <button>开始</button>
+                  </li>
+                  <li>
+                    <i>5</i>
+                    <p>
+                      <b>节点检测</b
+                      ><small
+                        >6 道题 · 正确率达到 80% · 完成前 4 项后开放</small
+                      >
+                    </p>
+                    <button disabled>未开放</button>
+                  </li>
+                </ol>
+              </section>
+              <aside class="task-side">
+                <section class="panel evidence-summary">
+                  <p class="eyebrow">学习证据</p>
+                  <h2>当前掌握度 58%</h2>
+                  <div class="mastery-meter">
+                    <span><i class="mastery-58"></i></span
+                    ><small>最近一次节点检测 +9%</small>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>薄弱点</dt>
+                      <dd>执行计划、Shuffle 边界</dd>
+                    </div>
+                    <div>
+                      <dt>路径影响</dt>
+                      <dd>完成后开放阶段测试</dd>
+                    </div>
+                    <div>
+                      <dt>证据来源</dt>
+                      <dd>2 次作业、1 次实验、3 项资源</dd>
+                    </div>
+                  </dl>
+                  <button class="quiet-button">查看证据账本</button>
+                </section>
+                <section class="panel task-notes">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">学习笔记</p>
+                      <h2>2 条笔记</h2>
+                    </div>
+                    <button class="text-button">新增</button>
+                  </div>
+                  <p>
+                    <b>Exchange 节点</b
+                    ><small
+                      >通常表示发生了 Shuffle，需要检查分区和 Join 策略。</small
+                    >
+                  </p>
+                  <p>
+                    <b>Broadcast 阈值</b
+                    ><small>先确认小表统计信息是否准确。</small>
+                  </p>
+                </section>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-assessment"
+            data-role="student"
+            aria-labelledby="student-assessment-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">初始测评</p>
+                <h1 id="student-assessment-title">
+                  完成测评，生成第一条学习路径
+                </h1>
+                <p>进度会自动保存。</p>
+              </div>
+              <button class="primary-button">继续知识测评</button>
+            </div>
+            <div class="assessment-track">
+              <span class="is-current"
+                ><i>1</i><b>知识测评</b><small>12 / 20</small></span
+              ><span><i>2</i><b>能力评测</b><small>约 8 分钟</small></span
+              ><span><i>3</i><b>习惯问卷</b><small>约 5 分钟</small></span
+              ><span><i>4</i><b>测评报告</b><small>完成后生成</small></span>
+            </div>
+            <div class="feature-grid feature-grid--three">
+              <article class="panel function-card">
+                <span class="status status--gold">进行中</span>
+                <h2>知识测评</h2>
+                <p>20 道题 · 已完成 12 题 · 预计还需 7 分钟。</p>
+                <div class="progress-line"><i class="progress-60"></i></div>
+                <button>继续答题</button>
+              </article>
+              <article class="panel function-card">
+                <span class="status">未开始</span>
+                <h2>能力评测</h2>
+                <p>18 道情境题，评估理解、迁移、推理和问题解决。</p>
+                <button disabled>完成知识测评后开放</button>
+              </article>
+              <article class="panel function-card">
+                <span class="status">未开始</span>
+                <h2>习惯问卷</h2>
+                <p>24 项量表，记录可用时间、内容偏好和学习节奏。</p>
+                <button disabled>尚未开放</button>
+              </article>
+            </div>
+            <div class="assessment-support">
+              <section class="panel">
+                <p class="eyebrow">当前答题范围</p>
+                <h2>8 个课程章节</h2>
+                <div class="assessment-chapters">
+                  <span>大数据基础 <b>3 题</b></span
+                  ><span>HDFS <b>2 题</b></span
+                  ><span>MapReduce <b>2 题</b></span
+                  ><span>Spark Core <b>4 题</b></span
+                  ><span>Spark SQL <b>5 题</b></span
+                  ><span>数据仓库 <b>2 题</b></span
+                  ><span>机器学习 <b>1 题</b></span
+                  ><span>综合实践 <b>1 题</b></span>
+                </div>
+              </section>
+              <section class="panel">
+                <p class="eyebrow">完成后生成</p>
+                <h2>测评报告与初始路径</h2>
+                <ul>
+                  <li>知识点掌握起点与证据可信度</li>
+                  <li>能力维度和学习习惯偏好</li>
+                  <li>第一条个性化学习路径</li>
+                  <li>可解释的资源与任务推荐</li>
+                </ul>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-assignments"
+            data-role="student"
+            aria-labelledby="student-assignments-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">作业</p>
+                <h1 id="student-assignments-title">2 项待完成</h1>
+                <p>答题过程自动保存。</p>
+              </div>
+              <button class="quiet-button">查看错题与补强</button>
+            </div>
+            <div class="assignment-summary">
+              <span><b>2</b><small>待完成</small></span
+              ><span><b>1</b><small>草稿中</small></span
+              ><span><b>4</b><small>已提交</small></span
+              ><span><b>3</b><small>已批阅</small></span
+              ><span><b>12</b><small>错题待复习</small></span>
+            </div>
+            <nav class="segmented" aria-label="作业状态">
+              <button class="is-active">全部</button><button>待完成</button
+              ><button>已提交</button><button>已批阅</button>
+            </nav>
+            <section class="panel assignment-list">
+              <article class="assignment-row assignment-row--urgent">
+                <time><b>今天</b><small>22:00 截止</small></time>
+                <div>
+                  <span class="status status--gold">剩余 5 小时</span>
+                  <h2>第 9 章：Spark SQL</h2>
+                  <p>12 道题 · 已完成 7 题 · 草稿已保存</p>
+                </div>
+                <button class="primary-button">继续作业</button>
+              </article>
+              <article class="assignment-row">
+                <time><b>7 月 21 日</b><small>23:59 截止</small></time>
+                <div>
+                  <span class="status status--blue">未开始</span>
+                  <h2>数据仓库综合练习</h2>
+                  <p>8 道题 · 允许 2 次提交 · 预计 25 分钟</p>
+                </div>
+                <button>开始作业</button>
+              </article>
+              <article class="assignment-row">
+                <time><b>待出结果</b><small>昨天提交</small></time>
+                <div>
+                  <span class="status">教师批阅中</span>
+                  <h2>HDFS 文件系统实践</h2>
+                  <p>实验报告 · 已提交 · 草稿记录已归档</p>
+                </div>
+                <button>查看提交</button>
+              </article>
+              <article class="assignment-row">
+                <time><b>已批阅</b><small>82 分</small></time>
+                <div>
+                  <span class="status status--ok">可查看反馈</span>
+                  <h2>Spark 核心模型</h2>
+                  <p>3 个知识点需要补强 · 可重做 1 次</p>
+                </div>
+                <button>查看反馈</button>
+              </article>
+              <article class="assignment-row">
+                <time><b>已完成</b><small>91 分</small></time>
+                <div>
+                  <span class="status status--ok">路径已更新</span>
+                  <h2>MapReduce 编程基础</h2>
+                  <p>掌握度提升 8% · 无待处理错题</p>
+                </div>
+                <button>查看结果</button>
+              </article>
+            </section>
+            <section class="panel reinforcement-strip">
+              <div>
+                <p class="eyebrow">错题与补强</p>
+                <h2>12 道错题集中在 4 个知识点</h2>
+              </div>
+              <div>
+                <span>执行计划 <b>5</b></span
+                ><span>Join 策略 <b>3</b></span
+                ><span>Shuffle <b>2</b></span
+                ><span>数据分区 <b>2</b></span>
+              </div>
+              <button class="quiet-button">生成补强任务</button>
+            </section>
+          </section>
+
+          <section
+            class="view"
+            id="student-resources"
+            data-role="student"
+            aria-labelledby="student-resources-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">课程资源</p>
+                <h1 id="student-resources-title">大数据技术与应用</h1>
+                <p>59 项资源 · 18 个知识点已建立关联</p>
+              </div>
+              <button class="quiet-button">查看学习记录</button>
+            </div>
+            <div class="resource-summary">
+              <button class="is-active"><b>59</b><span>全部资源</span></button
+              ><button><b>18</b><span>讲义与阅读</span></button
+              ><button><b>14</b><span>视频</span></button
+              ><button><b>9</b><span>交互实验</span></button
+              ><button><b>12</b><span>代码与数据</span></button
+              ><button><b>6</b><span>案例</span></button>
+            </div>
+            <div class="filter-bar resource-filter">
+              <label
+                ><svg><use href="#i-search" /></svg
+                ><input placeholder="搜索标题、知识点、作者或标签" /></label
+              ><button>
+                <svg><use href="#i-filter" /></svg>章节：第 9 章</button
+              ><button>
+                <svg><use href="#i-filter" /></svg>进度：全部</button
+              ><button>
+                <svg><use href="#i-filter" /></svg>排序：推荐优先</button
+              ><span>当前 12 项</span>
+            </div>
+            <div class="resource-library">
+              <section class="panel resource-results">
+                <div class="resource-results__heading">
+                  <div>
+                    <p class="eyebrow">当前章节</p>
+                    <h2>推荐资源</h2>
+                  </div>
+                  <span>依据路径位置与掌握证据排序</span>
+                </div>
+                <article>
+                  <span class="resource-kind">讲义</span>
+                  <div>
+                    <h2>Spark SQL 查询优化</h2>
+                    <p><a>执行计划</a><a>Catalyst</a><a>Join 策略</a></p>
+                    <small
+                      >课程讲义 · teacher1 · 阅读 12 分钟 · 已完成 65%</small
+                    ><em class="resource-reason">当前任务必读</em>
+                  </div>
+                  <button class="primary-button">继续阅读</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--video">视频</span>
+                  <div>
+                    <h2>从 SQL 到物理计划</h2>
+                    <p><a>逻辑计划</a><a>物理计划</a><a>执行计划</a></p>
+                    <small>课程视频 · 14:26 · 含字幕 · 未开始</small
+                    ><em class="resource-reason">补强执行计划</em>
+                  </div>
+                  <button>开始学习</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--lab">实验</span>
+                  <div>
+                    <h2>比较三种 Join 执行成本</h2>
+                    <p>
+                      <a>Broadcast Join</a><a>Sort Merge Join</a><a>Shuffle</a>
+                    </p>
+                    <small>交互实验 · 预计 25 分钟 · 自动保存</small
+                    ><em class="resource-reason">掌握度 43%</em>
+                  </div>
+                  <button>打开实验</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--note">手册</span>
+                  <div>
+                    <h2>Catalyst 优化规则速查</h2>
+                    <p><a>谓词下推</a><a>列裁剪</a><a>常量折叠</a></p>
+                    <small>参考手册 · 16 页 · 7 月 12 日更新</small>
+                  </div>
+                  <button>打开手册</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--data">数据</span>
+                  <div>
+                    <h2>TPC-DS 精简查询集</h2>
+                    <p><a>性能测试</a><a>数据分区</a><a>查询计划</a></p>
+                    <small>数据集 · CSV 84 MB · 12 个查询样例</small>
+                  </div>
+                  <button>查看数据</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--case">案例</span>
+                  <div>
+                    <h2>AQE 如何处理数据倾斜</h2>
+                    <p><a>自适应查询</a><a>倾斜 Join</a><a>分区合并</a></p>
+                    <small>案例分析 · 阅读 18 分钟 · 难度：进阶</small
+                    ><em class="resource-reason resource-reason--later"
+                      >当前任务后推荐</em
+                    >
+                  </div>
+                  <button>查看案例</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--code">代码</span>
+                  <div>
+                    <h2>Explain 与 SQL UI 分析 Notebook</h2>
+                    <p><a>Explain</a><a>Spark UI</a><a>性能诊断</a></p>
+                    <small
+                      >Jupyter Notebook · Python / PySpark · 6 个步骤</small
+                    >
+                  </div>
+                  <button>打开代码</button>
+                </article>
+                <article>
+                  <span class="resource-kind resource-kind--video">视频</span>
+                  <div>
+                    <h2>分区裁剪与动态分区裁剪</h2>
+                    <p><a>分区裁剪</a><a>文件扫描</a><a>Join</a></p>
+                    <small>课程视频 · 11:08 · 含练习 · 未开始</small>
+                  </div>
+                  <button>开始学习</button>
+                </article>
+                <div class="resource-pagination">
+                  <span>已显示 8 / 12 项</span><button>加载更多</button>
+                </div>
+              </section>
+              <aside class="resource-side">
+                <section class="panel resource-context">
+                  <p class="eyebrow">当前知识点</p>
+                  <h2>执行计划阅读</h2>
+                  <div class="mastery-meter">
+                    <span><i class="mastery-38"></i></span
+                    ><small>掌握度 38% · 可信度高</small>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>关联资源</dt>
+                      <dd>6 项</dd>
+                    </div>
+                    <div>
+                      <dt>未完成</dt>
+                      <dd>4 项</dd>
+                    </div>
+                    <div>
+                      <dt>预计用时</dt>
+                      <dd>52 分钟</dd>
+                    </div>
+                  </dl>
+                  <button class="quiet-button">在知识图谱中查看</button>
+                </section>
+                <section class="panel learning-queue">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">学习队列</p>
+                      <h2>3 项 · 48 分钟</h2>
+                    </div>
+                    <button class="text-button">清空</button>
+                  </div>
+                  <ol>
+                    <li>
+                      <i>1</i>
+                      <p>
+                        <b>从 SQL 到物理计划</b><small>视频 · 14 分钟</small>
+                      </p>
+                    </li>
+                    <li>
+                      <i>2</i>
+                      <p>
+                        <b>Join 执行成本实验</b><small>实验 · 25 分钟</small>
+                      </p>
+                    </li>
+                    <li>
+                      <i>3</i>
+                      <p><b>Catalyst 速查</b><small>手册 · 9 分钟</small></p>
+                    </li>
+                  </ol>
+                  <button class="primary-button">开始学习队列</button>
+                </section>
+                <section class="panel resource-breakdown">
+                  <p class="eyebrow">本章资源完整度</p>
+                  <h2>12 项资源覆盖 9 个节点</h2>
+                  <div><span>必修节点</span><b>8 / 8</b></div>
+                  <div><span>薄弱节点</span><b>3 / 3</b></div>
+                  <div><span>进阶节点</span><b>4 / 6</b></div>
+                  <small>“成本优化”和“倾斜 Join”仍缺少基础难度资源。</small>
+                </section>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-agent"
+            data-role="student"
+            aria-labelledby="student-agent-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">个性化智能体</p>
+                <h1 id="student-agent-title">生成并应用补强学习包</h1>
+                <p>智能体负责规划和生成；知识问答请使用 AI 学习助手。</p>
+              </div>
+              <button class="primary-button">生成学习包</button>
+            </div>
+            <div class="agent-grid">
+              <section class="panel agent-brief">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">生成条件</p>
+                    <h2>本周可用时间 3 小时</h2>
+                  </div>
+                  <button class="text-button">调整目标</button>
+                </div>
+                <dl>
+                  <div>
+                    <dt>目标</dt>
+                    <dd>完成 Spark SQL 阶段测试</dd>
+                  </div>
+                  <div>
+                    <dt>薄弱点</dt>
+                    <dd>执行计划、Join 策略</dd>
+                  </div>
+                  <div>
+                    <dt>偏好</dt>
+                    <dd>短视频 + 交互练习</dd>
+                  </div>
+                </dl>
+              </section>
+              <section class="panel agent-run">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">最近一次运行</p>
+                    <h2>补强包已生成</h2>
+                  </div>
+                  <span class="status status--ok">可应用</span>
+                </div>
+                <ol>
+                  <li class="is-done">
+                    <i
+                      ><svg><use href="#i-check" /></svg
+                    ></i>
+                    <p><b>读取画像与路径</b><small>已完成</small></p>
+                  </li>
+                  <li class="is-done">
+                    <i
+                      ><svg><use href="#i-check" /></svg
+                    ></i>
+                    <p><b>检索课程证据</b><small>使用 4 项课程资源</small></p>
+                  </li>
+                  <li class="is-done">
+                    <i
+                      ><svg><use href="#i-check" /></svg
+                    ></i>
+                    <p><b>生成 3 项补强资源</b><small>预计 48 分钟</small></p>
+                  </li>
+                </ol>
+                <div class="agent-actions">
+                  <button class="quiet-button">预览 3 项资源</button
+                  ><button class="primary-button">应用到学习路径</button>
+                </div>
+              </section>
+            </div>
+            <div class="agent-package">
+              <section class="panel generated-resources">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">生成结果 · RUN-028</p>
+                    <h2>3 项补强资源</h2>
+                  </div>
+                  <span>使用 4 项课程证据 · 生成于 16:40</span>
+                </div>
+                <div class="generated-resource-grid">
+                  <article>
+                    <span class="resource-kind resource-kind--video">视频</span>
+                    <div>
+                      <b>5 分钟读懂物理计划</b
+                      ><small>执行计划 · 预计 6 分钟</small>
+                      <p>
+                        用当前课程的查询案例解释 Exchange、Scan 和 Join 节点。
+                      </p>
+                    </div>
+                    <label><input type="checkbox" checked />应用</label>
+                  </article>
+                  <article>
+                    <span class="resource-kind resource-kind--lab">练习</span>
+                    <div>
+                      <b>Join 策略对比实验</b
+                      ><small>Join 策略 · 预计 28 分钟</small>
+                      <p>修改广播阈值并比较三种物理计划的 Shuffle 成本。</p>
+                    </div>
+                    <label><input type="checkbox" checked />应用</label>
+                  </article>
+                  <article>
+                    <span class="resource-kind resource-kind--note">速查</span>
+                    <div>
+                      <b>Explain 输出检查表</b
+                      ><small>性能诊断 · 预计 14 分钟</small>
+                      <p>
+                        按 Scan、Exchange、Join、Stage 顺序完成一次计划审查。
+                      </p>
+                    </div>
+                    <label><input type="checkbox" checked />应用</label>
+                  </article>
+                </div>
+              </section>
+              <aside class="panel agent-effect">
+                <p class="eyebrow">历史效果</p>
+                <h2>最近 3 个学习包</h2>
+                <div><span>已完成</span><b>8 / 9 项</b></div>
+                <div><span>平均掌握提升</span><b>+11%</b></div>
+                <div><span>采纳资源</span><b>7 / 9 项</b></div>
+                <ol>
+                  <li>
+                    <time>7 月 11 日</time>
+                    <p>RDD 算子补强<small>掌握度 +14%</small></p>
+                  </li>
+                  <li>
+                    <time>7 月 4 日</time>
+                    <p>HDFS 读写流程<small>掌握度 +9%</small></p>
+                  </li>
+                  <li>
+                    <time>6 月 28 日</time>
+                    <p>MapReduce Shuffle<small>掌握度 +10%</small></p>
+                  </li>
+                </ol>
+                <button class="quiet-button">查看全部运行记录</button>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-courses"
+            data-role="student"
+            aria-labelledby="student-courses-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">课程与班级</p>
+                <h1 id="student-courses-title">我的学习范围</h1>
+              </div>
+              <button class="quiet-button">使用邀请码加入班级</button>
+            </div>
+            <section class="panel current-course-card">
+              <div>
+                <span class="course-glyph"
+                  ><svg><use href="#i-book" /></svg
+                ></span>
+                <div class="current-course-copy">
+                  <small>当前课程</small>
+                  <h2>大数据技术与应用</h2>
+                  <span>2024 春季班 · 教师：teacher1</span>
+                </div>
+              </div>
+              <button class="primary-button">进入课程</button>
+            </section>
+            <div class="feature-grid">
+              <section class="panel compact-list">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">我的课程</p>
+                    <h2>4 门可用课程</h2>
+                  </div>
+                </div>
+                <article>
+                  <div>
+                    <b>大数据技术与应用</b
+                    ><small>当前课程 · 路径完成 53% · 2 项待办</small>
+                  </div>
+                  <button>进入</button>
+                </article>
+                <article>
+                  <div>
+                    <b>机器学习导论</b
+                    ><small>路径完成 42% · 1 项待办 · 2 个薄弱点</small>
+                  </div>
+                  <button>设为当前课程</button>
+                </article>
+                <article>
+                  <div>
+                    <b>数据分析基础</b><small>已完成 · 总体掌握度 86%</small>
+                  </div>
+                  <button>查看画像</button>
+                </article>
+                <article>
+                  <div>
+                    <b>Python 数据处理</b
+                    ><small>尚未测评 · 7 月 22 日开放</small>
+                  </div>
+                  <button disabled>未开放</button>
+                </article>
+              </section>
+              <section class="panel compact-list">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">班级</p>
+                    <h2>2024 春季班</h2>
+                  </div>
+                  <button class="text-button">班级详情</button>
+                </div>
+                <article>
+                  <div>
+                    <b>最新公告</b
+                    ><small>阶段作业截止时间调整至 7 月 21 日</small>
+                  </div>
+                  <button>查看公告</button>
+                </article>
+                <article>
+                  <div>
+                    <b>班级待办</b
+                    ><small>2 项作业 · 1 项测评 · 1 条教师反馈</small>
+                  </div>
+                  <button>查看待办</button>
+                </article>
+                <article>
+                  <div>
+                    <b>学习进度</b
+                    ><small>班级第 8 / 42 · 本周学习 6 小时 20 分</small>
+                  </div>
+                  <button>查看排名</button>
+                </article>
+                <article>
+                  <div><b>班级成员</b><small>42 名学生 · 2 名教师</small></div>
+                  <button>查看成员</button>
+                </article>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-profile"
+            data-role="student"
+            aria-labelledby="student-profile-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">学习画像</p>
+                <h1 id="student-profile-title">掌握变化与学习证据</h1>
+                <p>更新于今天 16:32</p>
+              </div>
+              <div>
+                <button class="quiet-button">比较历史版本</button
+                ><button class="primary-button">刷新画像</button>
+              </div>
+            </div>
+            <div class="profile-summary">
+              <span
+                ><b>熟练</b><small>总体掌握度 64%</small
+                ><em>+7% / 30 天</em></span
+              ><span
+                ><b>28</b><small>有证据知识点</small><em>课程共 74 个</em></span
+              ><span
+                ><b>6h 20m</b><small>本周学习</small><em>目标 7 小时</em></span
+              ><span
+                ><b>12 天</b><small>连续学习</small><em>最长 18 天</em></span
+              >
+            </div>
+            <div class="mastery-scale" aria-label="掌握等级说明">
+              <span><i></i><b>未开始</b><small>无有效证据</small></span>
+              <span><i></i><b>接触</b><small>1–49%</small></span>
+              <span class="is-active"
+                ><i></i><b>熟练</b><small>50–79%</small></span
+              >
+              <span><i></i><b>掌握</b><small>80–100%</small></span>
+              <em>等级由作业、检测、实验和教师确认共同决定</em>
+            </div>
+            <div class="profile-grid">
+              <section class="panel mastery-profile">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">章节掌握</p>
+                    <h2>8 个课程章节</h2>
+                  </div>
+                  <span class="status status--blue">熟练 · 64%</span>
+                </div>
+                <div class="profile-bars">
+                  <div>
+                    <p><b>大数据基础</b><small>掌握 · 88%</small></p>
+                    <span><i class="profile-88"></i></span>
+                  </div>
+                  <div>
+                    <p><b>HDFS</b><small>掌握 · 84%</small></p>
+                    <span><i class="profile-84"></i></span>
+                  </div>
+                  <div>
+                    <p><b>MapReduce</b><small>熟练 · 79%</small></p>
+                    <span><i class="profile-79"></i></span>
+                  </div>
+                  <div>
+                    <p><b>Spark Core</b><small>掌握 · 82%</small></p>
+                    <span><i class="profile-82"></i></span>
+                  </div>
+                  <div>
+                    <p><b>Spark SQL</b><small>熟练 · 58%</small></p>
+                    <span><i class="profile-58"></i></span>
+                  </div>
+                  <div>
+                    <p><b>数据仓库</b><small>接触 · 46%</small></p>
+                    <span><i class="profile-46"></i></span>
+                  </div>
+                </div>
+              </section>
+              <section class="panel evidence-ledger">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">掌握证据账本</p>
+                    <h2>最近变化</h2>
+                  </div>
+                  <button class="text-button">查看全部</button>
+                </div>
+                <ol>
+                  <li>
+                    <time>今天</time>
+                    <p>
+                      <b>执行计划 +9%</b><small>节点检测 5 / 6 题正确</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>昨天</time>
+                    <p>
+                      <b>Join 策略：接触 → 熟练</b
+                      ><small>完成交互实验 · +6%</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>7 月 16 日</time>
+                    <p>
+                      <b>Catalyst +5%</b><small>完成课程讲义并通过检查题</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>7 月 15 日</time>
+                    <p>
+                      <b>Shuffle −4%</b><small>课程作业连续答错 2 题</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>7 月 13 日</time>
+                    <p>
+                      <b>DataFrame：熟练 → 掌握</b
+                      ><small>教师确认实验结果 · +8%</small>
+                    </p>
+                  </li>
+                </ol>
+              </section>
+            </div>
+            <div class="profile-insights">
+              <section class="panel">
+                <p class="eyebrow">能力维度</p>
+                <h2>理解较强，迁移需要补强</h2>
+                <div class="ability-list">
+                  <span>概念理解 <b>82%</b></span
+                  ><span>操作应用 <b>71%</b></span
+                  ><span>知识迁移 <b>56%</b></span
+                  ><span>问题解决 <b>63%</b></span>
+                </div>
+              </section>
+              <section class="panel">
+                <p class="eyebrow">学习习惯</p>
+                <h2>晚间专注度最高</h2>
+                <dl>
+                  <div>
+                    <dt>高效时段</dt>
+                    <dd>19:00–21:00</dd>
+                  </div>
+                  <div>
+                    <dt>单次时长</dt>
+                    <dd>平均 34 分钟</dd>
+                  </div>
+                  <div>
+                    <dt>偏好资源</dt>
+                    <dd>实验、短视频</dd>
+                  </div>
+                  <div>
+                    <dt>建议</dt>
+                    <dd>每 3 天安排一次复习</dd>
+                  </div>
+                </dl>
+              </section>
+              <section class="panel">
+                <p class="eyebrow">路径变更</p>
+                <h2>最近 3 次调整</h2>
+                <ol>
+                  <li>
+                    <time>今天</time>
+                    <p>提前“执行计划阅读”<small>原因：作业正确率 38%</small></p>
+                  </li>
+                  <li>
+                    <time>7 月 15 日</time>
+                    <p>增加“Join 策略实验”<small>原因：连续错题</small></p>
+                  </li>
+                  <li>
+                    <time>7 月 12 日</time>
+                    <p>完成“DataFrame 基础”<small>教师确认掌握</small></p>
+                  </li>
+                </ol>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="student-settings"
+            data-role="student"
+            aria-labelledby="student-settings-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">个人设置</p>
+                <h1 id="student-settings-title">账户与学习偏好</h1>
+              </div>
+              <span class="save-state"><i></i>所有更改已保存</span>
+            </div>
+            <div class="settings-layout">
+              <nav class="settings-nav">
+                <button class="is-active">账户资料</button
+                ><button>学习偏好</button><button>通知</button
+                ><button>安全</button><button>数据与隐私</button>
+              </nav>
+              <div class="settings-content">
+                <section class="panel settings-form">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">账户资料</p>
+                      <h2>基本信息</h2>
+                    </div>
+                  </div>
+                  <div class="form-grid">
+                    <label>用户名<input value="student1" disabled /></label
+                    ><label>姓名<input value="陈同学" /></label
+                    ><label>邮箱<input value="student1@edu.qintsg.xyz" /></label
+                    ><label
+                      >每周学习目标<select>
+                        <option>7 小时</option>
+                        <option>5 小时</option>
+                      </select></label
+                    >
+                  </div>
+                </section>
+                <section class="panel settings-group">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">学习偏好</p>
+                      <h2>路径生成约束</h2>
+                    </div>
+                    <button class="text-button">恢复推荐设置</button>
+                  </div>
+                  <div class="preference-grid">
+                    <label
+                      >工作日可用时间<select>
+                        <option>每天 45 分钟</option>
+                      </select></label
+                    ><label
+                      >周末可用时间<select>
+                        <option>每天 90 分钟</option>
+                      </select></label
+                    ><label
+                      >优先资源<select>
+                        <option>交互实验、短视频</option>
+                      </select></label
+                    ><label
+                      >单项资源时长<select>
+                        <option>不超过 30 分钟</option>
+                      </select></label
+                    >
+                  </div>
+                  <div class="setting-row">
+                    <p>
+                      <b>允许智能体自动调整路径</b
+                      ><small>每次调整后仍会展示变更记录，并允许撤销。</small>
+                    </p>
+                    <span class="switch is-on" aria-label="已开启"></span>
+                  </div>
+                  <div class="setting-row">
+                    <p>
+                      <b>在截止日期前压缩学习安排</b
+                      ><small>只调整推荐任务，不改变教师布置的作业。</small>
+                    </p>
+                    <span class="switch is-on" aria-label="已开启"></span>
+                  </div>
+                </section>
+                <section class="panel settings-group">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">通知与隐私</p>
+                      <h2>提醒和数据</h2>
+                    </div>
+                  </div>
+                  <div class="setting-row">
+                    <p>
+                      <b>作业与测评截止提醒</b
+                      ><small>提前 24 小时和 2 小时提醒。</small>
+                    </p>
+                    <span class="switch is-on" aria-label="已开启"></span>
+                  </div>
+                  <div class="setting-row">
+                    <p>
+                      <b>路径变化提醒</b
+                      ><small>智能体或测评调整路径时通知。</small>
+                    </p>
+                    <span class="switch is-on" aria-label="已开启"></span>
+                  </div>
+                  <div class="setting-row">
+                    <p>
+                      <b>AI 对话用于改进个人推荐</b
+                      ><small
+                        >仅用于当前账户的学习画像，不向其他用户展示。</small
+                      >
+                    </p>
+                    <span class="switch" aria-label="已关闭"></span>
+                  </div>
+                  <div class="settings-data-actions">
+                    <button class="quiet-button">导出我的学习数据</button
+                    ><button class="quiet-button">管理 AI 对话记录</button>
+                  </div>
+                </section>
+                <div class="settings-actions">
+                  <button class="primary-button">保存全部更改</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="teacher-workspace"
+            data-role="teacher"
+            aria-labelledby="teacher-title"
+          >
+            <div class="course-heading">
+              <div>
+                <p class="eyebrow">课程工作空间</p>
+                <h1 id="teacher-title">大数据技术与应用</h1>
+                <p>2024 春季班 · 42 名学生 · 最近更新于 14:32</p>
+              </div>
+              <div>
+                <span class="save-state"><i></i>所有更改已保存</span
+                ><button class="primary-button">发布课程更新</button>
+              </div>
+            </div>
+            <nav class="workspace-tabs" aria-label="课程工作空间">
+              <button class="is-active">概览</button><button>学生</button
+              ><button>知识图谱</button><button>资源</button
+              ><button>题库</button><button>作业</button><button>设置</button>
+            </nav>
+            <div class="teacher-grid">
+              <section class="panel action-queue">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">需要处理</p>
+                    <h2>今天有 5 项工作等待你</h2>
+                  </div>
+                  <button class="text-button">查看全部</button>
+                </div>
+                <div class="queue-list">
+                  <article>
+                    <span class="queue-icon queue-icon--alert">!</span>
+                    <p>
+                      <b>3 名学生连续两周学习停滞</b
+                      ><small>机器学习导论 · 建议发送针对性反馈</small>
+                    </p>
+                    <button>查看学生</button>
+                  </article>
+                  <article>
+                    <span class="queue-icon queue-icon--gold">7</span>
+                    <p>
+                      <b>第 9 章作业有 7 份待批阅</b
+                      ><small>最早提交于昨天 18:24</small>
+                    </p>
+                    <button>开始批阅</button>
+                  </article>
+                  <article>
+                    <span class="queue-icon">2</span>
+                    <p>
+                      <b>2 项课程资源等待发布</b
+                      ><small>已完成处理，可供学生查看</small>
+                    </p>
+                    <button>检查资源</button>
+                  </article>
+                </div>
+              </section>
+              <aside class="panel class-pulse">
+                <p class="eyebrow">班级脉搏</p>
+                <h2>本周参与度 78%</h2>
+                <div class="pulse-chart">
+                  <span style="height: 35%"></span
+                  ><span style="height: 52%"></span
+                  ><span style="height: 46%"></span
+                  ><span style="height: 68%"></span
+                  ><span style="height: 78%"></span
+                  ><span style="height: 65%"></span
+                  ><span style="height: 40%"></span>
+                </div>
+                <div class="pulse-metrics">
+                  <p><b>33</b><small>活跃学生</small></p>
+                  <p><b>6.4h</b><small>人均时长</small></p>
+                  <p><b>4</b><small>风险学生</small></p>
+                </div>
+              </aside>
+              <section class="panel content-health">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">内容完整度</p>
+                    <h2>课程结构已达到可发布标准</h2>
+                  </div>
+                  <span class="status status--blue">82%</span>
+                </div>
+                <div class="health-grid">
+                  <div>
+                    <span><i style="width: 92%"></i></span>
+                    <p><b>知识图谱</b><small>74 个节点 · 121 条关系</small></p>
+                    <strong>92%</strong>
+                  </div>
+                  <div>
+                    <span><i style="width: 76%"></i></span>
+                    <p><b>课程资源</b><small>59 项 · 4 项待补充描述</small></p>
+                    <strong>76%</strong>
+                  </div>
+                  <div>
+                    <span><i style="width: 86%"></i></span>
+                    <p><b>题库与作业</b><small>192 道题 · 12 个套题</small></p>
+                    <strong>86%</strong>
+                  </div>
+                </div>
+              </section>
+              <section class="panel risk-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">学习风险</p>
+                    <h2>需要关注的学生</h2>
+                  </div>
+                  <button class="text-button">打开班级视图</button>
+                </div>
+                <div class="student-risk-list">
+                  <div>
+                    <span class="avatar">李</span>
+                    <p><b>李同学</b><small>路径停滞 12 天</small></p>
+                    <em class="risk-high">高风险</em><button>发送反馈</button>
+                  </div>
+                  <div>
+                    <span class="avatar">周</span>
+                    <p><b>周同学</b><small>Spark 章节正确率 32%</small></p>
+                    <em>需关注</em><button>查看画像</button>
+                  </div>
+                  <div>
+                    <span class="avatar">陈</span>
+                    <p><b>陈同学</b><small>连续 3 次缺交作业</small></p>
+                    <em>需关注</em><button>查看记录</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="teacher-content"
+            data-role="teacher"
+            aria-labelledby="teacher-content-title"
+          >
+            <div class="course-heading">
+              <div>
+                <p class="eyebrow">大数据技术与应用</p>
+                <h1 id="teacher-content-title">课程内容工作区</h1>
+              </div>
+              <div>
+                <span class="save-state"><i></i>草稿已保存</span
+                ><button class="quiet-button">以学员身份预览</button
+                ><button class="primary-button">发布 3 项更改</button>
+              </div>
+            </div>
+            <div class="publish-banner">
+              <div>
+                <span class="publish-dot publish-dot--draft"></span>
+                <p>
+                  <b>当前编辑：草稿 v19</b
+                  ><small>3 项未发布更改 · 保存于 16:42</small>
+                </p>
+              </div>
+              <div>
+                <span class="publish-dot"></span>
+                <p>
+                  <b>学员可见：版本 v18</b
+                  ><small>发布于今天 15:48 · 全部班级</small>
+                </p>
+              </div>
+              <button>比较草稿与已发布版本</button>
+            </div>
+            <nav class="workspace-tabs" aria-label="内容类型">
+              <button class="is-active">知识图谱</button><button>资源</button
+              ><button>题库</button><button>作业</button
+              ><button>课程设置</button>
+            </nav>
+            <div class="content-summary">
+              <span><b>74</b><small>知识节点</small><em>71 个已发布</em></span
+              ><span><b>121</b><small>知识关系</small><em>3 条待校验</em></span
+              ><span><b>59</b><small>课程资源</small><em>4 项处理中</em></span
+              ><span><b>192</b><small>题目</small><em>覆盖率 86%</em></span
+              ><span><b>12</b><small>作业</small><em>8 个已发布</em></span>
+            </div>
+            <div class="content-workbench">
+              <aside class="panel content-tree">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">课程结构</p>
+                    <h2>10 个章节</h2>
+                  </div>
+                  <button class="text-button">新增</button>
+                </div>
+                <label class="tree-search"
+                  ><svg><use href="#i-search" /></svg
+                  ><input placeholder="搜索章节或节点" /></label
+                ><button class="tree-item">
+                  第 1 章 大数据基础 <span>8</span></button
+                ><button class="tree-item">第 2 章 HDFS <span>7</span></button
+                ><button class="tree-item">
+                  第 3 章 MapReduce <span>8</span></button
+                ><button class="tree-item">
+                  第 4–7 章 数据处理 <span>23</span></button
+                ><button class="tree-item">
+                  第 8 章 Spark 核心模型 <span>12</span></button
+                ><button class="tree-item is-active">
+                  第 9 章 Spark SQL <span>9</span>
+                </button>
+                <div class="tree-branch">
+                  <button>
+                    <span>9.1</span>查询计划与 Catalyst <em>4</em>
+                  </button>
+                  <button class="is-active">
+                    <span>单元</span>Spark SQL 原理与特征
+                  </button>
+                  <button><span>9.2</span>Join 与 Shuffle <em>3</em></button>
+                  <button><span>9.3</span>AQE 与性能实践 <em>2</em></button>
+                </div>
+                <button class="tree-item">
+                  第 10 章 综合实践 <span>7</span>
+                </button>
+              </aside>
+              <section class="panel content-editor">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">知识节点 · KP-09-01</p>
+                    <h2>Spark SQL 原理与特征</h2>
+                  </div>
+                  <span class="status status--gold">有未发布更改</span>
+                </div>
+                <div class="editor-meta">
+                  <span>必修节点</span><span>难度：中等</span
+                  ><span>预计 35 分钟</span><span>学员可见版本 v18</span>
+                </div>
+                <div class="editor-summary">
+                  <label>节点名称<input value="Spark SQL 原理与特征" /></label
+                  ><label
+                    >学习目标<textarea>
+理解 Catalyst 优化流程；能够阅读逻辑计划与物理计划；能比较常见 Join 策略。</textarea
+                    ></label
+                  ><label
+                    >掌握标准<textarea>
+节点检测正确率不低于 80%，并完成 Join 策略实验。</textarea
+                    >
+                  </label>
+                </div>
+                <div class="linked-assets">
+                  <article>
+                    <span>资源</span>
+                    <p>
+                      <b>8 项已关联</b
+                      ><small>讲义 2 · 视频 2 · 实验 2 · 其他 2</small>
+                    </p>
+                    <button>管理资源</button>
+                  </article>
+                  <article>
+                    <span>题目</span>
+                    <p>
+                      <b>14 道已关联</b><small>基础 5 · 应用 6 · 综合 3</small>
+                    </p>
+                    <button>管理题目</button>
+                  </article>
+                  <article>
+                    <span>关系</span>
+                    <p>
+                      <b>12 条关系</b><small>先修 4 · 组成 6 · 后续 2</small>
+                    </p>
+                    <button>编辑关系</button>
+                  </article>
+                </div>
+                <div class="content-quality">
+                  <div>
+                    <p><b>发布检查</b><small>5 / 6 项通过</small></p>
+                    <span class="status status--gold">1 项待处理</span>
+                  </div>
+                  <ul>
+                    <li class="is-ok">节点名称与学习目标完整</li>
+                    <li class="is-ok">已关联基础、应用和综合题目</li>
+                    <li class="is-ok">已有课程资源和掌握标准</li>
+                    <li>“成本优化”关系尚未确认方向</li>
+                  </ul>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="teacher-classroom"
+            data-role="teacher"
+            aria-labelledby="teacher-classroom-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">班级工作区</p>
+                <h1 id="teacher-classroom-title">2024 春季班</h1>
+                <p>42 名学生 · 3 门已发布课程</p>
+              </div>
+              <div>
+                <button class="quiet-button">生成邀请码</button
+                ><button class="primary-button">发布公告</button>
+              </div>
+            </div>
+            <nav class="workspace-tabs" aria-label="班级功能">
+              <button class="is-active">学生与进度</button><button>课程</button
+              ><button>作业</button><button>公告</button><button>邀请</button>
+            </nav>
+            <div class="class-summary">
+              <span><b>33</b><small>本周活跃</small><em>78%</em></span
+              ><span><b>4</b><small>风险学生</small><em>+1</em></span
+              ><span><b>7</b><small>待批作业</small><em>最早昨天提交</em></span
+              ><span><b>6.4h</b><small>人均学习</small><em>+0.8h</em></span>
+            </div>
+            <div class="classroom-grid">
+              <section class="panel class-progress">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">学习进度</p>
+                    <h2>学生明细</h2>
+                  </div>
+                  <div class="panel-actions">
+                    <button class="text-button">按知识点查看</button
+                    ><button class="text-button">打开干预中心</button>
+                  </div>
+                </div>
+                <div class="class-filter">
+                  <label
+                    ><svg><use href="#i-search" /></svg
+                    ><input placeholder="搜索学生" /></label
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>风险：全部</button
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>课程：大数据技术</button
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>时间：近 7 天</button
+                  ><button>
+                    <svg><use href="#i-filter" /></svg>知识点：全部
+                  </button>
+                </div>
+                <div class="student-progress-row">
+                  <span class="avatar">李</span>
+                  <p><b>李同学</b><small>12 天未推进路径 · 2 项逾期</small></p>
+                  <span class="mini-progress"><i class="progress-24"></i></span
+                  ><em class="risk-high">高风险</em><button>查看画像</button>
+                </div>
+                <div class="student-progress-row">
+                  <span class="avatar">周</span>
+                  <p>
+                    <b>周同学</b><small>Spark SQL 掌握度 32% · 连续错题</small>
+                  </p>
+                  <span class="mini-progress"><i class="progress-42"></i></span
+                  ><em>需关注</em><button>发送反馈</button>
+                </div>
+                <div class="student-progress-row">
+                  <span class="avatar">王</span>
+                  <p>
+                    <b>王同学</b><small>3 次缺交作业 · 最近活跃于昨天</small>
+                  </p>
+                  <span class="mini-progress"><i class="progress-58"></i></span
+                  ><em>需关注</em><button>查看记录</button>
+                </div>
+                <div class="student-progress-row">
+                  <span class="avatar">陈</span>
+                  <p>
+                    <b>陈同学</b><small>路径完成 89% · 本周学习 6.3 小时</small>
+                  </p>
+                  <span class="mini-progress"><i class="progress-89"></i></span
+                  ><em class="status-ok-text">正常</em><button>查看画像</button>
+                </div>
+                <div class="student-progress-row">
+                  <span class="avatar">赵</span>
+                  <p>
+                    <b>赵同学</b><small>路径完成 76% · 本周学习 5.8 小时</small>
+                  </p>
+                  <span class="mini-progress"><i class="progress-76"></i></span
+                  ><em class="status-ok-text">正常</em><button>查看画像</button>
+                </div>
+              </section>
+              <aside class="classroom-side-stack">
+                <section class="panel classroom-side">
+                  <p class="eyebrow">最近公告</p>
+                  <h2>阶段作业安排</h2>
+                  <p>第 9 章作业截止时间调整至 7 月 21 日 23:59。</p>
+                  <small>已读 36 / 42</small
+                  ><button class="quiet-button">查看全部公告</button>
+                </section>
+                <section class="panel classroom-side">
+                  <p class="eyebrow">本周作业</p>
+                  <h2>3 项进行中</h2>
+                  <div class="class-side-row">
+                    <span>第 9 章 Spark SQL</span><b>35 / 42</b>
+                  </div>
+                  <div class="class-side-row">
+                    <span>数据仓库综合练习</span><b>18 / 42</b>
+                  </div>
+                  <div class="class-side-row">
+                    <span>HDFS 实验报告</span><b>待批 7</b>
+                  </div>
+                  <button class="quiet-button">管理全部作业</button>
+                </section>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="admin-governance"
+            data-role="admin"
+            aria-labelledby="admin-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">系统治理</p>
+                <h1 id="admin-title">保持平台可用、清楚、可追溯</h1>
+                <p>数据更新于 16:40 · 所有核心服务运行正常</p>
+              </div>
+              <button class="quiet-button">导出今日审计摘要</button>
+            </div>
+            <div class="admin-kpis">
+              <div>
+                <span>53</span>
+                <p>活跃用户<small>过去 24 小时</small></p>
+                <em>+8%</em>
+              </div>
+              <div>
+                <span>3</span>
+                <p>在用课程<small>均正常开放</small></p>
+                <em>稳定</em>
+              </div>
+              <div>
+                <span>192</span>
+                <p>题库项目<small>12 个套题</small></p>
+                <em>+18</em>
+              </div>
+              <div>
+                <span>0</span>
+                <p>关键故障<small>服务健康</small></p>
+                <em class="ok">正常</em>
+              </div>
+            </div>
+            <section class="panel admin-table-panel">
+              <div class="table-heading">
+                <div>
+                  <p class="eyebrow">用户与权限</p>
+                  <h2>最近活跃账户</h2>
+                </div>
+                <button class="primary-button">创建账户</button>
+              </div>
+              <div class="filter-bar">
+                <label
+                  ><svg><use href="#i-search" /></svg
+                  ><input placeholder="搜索用户名、姓名或邮箱" /></label
+                ><button>
+                  <svg><use href="#i-filter" /></svg>角色：全部</button
+                ><button>
+                  <svg><use href="#i-filter" /></svg>状态：全部</button
+                ><span>共 8 个账户</span>
+              </div>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <input type="checkbox" aria-label="选择全部账户" />
+                      </th>
+                      <th>账户</th>
+                      <th>角色</th>
+                      <th>所属范围</th>
+                      <th>最近活动</th>
+                      <th>状态</th>
+                      <th><span class="sr-only">操作</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 student1" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">S</span>
+                          <p>
+                            <b>student1</b
+                            ><small>student1@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td><span class="role-tag">学生</span></td>
+                      <td>2024 春季班</td>
+                      <td>今天 16:32</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 teacher1" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar avatar--teacher">T</span>
+                          <p>
+                            <b>teacher1</b
+                            ><small>teacher1@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="role-tag role-tag--teacher">教师</span>
+                      </td>
+                      <td>2 门课程</td>
+                      <td>今天 14:18</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 student2" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">王</span>
+                          <p>
+                            <b>student2</b
+                            ><small>student2@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td><span class="role-tag">学生</span></td>
+                      <td>2024 春季班</td>
+                      <td>今天 13:54</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" aria-label="选择 admin" /></td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">A</span>
+                          <p><b>admin</b><small>admin@edu.qintsg.xyz</small></p>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="role-tag role-tag--teacher">管理员</span>
+                      </td>
+                      <td>全系统</td>
+                      <td>今天 14:06</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 student4" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">赵</span>
+                          <p>
+                            <b>student4</b
+                            ><small>student4@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td><span class="role-tag">学生</span></td>
+                      <td>数据实验班</td>
+                      <td>今天 11:28</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 student5" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">周</span>
+                          <p>
+                            <b>student5</b
+                            ><small>student5@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td><span class="role-tag">学生</span></td>
+                      <td>机器学习 1 班</td>
+                      <td>昨天 20:12</td>
+                      <td>
+                        <span class="status-dot"><i></i>正常</span>
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 teacher2" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar avatar--teacher">T</span>
+                          <p>
+                            <b>teacher2</b
+                            ><small>teacher2@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="role-tag role-tag--teacher">教师</span>
+                      </td>
+                      <td>1 门课程</td>
+                      <td>7 月 17 日</td>
+                      <td>
+                        <span class="status-dot status-dot--idle"
+                          ><i></i>已停用</span
+                        >
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" aria-label="选择 student3" />
+                      </td>
+                      <td>
+                        <div class="table-user">
+                          <span class="avatar">陈</span>
+                          <p>
+                            <b>student3</b
+                            ><small>student3@edu.qintsg.xyz</small>
+                          </p>
+                        </div>
+                      </td>
+                      <td><span class="role-tag">学生</span></td>
+                      <td>2024 机器学习班</td>
+                      <td>7 月 15 日</td>
+                      <td>
+                        <span class="status-dot status-dot--idle"
+                          ><i></i>长期未活跃</span
+                        >
+                      </td>
+                      <td><button class="row-action">查看</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <div class="admin-lower-grid">
+              <section class="panel audit-stream">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">审计流</p>
+                    <h2>最近系统操作</h2>
+                  </div>
+                  <button class="text-button">查看完整日志</button>
+                </div>
+                <ol>
+                  <li>
+                    <time>16:32</time><span><i></i></span>
+                    <p>
+                      <b>student1 完成学习任务</b
+                      ><small>Spark 核心计算模型 · 学生端</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>15:48</time><span><i></i></span>
+                    <p>
+                      <b>teacher1 发布课程资源</b
+                      ><small>第 9 章逻辑回归讲义 · 教师端</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>14:06</time><span><i></i></span>
+                    <p>
+                      <b>admin 更新用户权限</b><small>teacher2 · 管理端</small>
+                    </p>
+                  </li>
+                </ol>
+              </section>
+              <aside class="panel service-health">
+                <p class="eyebrow">服务状态</p>
+                <h2>核心依赖</h2>
+                <div>
+                  <span><i></i>PostgreSQL</span><em>12ms</em>
+                </div>
+                <div>
+                  <span><i></i>Neo4j</span><em>24ms</em>
+                </div>
+                <div>
+                  <span><i></i>GraphRAG 索引</span><em>就绪</em>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="admin-content"
+            data-role="admin"
+            aria-labelledby="admin-content-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">内容治理</p>
+                <h1 id="admin-content-title">课程与班级</h1>
+              </div>
+              <button class="primary-button">创建课程</button>
+            </div>
+            <nav class="workspace-tabs" aria-label="内容治理类型">
+              <button class="is-active">课程</button><button>班级</button>
+            </nav>
+            <div class="admin-kpis admin-content-kpis">
+              <div>
+                <span>3</span>
+                <p>课程<small>2 开放 · 1 草稿</small></p>
+                <em>74 个知识点</em>
+              </div>
+              <div>
+                <span>4</span>
+                <p>班级<small>81 名学生</small></p>
+                <em>3 名教师</em>
+              </div>
+              <div>
+                <span>59</span>
+                <p>课程资源<small>4 项处理中</small></p>
+                <em>92% 已关联</em>
+              </div>
+              <div>
+                <span>2</span>
+                <p>治理问题<small>需要处理</small></p>
+                <em class="warn">查看</em>
+              </div>
+            </div>
+            <section class="panel admin-table-panel">
+              <div class="filter-bar">
+                <label
+                  ><svg><use href="#i-search" /></svg
+                  ><input placeholder="搜索课程名称或教师" /></label
+                ><button>
+                  <svg><use href="#i-filter" /></svg>状态：全部</button
+                ><span>3 门课程</span>
+              </div>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>课程</th>
+                      <th>负责教师</th>
+                      <th>知识点</th>
+                      <th>资源</th>
+                      <th>班级</th>
+                      <th>学生</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <b>大数据技术与应用</b
+                        ><small class="cell-sub">更新于今天 15:48</small>
+                      </td>
+                      <td>teacher1</td>
+                      <td>74</td>
+                      <td>59</td>
+                      <td>2</td>
+                      <td>53</td>
+                      <td>
+                        <span class="status-dot"><i></i>开放</span>
+                      </td>
+                      <td><button class="row-action">管理</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <b>机器学习导论</b
+                        ><small class="cell-sub">更新于昨天 18:20</small>
+                      </td>
+                      <td>teacher2</td>
+                      <td>48</td>
+                      <td>37</td>
+                      <td>1</td>
+                      <td>28</td>
+                      <td>
+                        <span class="status-dot"><i></i>开放</span>
+                      </td>
+                      <td><button class="row-action">管理</button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <b>数据分析基础</b
+                        ><small class="cell-sub">创建于 7 月 16 日</small>
+                      </td>
+                      <td>未分配</td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td>0</td>
+                      <td>
+                        <span class="status-dot status-dot--idle"
+                          ><i></i>草稿</span
+                        >
+                      </td>
+                      <td><button class="row-action">分配教师</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <div class="admin-lower-grid">
+              <section class="panel class-governance">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">班级</p>
+                    <h2>4 个班级</h2>
+                  </div>
+                  <button class="text-button">管理班级</button>
+                </div>
+                <div>
+                  <span>2024 春季班</span><b>42 人 · teacher1</b
+                  ><em>3 门课程</em>
+                </div>
+                <div>
+                  <span>机器学习 1 班</span><b>28 人 · teacher2</b
+                  ><em>1 门课程</em>
+                </div>
+                <div>
+                  <span>数据实验班</span><b>11 人 · teacher1</b
+                  ><em>1 门课程</em>
+                </div>
+                <div>
+                  <span>归档测试班</span><b>0 人 · 未分配</b><em>未开放</em>
+                </div>
+              </section>
+              <aside class="panel governance-issues">
+                <p class="eyebrow">需要处理</p>
+                <h2>2 项内容问题</h2>
+                <article>
+                  <span class="queue-icon queue-icon--gold">!</span>
+                  <p>
+                    <b>数据分析基础未分配教师</b
+                    ><small>无法发布课程或创建班级</small>
+                  </p>
+                  <button>分配</button>
+                </article>
+                <article>
+                  <span class="queue-icon">4</span>
+                  <p>
+                    <b>4 项资源处理时间超过 10 分钟</b
+                    ><small>大数据技术与应用</small>
+                  </p>
+                  <button>查看</button>
+                </article>
+              </aside>
+            </div>
+          </section>
+
+          <section
+            class="view"
+            id="admin-access"
+            data-role="admin"
+            aria-labelledby="admin-access-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">访问与审计</p>
+                <h1 id="admin-access-title">激活码、日志与系统设置</h1>
+              </div>
+              <button class="quiet-button">导出审计日志</button>
+            </div>
+            <div class="feature-grid feature-grid--three admin-function-grid">
+              <article class="panel function-card">
+                <span class="status status--blue">18 个可用</span>
+                <h2>激活码</h2>
+                <p>按角色和有效期生成，追踪使用状态。</p>
+                <button>管理激活码</button>
+              </article>
+              <article class="panel function-card">
+                <span class="status status--ok">无异常</span>
+                <h2>系统日志</h2>
+                <p>按时间、操作者、模块和结果筛选。</p>
+                <button>查看日志</button>
+              </article>
+              <article class="panel function-card">
+                <span class="status">7 项配置</span>
+                <h2>系统设置</h2>
+                <p>注册策略、功能开关和系统名称。</p>
+                <button>打开设置</button>
+              </article>
+            </div>
+            <div class="access-grid">
+              <section class="panel activation-batches">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">激活码批次</p>
+                    <h2>最近生成</h2>
+                  </div>
+                  <button class="primary-button">生成激活码</button>
+                </div>
+                <div class="data-table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>批次</th>
+                        <th>角色</th>
+                        <th>数量</th>
+                        <th>已使用</th>
+                        <th>有效期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>AC-20240718-01</td>
+                        <td>学生</td>
+                        <td>20</td>
+                        <td>2</td>
+                        <td>7 月 31 日</td>
+                        <td>
+                          <span class="status-dot"><i></i>有效</span>
+                        </td>
+                        <td><button class="row-action">导出</button></td>
+                      </tr>
+                      <tr>
+                        <td>AC-20240715-02</td>
+                        <td>教师</td>
+                        <td>5</td>
+                        <td>3</td>
+                        <td>8 月 15 日</td>
+                        <td>
+                          <span class="status-dot"><i></i>有效</span>
+                        </td>
+                        <td><button class="row-action">查看</button></td>
+                      </tr>
+                      <tr>
+                        <td>AC-20240701-03</td>
+                        <td>学生</td>
+                        <td>30</td>
+                        <td>30</td>
+                        <td>7 月 15 日</td>
+                        <td>
+                          <span class="status-dot status-dot--idle"
+                            ><i></i>已结束</span
+                          >
+                        </td>
+                        <td><button class="row-action">查看</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="panel audit-stream access-audit">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">最近操作</p>
+                    <h2>高影响变更</h2>
+                  </div>
+                  <button class="text-button">完整日志</button>
+                </div>
+                <ol>
+                  <li>
+                    <time>14:06</time><span><i></i></span>
+                    <p>
+                      <b>admin 停用账户 teacher2</b
+                      ><small>原因：账户移交 · 操作成功</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>11:42</time><span><i></i></span>
+                    <p>
+                      <b>admin 生成 20 个学生激活码</b
+                      ><small>有效期至 7 月 31 日</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>10:18</time><span><i></i></span>
+                    <p>
+                      <b>admin 将课程分配给 teacher1</b
+                      ><small>数据分析基础 · 操作成功</small>
+                    </p>
+                  </li>
+                  <li>
+                    <time>昨天</time><span><i></i></span>
+                    <p>
+                      <b>admin 更新注册策略</b
+                      ><small>关闭公开注册 · 操作成功</small>
+                    </p>
+                  </li>
+                </ol>
+              </section>
+            </div>
+          </section>
+
+          <section
+            class="view auth-preview"
+            id="auth-preview"
+            data-role="all"
+            aria-labelledby="auth-title"
+          >
+            <div class="auth-concept">
+              <section class="auth-map">
+                <div class="brand brand--auth">
+                  <span class="brand__mark"><i></i><i></i><i></i></span
+                  ><span><b>自适应学习</b><small>知识图谱驱动</small></span>
+                </div>
+                <div class="auth-map__copy">
+                  <p class="eyebrow">知识图谱驱动的个性化自适应学习系统</p>
+                  <h1>自适应学习</h1>
+                </div>
+                <svg viewBox="0 0 580 300" aria-label="示意学习路径">
+                  <path
+                    d="M30 210C110 210 95 70 180 70s80 155 170 155S420 95 535 95"
+                  />
+                  <g transform="translate(30 210)">
+                    <circle r="17" />
+                    <text y="40">基础建立</text>
+                  </g>
+                  <g transform="translate(180 70)">
+                    <circle r="17" />
+                    <text y="40">知识理解</text>
+                  </g>
+                  <g class="auth-node-current" transform="translate(350 225)">
+                    <circle r="25" />
+                    <text y="48">当前任务</text>
+                  </g>
+                  <g transform="translate(535 95)">
+                    <circle r="17" />
+                    <text y="40" text-anchor="end">综合实践</text>
+                  </g>
+                </svg>
+              </section>
+              <section class="auth-form">
+                <div>
+                  <p class="eyebrow">账户登录</p>
+                  <h2 id="auth-title">欢迎回来</h2>
+                </div>
+                <form>
+                  <label>用户名<input value="student1" /></label
+                  ><label
+                    >密码<input type="password" value="Test123456"
+                  /></label>
+                  <div class="auth-options">
+                    <label><input type="checkbox" /> 保持登录</label
+                    ><span>无法登录？请联系课程教师或管理员</span>
+                  </div>
+                  <button class="primary-button" type="button">登录</button>
+                </form>
+                <p class="register-copy">
+                  还没有账户？<a href="#">使用班级邀请码注册</a>
+                </p>
+              </section>
+            </div>
+          </section>
+        </main>
+
+        <nav class="mobile-nav" aria-label="移动端主导航">
+          <button class="is-active" data-view="student-home">
+            <svg><use href="#i-today" /></svg><span>今天</span>
+          </button>
+          <button data-view="student-path">
+            <svg><use href="#i-route" /></svg><span>路径</span>
+          </button>
+          <button data-view="student-assignments">
+            <svg><use href="#i-chart" /></svg><span>作业</span>
+          </button>
+          <button data-view="student-profile">
+            <svg><use href="#i-users" /></svg><span>我的</span>
+          </button>
+        </nav>
+      </section>
+    </div>
+
+    <aside class="review-dock" aria-label="原型页面切换">
+      <button
+        class="review-dock__toggle"
+        aria-expanded="true"
+        aria-controls="review-panel"
+      >
+        设计评审 <span>×</span>
+      </button>
+      <div id="review-panel">
+        <label
+          >角色<select id="role-select">
+            <option value="student">学生</option>
+            <option value="teacher">教师</option>
+            <option value="admin">管理员</option>
+            <option value="auth">认证页</option>
+          </select></label
+        >
+        <label
+          >页面<select id="view-select">
+            <option value="student-home">学习工作台</option>
+            <option value="student-path">学习路径</option>
+            <option value="student-graph">知识与资源</option>
+            <option value="student-ai">AI 学习助手</option>
+          </select></label
+        >
+        <p>
+          <span class="dock-swatch dock-swatch--ink"></span
+          ><span class="dock-swatch dock-swatch--beacon"></span
+          ><span class="dock-swatch dock-swatch--route"></span
+          ><span class="dock-swatch dock-swatch--gold"></span>自适应学习 ·
+          设计基线
+        </p>
+      </div>
+    </aside>
+
+    <script src="./prototype.js"></script>
+  </body>
+</html>

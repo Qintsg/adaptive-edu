@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import torch
 from mefkt_encoders import AdaptiveForgetGate, LogTimeEncoder, MultiViewItemEncoder
-from mefkt_model_config import MEFKTConfig, full_config, lite_config
+from mefkt_model_config import MEFKTConfig, full_config, legacy_config, lite_config
 from torch import Tensor, nn
 
 
@@ -27,6 +27,15 @@ class SequenceState:
     context: Tensor
     memory: Tensor | None = None
     memory_mask: Tensor | None = None
+    skill_memory: Tensor | None = None
+    skill_attempts: Tensor | None = None
+    skill_successes: Tensor | None = None
+    skill_last_seen: Tensor | None = None
+    elapsed_hours: Tensor | None = None
+    positive_streak: Tensor | None = None
+    negative_streak: Tensor | None = None
+    session_steps: Tensor | None = None
+    last_items: Tensor | None = None
 
     def detach(self) -> SequenceState:
         """
@@ -39,6 +48,15 @@ class SequenceState:
             self.context.detach(),
             self.memory.detach() if self.memory is not None else None,
             self.memory_mask.detach() if self.memory_mask is not None else None,
+            self.skill_memory.detach() if self.skill_memory is not None else None,
+            self.skill_attempts.detach() if self.skill_attempts is not None else None,
+            self.skill_successes.detach() if self.skill_successes is not None else None,
+            self.skill_last_seen.detach() if self.skill_last_seen is not None else None,
+            self.elapsed_hours.detach() if self.elapsed_hours is not None else None,
+            self.positive_streak.detach() if self.positive_streak is not None else None,
+            self.negative_streak.detach() if self.negative_streak is not None else None,
+            self.session_steps.detach() if self.session_steps is not None else None,
+            self.last_items.detach() if self.last_items is not None else None,
         )
 
 
@@ -552,6 +570,7 @@ def build_model(
     item_skills: Tensor,
     subject_count: int,
     skill_count: int,
+    config: MEFKTConfig | None = None,
 ) -> BaseMEFKT:
     """
     通过统一工厂创建完整模型或 Lite 模型。
@@ -563,14 +582,25 @@ def build_model(
     :param item_skills: 题目知识点索引。
     :param subject_count: 学科词表大小。
     :param skill_count: 知识点词表大小。
+    :param config: 可选的 checkpoint 结构配置；为空时使用当前最新版。
     :returns: 共享同一推理 interface 的知识追踪模型。
     """
     if profile == "lite":
-        config = lite_config()
-        model_type: type[BaseMEFKT] = MEFKTLite
+        effective_config = config or lite_config()
+        if effective_config.architecture_version >= 3:
+            from mefkt_v3_models import MEFKTLiteV3
+
+            model_type: type[BaseMEFKT] = MEFKTLiteV3
+        else:
+            model_type = MEFKTLite
     elif profile == "full":
-        config = full_config()
-        model_type = MEFKT
+        effective_config = config or full_config()
+        if effective_config.architecture_version >= 3:
+            from mefkt_v3_models import MEFKTV3
+
+            model_type = MEFKTV3
+        else:
+            model_type = MEFKT
     else:
         raise ValueError(f"未知模型 profile: {profile}")
     return model_type(
@@ -580,8 +610,26 @@ def build_model(
         item_skills,
         subject_count,
         skill_count,
-        config,
+        effective_config,
     )
+
+
+def model_config_from_checkpoint(checkpoint: dict[str, object], profile: str) -> MEFKTConfig:
+    """
+    从 checkpoint metadata 恢复结构版本，缺失时回退到 v2。
+
+    :param checkpoint: 已加载的 checkpoint 字典。
+    :param profile: full 或 lite。
+    :returns: 可传给模型工厂的结构配置。
+    """
+    metadata = checkpoint.get("metadata", {})
+    if isinstance(metadata, dict):
+        model_metadata = metadata.get("model", {})
+        if isinstance(model_metadata, dict):
+            config = model_metadata.get("config")
+            if isinstance(config, dict):
+                return MEFKTConfig.from_dict(config)
+    return legacy_config(profile)
 
 
 __all__ = [
@@ -593,4 +641,5 @@ __all__ = [
     "build_model",
     "full_config",
     "lite_config",
+    "model_config_from_checkpoint",
 ]

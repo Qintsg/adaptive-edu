@@ -139,6 +139,7 @@ class MultiViewItemEncoder(nn.Module):
         item_indices: Tensor,
         external_features: Tensor | None = None,
         external_content_features: Tensor | None = None,
+        apply_item_id_dropout: bool = False,
     ) -> Tensor:
         """
         编码题目索引；未知索引可以使用外部开放世界元数据。
@@ -146,11 +147,16 @@ class MultiViewItemEncoder(nn.Module):
         :param item_indices: 题目索引张量。
         :param external_features: 未知题目的 7 维数值特征。
         :param external_content_features: 未知题目的固定内容向量。
+        :param apply_item_id_dropout: 是否随机屏蔽已知题目的 ID embedding。
         :returns: 多视角题目表示。
         """
         known = (item_indices >= 0) & (item_indices < self.item_count)
         safe_items = torch.where(known, item_indices.long(), torch.full_like(item_indices.long(), self.item_count))
-        item_view = self.item_embedding(safe_items)
+        embedding_items = safe_items
+        if apply_item_id_dropout and self.training and self.config.item_id_dropout > 0.0:
+            dropped = known & (torch.rand(item_indices.shape, device=item_indices.device) < self.config.item_id_dropout)
+            embedding_items = torch.where(dropped, torch.full_like(safe_items, self.item_count), safe_items)
+        item_view = self.item_embedding(embedding_items)
         subject_view = self.subject_embedding(self.subject_catalog[safe_items])
         skill_indices = self.skill_catalog[safe_items]
         skill_mask = skill_indices != self.skill_count
@@ -174,6 +180,52 @@ class MultiViewItemEncoder(nn.Module):
         feature_view = self.feature_encoder(numeric_features)
         content_view = self.content_encoder(content_features)
         return self.fusion(torch.cat([item_view, subject_view, skill_view, feature_view, content_view], dim=-1))
+
+    def resolve_subject_indices(self, item_indices: Tensor) -> Tensor:
+        """
+        将题目解析为已知学科索引，未知题目使用共享未知学科槽。
+
+        :param item_indices: 任意形状题目索引。
+        :returns: 与输入同形状的学科索引。
+        """
+        known = (item_indices >= 0) & (item_indices < self.item_count)
+        safe_items = torch.where(known, item_indices.long(), torch.full_like(item_indices.long(), self.item_count))
+        return self.subject_catalog[safe_items]
+
+    def resolve_skill_indices(
+        self,
+        item_indices: Tensor,
+        external_skill_indices: Tensor | None = None,
+    ) -> Tensor:
+        """
+        将题目解析为知识状态槽；未知题目可使用课程内外部 skill 槽。
+
+        外部 skill 索引是课程内稳定的非负整数，并会映射到专门的开放课程槽，
+        不与训练词表中的已知 skill 冲突。负数表示 padding。
+
+        :param item_indices: 任意形状题目索引。
+        :param external_skill_indices: `[*item_shape, max_skills]` 外部 skill 索引。
+        :returns: `[*item_shape, max_skills]` 状态槽索引。
+        :raises ValueError: 外部 skill 形状不匹配时抛出。
+        """
+        known = (item_indices >= 0) & (item_indices < self.item_count)
+        safe_items = torch.where(known, item_indices.long(), torch.full_like(item_indices.long(), self.item_count))
+        resolved = self.skill_catalog[safe_items].clone()
+        padding_slot = self.skill_count + self.config.external_skill_slots
+        resolved[resolved == self.skill_count] = padding_slot
+        if external_skill_indices is None:
+            return resolved
+        if external_skill_indices.shape != resolved.shape:
+            raise ValueError(f"外部 skill 索引必须为 {list(resolved.shape)}")
+        if self.config.external_skill_slots <= 0:
+            external = torch.full_like(external_skill_indices.long(), padding_slot)
+        else:
+            external = torch.where(
+                external_skill_indices >= 0,
+                self.skill_count + external_skill_indices.long().remainder(self.config.external_skill_slots),
+                torch.full_like(external_skill_indices.long(), padding_slot),
+            )
+        return torch.where(known.unsqueeze(-1), resolved, external)
 
 
 class AdaptiveForgetGate(nn.Module):

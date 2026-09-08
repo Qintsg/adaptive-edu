@@ -20,7 +20,7 @@ import numpy as np
 import torch
 from mefkt_canonical_data import _parse_correct, _parse_timestamp
 from mefkt_lite_data import _load_prepared
-from mefkt_models import build_model
+from mefkt_models import build_model, model_config_from_checkpoint
 
 
 def _average_ranks(values: np.ndarray) -> np.ndarray:
@@ -163,6 +163,45 @@ def _load_events(path: Path, max_users: int) -> dict[str, list[dict[str, str]]]:
     return grouped
 
 
+def _external_skill_mapping(groups: dict[str, list[dict[str, str]]]) -> dict[str, int]:
+    """
+    为未见课程知识点生成课程内稳定索引。
+
+    :param groups: 按学习者分组的 canonical 交互。
+    :returns: skill token 到课程内连续索引的映射。
+    """
+    tokens = {
+        token.strip()
+        for rows in groups.values()
+        for row in rows
+        for token in str(row.get("skill_ids") or "").replace(";", "|").replace(",", "|").split("|")
+        if token.strip()
+    }
+    return {token: index for index, token in enumerate(sorted(tokens))}
+
+
+def _window_skill_indices(
+    window: list[dict[str, str]],
+    skill_mapping: dict[str, int],
+    max_skills: int,
+) -> torch.Tensor:
+    """
+    将一个未见课程窗口编码为外部 skill 索引张量。
+
+    :param window: canonical 交互窗口。
+    :param skill_mapping: 课程内稳定 skill 映射。
+    :param max_skills: 模型每题支持的最大知识点数量。
+    :returns: `[1, length, max_skills]` 索引，-1 表示 padding。
+    """
+    result = torch.full((1, len(window), max_skills), -1, dtype=torch.long)
+    for row_index, row in enumerate(window):
+        tokens = str(row.get("skill_ids") or "").replace(";", "|").replace(",", "|").split("|")
+        indices = [skill_mapping[token.strip()] for token in tokens if token.strip() in skill_mapping]
+        if indices:
+            result[0, row_index, : min(len(indices), max_skills)] = torch.tensor(indices[:max_skills])
+    return result
+
+
 def evaluate(
     profile: str,
     data_root: Path,
@@ -175,7 +214,7 @@ def evaluate(
     predictions_output: Path | None = None,
 ) -> dict[str, object]:
     """
-    以所有题目为 OOV、仅使用外部内容向量进行评估。
+    以所有题目为 OOV，使用外部内容向量与课程内稳定 skill 索引进行评估。
 
     :param profile: `full` 或 `lite`。
     :param data_root: 训练集预处理根目录。
@@ -191,11 +230,14 @@ def evaluate(
     prepared = _load_prepared(data_root / "processed")
     if prepared is None:
         raise RuntimeError("训练数据缓存不存在")
-    model = build_model(profile, prepared.item_count, prepared.item_features, prepared.item_subjects, prepared.item_skills, len(prepared.subject_vocab), len(prepared.skill_vocab))
-    model.load_state_dict(torch.load(checkpoint, map_location="cpu", weights_only=False)["model_state_dict"])
+    checkpoint_data = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    config = model_config_from_checkpoint(checkpoint_data, profile)
+    model = build_model(profile, prepared.item_count, prepared.item_features, prepared.item_subjects, prepared.item_skills, len(prepared.subject_vocab), len(prepared.skill_vocab), config)
+    model.load_state_dict(checkpoint_data["model_state_dict"])
     model.eval()
     torch.set_num_threads(max(cpu_threads, 1))
     groups = _load_events(events_file, max_users)
+    skill_mapping = _external_skill_mapping(groups)
     with np.load(content_file, allow_pickle=False) as archive:
         content_ids = [str(value) for value in archive["item_ids"].tolist()]
         content_values = np.asarray(archive["embeddings"], dtype=np.float32)
@@ -231,6 +273,11 @@ def evaluate(
                     torch.from_numpy(content_map.get(str(row.get("item_id")), np.zeros(384, dtype=np.float32)))
                     for row in window
                 ]).unsqueeze(0)
+                external_skills = _window_skill_indices(
+                    window,
+                    skill_mapping,
+                    int(prepared.item_skills.size(1)),
+                )
                 logits, mask, state = model(
                     items,
                     correct,
@@ -240,6 +287,7 @@ def evaluate(
                     sequence_features=numeric,
                     sequence_content_features=content,
                     sequence_valid_mask=torch.ones((1, item_count), dtype=torch.bool),
+                    sequence_skill_indices=external_skills if config.architecture_version >= 3 else None,
                 )
                 state = state.detach()
                 selected_logits = logits[mask].cpu().tolist()
@@ -263,6 +311,7 @@ def evaluate(
         "profile": profile,
         "users": len(groups),
         "unseen_item_mode": True,
+        "external_skill_count": len(skill_mapping),
         **_metric(probabilities, targets),
         "gap_buckets": _bucket_metrics(
             evaluated_gaps,
