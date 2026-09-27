@@ -1,3 +1,4 @@
+<!-- 管理员用户列表：可搜索、编辑，并在窄屏表格中保持操作可达。 -->
 <template>
   <div class="user-manage-view">
     <n-card class="page-header" shadow="never">
@@ -13,52 +14,57 @@
 
     <n-card shadow="hover">
       <div class="filter-bar">
-        <n-select v-model="userFilter.roleCode" placeholder="用户角色" clearable style="width: 120px;" @change="loadUsers">
+        <n-select v-model="userFilter.roleCode" placeholder="用户角色" clearable style="width: 120px;" @change="applyFilters">
           <n-option label="学生" value="student" />
           <n-option label="教师" value="teacher" />
           <n-option label="管理员" value="admin" />
         </n-select>
-        <n-input v-model="userFilter.keywordText" placeholder="搜索用户名" clearable style="width: 200px;"
-          @keyup.enter="loadUsers" />
-        <n-button type="primary" @click="loadUsers">搜索</n-button>
+        <n-input v-model="userFilter.keywordText" placeholder="搜索用户名、姓名或邮箱" clearable style="width: 220px;"
+          @keyup.enter="applyFilters" />
+        <n-button type="primary" @click="applyFilters">搜索</n-button>
+        <n-button v-if="userFilter.roleCode || userFilter.keywordText" @click="resetFilters">重置</n-button>
       </div>
 
       <n-table :data="userRecords" v-loading="loading" style="width: 100%;">
-        <n-table-column prop="username" label="用户名" width="120" />
-        <n-table-column prop="realNameText" label="姓名" width="100">
+        <n-table-column prop="username" label="用户名" width="110" />
+        <n-table-column prop="realNameText" label="姓名" width="80">
           <template #default="{ row }">{{ row.realNameText || '-' }}</template>
         </n-table-column>
-        <n-table-column prop="emailText" label="邮箱" />
-        <n-table-column prop="phoneText" label="手机号" width="130">
+        <n-table-column prop="emailText" label="邮箱" min-width="210" show-overflow-tooltip />
+        <n-table-column prop="phoneText" label="手机号" width="110">
           <template #default="{ row }">{{ row.phoneText || '-' }}</template>
         </n-table-column>
-        <n-table-column prop="roleCode" label="角色" width="100">
+        <n-table-column prop="roleCode" label="角色" width="75">
           <template #default="{ row }">
             <n-tag :type="getRoleType(row.roleCode)">{{ getRoleText(row.roleCode) }}</n-tag>
           </template>
         </n-table-column>
-        <n-table-column prop="statusText" label="状态" width="80">
+        <n-table-column prop="statusText" label="状态" width="70">
           <template #default="{ row }">
             <n-tag :type="row.statusText === 'active' ? 'success' : 'danger'" size="small">
               {{ row.statusText === 'active' ? '正常' : '禁用' }}
             </n-tag>
           </template>
         </n-table-column>
-        <n-table-column prop="lastLoginText" label="最后登录" width="160" />
-        <n-table-column prop="createdAtText" label="注册时间" width="120" />
-        <n-table-column label="操作" width="200" fixed="right">
+        <n-table-column prop="lastLoginText" label="最后登录" width="135" />
+        <n-table-column prop="createdAtText" label="注册时间" width="110" />
+        <n-table-column label="操作" width="190" fixed="right">
           <template #default="{ row }">
-            <n-button type="primary" link @click="editUser(row)">编辑</n-button>
-            <n-button :type="row.statusText === 'active' ? 'warning' : 'success'" link @click="toggleStatus(row)">
-              {{ row.statusText === 'active' ? '禁用' : '启用' }}
-            </n-button>
-            <n-button type="danger" link @click="deleteUser(row)">删除</n-button>
+            <div class="row-actions">
+              <n-button size="small" type="primary" link @click="editUser(row)">编辑</n-button>
+              <n-button size="small" :type="row.statusText === 'active' ? 'warning' : 'success'" link @click="toggleStatus(row)">
+                {{ row.statusText === 'active' ? '禁用' : '启用' }}
+              </n-button>
+              <n-button size="small" type="danger" link @click="deleteUser(row)">删除</n-button>
+            </div>
           </template>
         </n-table-column>
         <template #empty>
           <n-empty description="暂无用户数据" />
         </template>
       </n-table>
+
+      <p class="table-scroll-hint">左右滑动表格，查看其余信息与操作。</p>
 
       <n-pagination class="pagination" layout="total, sizes, prev, pager, next" :total="totalUserCount"
         :page-sizes="[10, 20, 50]" v-model:current-page="pagination.currentPage" v-model:page-size="pagination.pageSize"
@@ -331,6 +337,23 @@ const loadUsers = async () => {
 }
 
 /**
+ * 应用筛选时回到第一页，避免旧页码造成空列表。
+ */
+const applyFilters = () => {
+  pagination.currentPage = 1
+  void loadUsers()
+}
+
+/**
+ * 清除角色与关键词筛选。
+ */
+const resetFilters = () => {
+  userFilter.roleCode = ''
+  userFilter.keywordText = ''
+  applyFilters()
+}
+
+/**
  * 获取角色类型
  */
 const getRoleType = (roleCode) => ({ admin: 'danger', teacher: 'warning', student: 'primary' }[roleCode] || 'info')
@@ -488,5 +511,28 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   justify-content: flex-end;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.row-actions :deep(.n-button) {
+  min-width: 0;
+  padding-inline: 6px;
+}
+
+.table-scroll-hint { display: none; }
+
+@media (max-width: 640px) {
+  .table-scroll-hint {
+    display: block;
+    margin: 10px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
 }
 </style>

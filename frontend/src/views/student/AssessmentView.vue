@@ -1,9 +1,8 @@
 <template>
   <div class="assessment-view" v-loading="loading">
     <n-card class="page-header" shadow="never">
-      <h2>初始测评中心</h2>
-      <p v-if="!profileGenerated">完成初始测评，帮助系统了解您的学习状况，生成个性化学习路径</p>
-      <p v-else>您的学习画像已生成。您可以重新进行能力评测或修改学习偏好。</p>
+      <h2>初始测评</h2>
+      <p v-if="!profileGenerated">完成三项测评后，查看学习路径。</p>
     </n-card>
 
     <!-- 画像已生成提示 -->
@@ -11,7 +10,7 @@
       style="margin-bottom: 20px;">
       <template #default>
         <div class="assessment-alert-actions">
-          <span>您可以前往「学习画像」页面查看详细分析，也可以重新评测或修改偏好来更新画像。</span>
+          <span>能力评测和学习偏好可以随时更新。</span>
           <n-button type="primary" plain size="small" @click="viewAssessmentReport">
             查看评测报告
           </n-button>
@@ -29,7 +28,7 @@
             </n-icon>
           </div>
           <h3>能力评测</h3>
-          <p>评估您的学习能力和认知水平</p>
+          <p>了解阅读、推理和记忆等方面的表现。</p>
           <div class="card-status">
             <n-tag :type="abilityCompleted ? 'success' : 'info'">
               {{ abilityCompleted ? '已完成' : '未完成' }}
@@ -50,7 +49,7 @@
             </n-icon>
           </div>
           <h3>习惯问卷</h3>
-          <p>了解您的学习习惯和偏好</p>
+          <p>填写学习时间、节奏和资源偏好。</p>
           <div class="card-status">
             <n-tag :type="habitCompleted ? 'success' : 'info'">
               {{ habitCompleted ? '已完成' : '未完成' }}
@@ -71,7 +70,7 @@
             </n-icon>
           </div>
           <h3>知识测评</h3>
-          <p>测试您当前课程的知识水平（按课程独立）</p>
+          <p>回答本课程题目，查看知识点掌握情况。</p>
           <div class="card-status">
             <n-tag :type="knowledgeCompleted ? 'success' : 'info'">
               {{ knowledgeCompleted ? '已完成' : '未完成' }}
@@ -91,8 +90,7 @@
         <n-icon class="generate-icon">
           <Checked />
         </n-icon>
-        <h3>恭喜！您已完成所有初始测评</h3>
-        <p>点击下方按钮生成您的专属学习画像</p>
+        <h3>三项测评已完成</h3>
         <n-button type="primary" size="large" :loading="generating" :disabled="generating" @click="generateProfile">
           {{ generating ? '正在生成画像...' : '生成学习画像' }}
         </n-button>

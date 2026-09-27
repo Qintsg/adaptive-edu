@@ -1,3 +1,4 @@
+/* 学生学习路径的统计、站点与详情布局。 */
 .learning-path-view {
   display: flex;
   flex-direction: column;
@@ -123,6 +124,12 @@
 
 .subway-station:hover {
   transform: translateY(-2px);
+}
+
+.subway-station:focus-visible {
+  outline: 3px solid rgba(15, 108, 189, 0.5);
+  outline-offset: 5px;
+  border-radius: 12px;
 }
 
 .subway-station.active .station-dot {

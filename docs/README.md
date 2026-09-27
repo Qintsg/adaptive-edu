@@ -1,8 +1,8 @@
 # 知识图谱驱动的个性化自适应学习系统文档总览
 
-> 最后更新：2026-06-05
+> 最后更新：2026-09-23
 
-本文档目录面向开发、验收、接口契约维护和项目材料归档。文档内容以当前仓库真实实现为准，API 契约源文件统一维护在 `docs/openapi/openapi.yaml`，`docs/api.yaml` 为 Redocly CLI 打包后的单文件产物。
+这里收录开发、验收、接口契约和项目材料。已实现功能以当前代码为准；设计提案会单独标注。API 契约源文件是 `docs/openapi/openapi.yaml`，`docs/api.yaml` 是 Redocly CLI 打包产物。
 
 ## 推荐阅读顺序
 
@@ -21,6 +21,7 @@
 - `api.yaml`：由 Redocly CLI 从 `docs/openapi/openapi.yaml` 打包生成的单文件 OpenAPI 描述。
 - `API端点测试报告.md`：逐 operation 记录本地后端 HTTP 巡检状态、请求上下文、响应摘要和问题分类。
 - `CHANGELOG.md`：项目变更记录。
+- [MEFKT 下一代架构设计](mefkt-next/README.md)：基于项目需求重新设计的模型提案，含数学定义、数据接入和验证方案；阶段 B 首次 prd 训练已完成，结果见专题文档。
 - `../LICENSE`：Academic Free License version 3.0（AFL-3.0）。
 
 ## 项目与参赛信息
@@ -43,7 +44,7 @@
 - GraphRAG 课程索引默认位于 `backend/runtime_logs/rag/course_{course_id}.json`。
 - GraphRAG 本地向量库默认位于 `backend/runtime_logs/rag/qdrant/`。
 - KT 当前只保留 `MEFKT`，默认 `single` 模式；`fusion / ensemble` 响应结构保留用于后续扩展。
-- A3 Agent 已提供学生端画像对话、资源生成、学习包、路径绑定、反馈和效果摘要闭环；学生端专题页面为 `/student/agent-learning`。
+- A3 Agent 已支持学生描述学习情况、生成资源包、查看依据、加入学习路径和提交反馈；学生端页面为 `/student/agent-learning`。
 
 ## 常用命令
 
@@ -84,8 +85,8 @@ npx @redocly/cli bundle adaptiveedu@v1
 
 ```bash
 cd frontend
-npm run typecheck
-npm run build
+pnpm typecheck
+pnpm build
 ```
 
 ### 测试数据与浏览器巡检

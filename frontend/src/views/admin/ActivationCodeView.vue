@@ -1,3 +1,4 @@
+<!-- 管理员激活码页：按适用角色与真实可用状态筛选。 -->
 <template>
   <div class="activation-code-view">
     <n-card class="page-header" shadow="never">
@@ -134,7 +135,10 @@ const loadCodes = async () => {
     }
     if (filter.role) params.code_type = filter.role
     if (filter.status === 'used') params.is_used = true
-    if (filter.status === 'unused') params.is_used = false
+    if (filter.status === 'unused') {
+      params.is_used = false
+      params.expired = false
+    }
     if (filter.status === 'expired') params.expired = true
 
     const res = await getActivationCodes(params)
@@ -162,7 +166,7 @@ const loadCodes = async () => {
  * 获取激活码状态
  */
 const getCodeStatus = (code, now = new Date()) => {
-  if (code.used || code.used_at) return 'used'
+  if (code.is_used || code.used || code.used_at) return 'used'
   if (code.expires_at && new Date(code.expires_at) < now) return 'expired'
   return 'unused'
 }

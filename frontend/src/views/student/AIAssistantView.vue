@@ -4,10 +4,7 @@
       <n-card class="search-panel" shadow="hover">
         <template #header>
           <div class="panel-header">
-            <span>知识图谱检索</span>
-            <div class="panel-header-tags">
-              <n-tag size="small" type="info">GraphRAG</n-tag>
-            </div>
+            <span>查找知识点</span>
           </div>
         </template>
 
@@ -19,7 +16,7 @@
             @keyup.enter="runSearch"
           >
             <template #append>
-              <n-button :loading="searchLoading" @click="runSearch">检索</n-button>
+              <n-button :loading="searchLoading" @click="runSearch">搜索</n-button>
             </template>
           </n-input>
         </div>
@@ -42,7 +39,7 @@
             <span class="search-result-summary">{{ pointItem.description || '暂无摘要' }}</span>
           </button>
         </div>
-        <n-empty v-else description="输入关键词后检索课程知识图谱" />
+        <n-empty v-else description="输入关键词查找知识点" />
 
         <div v-if="selectedPointDetail" class="point-detail-card">
           <div class="detail-header">
@@ -90,7 +87,7 @@
       <n-card class="chat-panel" shadow="hover">
         <template #header>
           <div class="panel-header">
-            <span>图谱增强问答</span>
+            <span>课程问答</span>
             <span v-if="chatLoading" class="chat-stage-status">{{ chatStageText }}</span>
           </div>
         </template>
@@ -119,14 +116,14 @@
             type="textarea"
             :rows="3"
             resize="none"
-            placeholder="输入你的问题，可以先检索知识点再追问，也可以直接围绕当前课程提问。"
+            placeholder="输入课程问题"
             @keydown="handleComposerKeydown"
             @keyup.ctrl.enter="askQuestion"
           />
           <div class="composer-actions">
             <div class="composer-context">
               <n-tag v-if="selectedPoint" size="small" type="info">当前知识点：{{ selectedPoint.point_name }}</n-tag>
-              <span v-else>当前未指定知识点，将按课程上下文检索。</span>
+              <span v-else>未选知识点，将搜索当前课程。</span>
               <span class="composer-shortcut">Enter 发送 · Shift + Enter 换行</span>
             </div>
             <n-button type="primary" :loading="chatLoading" @click="askQuestion">发送问题</n-button>
@@ -163,7 +160,7 @@ const chatScrollRef = ref(null)
 const chatMessages = ref([
   {
     role: 'assistant',
-    content: '你好，我是系统中的 GraphRAG AI助手。你可以先检索知识点，再围绕该知识点继续追问；也可以直接针对当前课程提问。',
+    content: '可以先查找知识点，再继续提问；也可以直接问当前课程的问题。',
     sources: [],
     matchedPoint: null
   }
@@ -237,7 +234,7 @@ const runSearch = async () => {
   } catch (error) {
     console.error('GraphRAG检索失败:', error)
     if (!isApiErrorHandled(error)) {
-      appMessage.error(extractApiErrorMessage(error, '知识图谱检索失败'))
+      appMessage.error(extractApiErrorMessage(error, '搜索知识点失败'))
     }
   } finally {
     searchLoading.value = false
@@ -307,7 +304,7 @@ const askQuestion = async () => {
     }
   } catch (error) {
     console.error('GraphRAG问答失败:', error)
-    assistantMessage.content = `抱歉，AI助手暂时无法回复：${extractApiErrorMessage(error, '请稍后重试')}`
+    assistantMessage.content = `暂时无法回答：${extractApiErrorMessage(error, '请稍后重试')}`
   } finally {
     await scrollToBottom()
   }

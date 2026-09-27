@@ -166,7 +166,7 @@ export default {
       name: 'AgentLearning',
       component: AgentLearningView,
       meta: {
-        title: '个性化智能体',
+        title: '生成学习资源',
         icon: 'Sparkle'
       }
     },

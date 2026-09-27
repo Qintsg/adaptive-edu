@@ -1,9 +1,10 @@
+<!-- 管理首页：平台规模与近期活动概览。 -->
 <template>
-  <div class="dashboard-view" v-loading="loading">
+  <div class="dashboard-view management-dashboard" v-loading="loading">
     <n-row :gutter="20">
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="stat-icon stat-icon--users">
             <n-icon>
               <User />
             </n-icon>
@@ -16,7 +17,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+          <div class="stat-icon stat-icon--courses">
             <n-icon>
               <Reading />
             </n-icon>
@@ -29,7 +30,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="stat-icon stat-icon--classes">
             <n-icon>
               <School />
             </n-icon>
@@ -42,7 +43,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="stat-icon stat-icon--work">
             <n-icon>
               <TrendCharts />
             </n-icon>

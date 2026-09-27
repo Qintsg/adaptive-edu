@@ -1,6 +1,6 @@
 <template>
   <div class="exam-manage-view">
-    <PageHero eyebrow="Assessment" title="作业管理" description="从当前课程题库快速组卷、发布到班级，并跟踪作业状态、题目结构与结果分析。">
+    <PageHero title="作业管理" description="从课程题库组卷、发布到班级，并查看作答结果。">
       <template #actions>
         <n-button type="primary" @click="showCreateDialog = true">
           <n-icon>

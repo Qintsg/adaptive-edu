@@ -1,3 +1,4 @@
+/* 教师资源列表与操作区布局。 */
 .resource-manage {
   display: grid;
   gap: 20px;
@@ -28,3 +29,6 @@
   margin-top: 20px;
   justify-content: flex-end;
 }
+
+.row-actions { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.row-actions :deep(.n-button) { min-width: 0; padding-inline: 6px; }

@@ -17,7 +17,7 @@ from common.http.permissions import IsStudent
 from common.http.responses import error_response, success_response
 from common.domain.utils import validate_course_exists
 from courses.models import Enrollment
-from users.models import User
+from users.models import User, UserCourseContext
 
 from assessments.defaults.ability_survey import DEFAULT_ABILITY_QUESTIONS
 from assessments.services.assessment_helpers import (
@@ -397,8 +397,17 @@ def _save_ability_result(
     return resolved_course_id
 
 
-def _resolve_default_course_id(user: User) -> object:
-    """无 course_id 提交时，沿用旧逻辑取第一个活跃选课课程。"""
+def _resolve_default_course_id(user: User) -> int | None:
+    """未显式传课程时优先使用已选择的课程，兼容旧客户端。
+
+    :param user: 当前学生。
+    :returns: 当前课程或首个活跃选课课程的 ID。
+    """
+    current_course_id = UserCourseContext.objects.filter(user=user).values_list(
+        "current_course_id", flat=True,
+    ).first()
+    if current_course_id is not None:
+        return current_course_id
     enrollment = Enrollment.objects.filter(user=user).first()
     if not enrollment or not enrollment.class_obj:
         return None

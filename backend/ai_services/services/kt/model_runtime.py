@@ -1,5 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """
 知识追踪模型运行混入模块。
+@Project : adaptive-edu
+@File : model_runtime.py
+@Author : Qintsg
+@Date : 2026-09-25
 
 本模块封装课程知识点加载和 MEFKT 运行时调用，
 主服务类只负责配置与公开入口。
@@ -100,6 +106,8 @@ class KTModelRuntimeMixin:
                     knowledge_points,
                     course_id=course_id,
                 )
+                if not result.get("predictions"):
+                    raise ValueError("模型未能覆盖本次目标知识点")
                 logger.debug(
                     build_log_message(
                         "kt.mefkt.inference_ok",

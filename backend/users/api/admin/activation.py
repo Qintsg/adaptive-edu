@@ -1,12 +1,23 @@
-"""用户模块 - 管理员激活码接口。"""
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+'''
+用户模块 - 管理员激活码接口。
+@Project : adaptive-edu
+@File : activation.py
+@Author : Qintsg
+@Date : 2026-09-24 21:00
+'''
 
 import csv
 from datetime import timedelta
 
 from django.http import HttpResponse
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from common.http.permissions import IsAdmin
 from common.http.responses import created_response, error_response, success_response
@@ -60,8 +71,13 @@ def generate_activation_code(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
-def list_activation_codes(request):
-    """获取激活码列表（仅管理员）。"""
+def list_activation_codes(request: Request) -> Response:
+    """
+    获取管理员激活码列表，并按角色及可用状态筛选。
+
+    :param request: 包含 code_type、is_used、expired 等筛选参数的请求。
+    :returns: 分页激活码列表。
+    """
     queryset = ActivationCode.objects.all()
     code_type = request.query_params.get('code_type')
     if code_type:
@@ -70,6 +86,14 @@ def list_activation_codes(request):
     is_used = request.query_params.get('is_used')
     if is_used is not None:
         queryset = queryset.filter(is_used=is_used.lower() == 'true')
+
+    expired = request.query_params.get('expired')
+    if expired is not None:
+        now = timezone.now()
+        if expired.lower() == 'true':
+            queryset = queryset.filter(is_used=False, expires_at__lt=now)
+        elif expired.lower() == 'false':
+            queryset = queryset.filter(Q(expires_at__isnull=True) | Q(expires_at__gte=now))
 
     page, page_size = _parse_pagination(request.query_params)
     start = (page - 1) * page_size

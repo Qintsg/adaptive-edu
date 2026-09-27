@@ -1,9 +1,10 @@
+/* 全局设计令牌：蓝色工作区、清晰的内容表面与知识路径强调色。 */
 :root {
   --primary-color: #0f6cbd;
   --primary-light: #5b9ded;
   --primary-dark: #115ea3;
   --accent-color: rgba(15, 108, 189, 0.1);
-  --accent-cyan: rgba(91, 157, 237, 0.16);
+  --accent-cyan: #dceeff;
   --accent-yellow: rgba(255, 244, 206, 0.86);
   --accent-amber: #c77700;
   --success-color: #107c10;
@@ -11,21 +12,20 @@
   --danger-color: #d13438;
   --info-color: #616161;
 
-  --text-primary: #1b1b1f;
-  --text-regular: #242424;
-  --text-secondary: #616161;
+  --text-primary: #142b43;
+  --text-regular: #274059;
+  --text-secondary: #5b7085;
   --text-placeholder: #8a8886;
 
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.05);
-  --border-lighter: rgba(0, 0, 0, 0.035);
+  --border-color: rgba(26, 70, 108, 0.16);
+  --border-light: rgba(26, 70, 108, 0.1);
+  --border-lighter: rgba(26, 70, 108, 0.06);
 
   --bg-color: #ffffff;
   --bg-page:
-    radial-gradient(circle at top left, rgba(15, 108, 189, 0.1), transparent 28%),
-    radial-gradient(circle at 86% 10%, rgba(91, 157, 237, 0.12), transparent 24%),
-    linear-gradient(180deg, #f6f8fb 0%, #eef2f6 100%);
-  --bg-card: rgba(255, 255, 255, 0.88);
+    radial-gradient(circle at 90% 0%, rgba(83, 163, 220, 0.1), transparent 34%),
+    linear-gradient(180deg, #f6f9fc 0%, #eff4f8 100%);
+  --bg-card: #ffffff;
   --bg-hover: rgba(15, 108, 189, 0.06);
   --bg-hero:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 252, 0.94)),
@@ -35,16 +35,16 @@
   --bg-soft-alt: rgba(246, 248, 252, 0.92);
   --bg-elevated: rgba(255, 255, 255, 0.94);
 
-  --sidebar-surface: rgba(255, 255, 255, 0.72);
-  --sidebar-surface-strong: rgba(255, 255, 255, 0.9);
-  --sidebar-border: rgba(0, 0, 0, 0.06);
-  --sidebar-text: #242424;
-  --sidebar-text-muted: #616161;
-  --sidebar-icon: #0f6cbd;
-  --sidebar-hover-bg: rgba(15, 108, 189, 0.08);
-  --sidebar-submenu-bg: rgba(248, 250, 252, 0.9);
-  --sidebar-active-bg: linear-gradient(135deg, #0f6cbd, #115ea3);
-  --sidebar-active-text: #ffffff;
+  --sidebar-surface: #122e4b;
+  --sidebar-surface-strong: #122e4b;
+  --sidebar-border: rgba(229, 242, 255, 0.12);
+  --sidebar-text: #e7f1fb;
+  --sidebar-text-muted: #acc3d8;
+  --sidebar-icon: #a8d3f3;
+  --sidebar-hover-bg: rgba(226, 241, 253, 0.1);
+  --sidebar-submenu-bg: rgba(5, 27, 49, 0.38);
+  --sidebar-active-bg: #e4f2ff;
+  --sidebar-active-text: #143a5f;
 
   --hero-text: #1b1b1f;
   --hero-shadow: 0 18px 42px rgba(0, 0, 0, 0.1);
@@ -57,9 +57,9 @@
   --radius-large: 20px;
   --radius-round: 999px;
 
-  --shadow-light: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-medium: 0 18px 42px rgba(0, 0, 0, 0.1);
-  --shadow-heavy: 0 26px 60px rgba(0, 0, 0, 0.14);
+  --shadow-light: 0 8px 24px rgba(17, 52, 82, 0.06);
+  --shadow-medium: 0 16px 38px rgba(17, 52, 82, 0.11);
+  --shadow-heavy: 0 24px 52px rgba(17, 52, 82, 0.16);
 
   --transition-fast: 0.16s ease;
   --transition-base: 0.28s cubic-bezier(0.22, 1, 0.36, 1);

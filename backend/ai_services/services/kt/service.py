@@ -1,5 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """
 知识追踪服务模块 (Knowledge Tracing Service)
+@Project : adaptive-edu
+@File : service.py
+@Author : Qintsg
+@Date : 2026-09-25
 
 本模块保留 MEFKT 知识追踪服务的公开入口，具体运行时、预测策略与统计回退
 拆分到相邻 mixin 模块中，保持旧导入路径与响应结构兼容。
@@ -13,6 +19,7 @@ from typing import Any, Dict, List, Optional
 
 from common.core.logging_utils import build_log_message
 
+from ai_services.services.mefkt.loader import default_mefkt_model_path as resolve_default_mefkt_model_path
 from ai_services.services.kt.model_runtime import KTModelRuntimeMixin
 from ai_services.services.kt.prediction_modes import KTPredictionModeMixin
 
@@ -23,11 +30,11 @@ BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 MODEL_CONFIGS = {
     "mefkt": {
-        "name": "Multi-view Exercise Fusion KT",
-        "description": "融合结构视角、属性视角与遗忘机制的知识追踪模型，支持公开预训练 + 题目级在线部署",
-        "paper_title": "融合多视角习题表征与遗忘机制的深度知识追踪",
-        "paper_doi": "10.11896/jsjkx.250700092",
-        "requires": ["torch", "numpy", "scikit-learn"],
+        "name": "MEFKT-NG",
+        "description": "内容泛化、显式知识状态与时间遗忘的四来源训练模型",
+        "paper_title": None,
+        "paper_doi": None,
+        "requires": ["torch", "numpy", "safetensors", "sentence-transformers"],
         "default_weight": 1.0,
     },
 }
@@ -98,11 +105,12 @@ class KnowledgeTracingService(KTModelRuntimeMixin, KTPredictionModeMixin):
         enabled_models: Optional[List[str]] = None,
     ):
         """初始化知识追踪服务和预测模式配置。"""
-        default_mefkt_model_root = BACKEND_ROOT / "models" / "MEFKT"
-        default_mefkt_model_path = default_mefkt_model_root / "mefkt_model.pt"
+        default_mefkt_model_path = resolve_default_mefkt_model_path(BACKEND_ROOT, os.environ)
+        legacy_mefkt = os.getenv("KT_MEFKT_RUNTIME", "ng").strip().lower() == "legacy"
         raw_model_paths = model_paths or {
             "mefkt": os.getenv(
-                "KT_MEFKT_MODEL_PATH", str(default_mefkt_model_path)
+                "KT_MEFKT_MODEL_PATH" if legacy_mefkt else "KT_MEFKT_NG_BUNDLE_PATH",
+                str(default_mefkt_model_path),
             ),
         }
         self.model_paths = {

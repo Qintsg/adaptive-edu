@@ -258,8 +258,12 @@ export const useCourseStore = defineStore('course', () => {
    * @param {number} [classIdVal] - 班级ID（可选）
    */
   function switchCourse(courseIdVal: number | string, classIdVal?: number | null): void {
-    // 从课程列表中查找完整课程对象
-    const course = courses.value.find(c => c.course_id === courseIdVal || c.course_id === Number(courseIdVal))
+    // 同一课程可以属于多个班级，优先匹配完整的课程与班级身份。
+    const courseId = normalizeIdentifier(courseIdVal)
+    const classId = normalizeIdentifier(classIdVal)
+    const course = courses.value.find(c => (
+      c.course_id === courseId && (classId === null || c.class_id === classId)
+    ))
     if (course) {
       selectCourse(course)
     } else {

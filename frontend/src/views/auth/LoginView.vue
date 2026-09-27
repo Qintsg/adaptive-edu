@@ -1,21 +1,26 @@
+<!-- 登录页面：保留角色跳转与记住登录状态，统一表单视觉和键盘提交。 -->
 <template>
-  <!-- Compact login form keeps the recovery and registration paths visible without leaving the page. -->
-  <div class="login-view">
-    <h2 class="form-title">欢迎回来</h2>
-    <p class="form-desc">登录您的账号，开启个性化学习之旅</p>
+  <!-- 登录表单同时提供密码找回提示与注册入口。 -->
+  <div class="login-view w-full">
+    <div class="form-heading">
+      <h2 class="form-title">登录自适应学习</h2>
+      <p class="form-desc">登录后查看课程、学习路径和最近进展。</p>
+    </div>
 
-    <n-form ref="formRef" :model="form" :rules="rules" class="login-form" @submit.prevent="handleLogin">
-      <n-form-item prop="username">
-        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
+    <n-form ref="formRef" :model="form" :rules="rules" label-placement="top" class="login-form"
+      @submit.prevent="handleLogin">
+      <n-form-item prop="username" label="用户名">
+        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable
+          :input-props="{ autocomplete: 'username', name: 'username' }">
           <template #prefix>
             <AppIcon name="User" />
           </template>
         </n-input>
       </n-form-item>
 
-      <n-form-item prop="password">
+      <n-form-item prop="password" label="密码">
         <n-input v-model:value="form.password" type="password" placeholder="请输入密码" size="large"
-          show-password-on="click" @keyup.enter="handleLogin">
+          show-password-on="click" :input-props="{ autocomplete: 'current-password', name: 'password' }">
           <template #prefix>
             <AppIcon name="Lock" />
           </template>
@@ -25,17 +30,17 @@
       <n-form-item>
         <div class="form-options">
           <n-checkbox v-model:checked="rememberMe">记住我</n-checkbox>
-          <a href="javascript:;" class="forgot-link" @click="showForgotPasswordHint">忘记密码？</a>
+          <button type="button" class="forgot-link" @click="showForgotPasswordHint">忘记密码？</button>
         </div>
       </n-form-item>
 
       <n-form-item>
-        <n-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleLogin">
-          {{ loading ? '登录中...' : '登 录' }}
+        <n-button attr-type="submit" type="primary" size="large" class="submit-btn" :loading="loading">
+          {{ loading ? '正在登录…' : '登录' }}
         </n-button>
       </n-form-item>
 
-      <div class="form-footer">
+      <div class="form-footer mt-6">
         <span>还没有账号？</span>
         <router-link to="/register" class="register-link">立即注册</router-link>
       </div>
@@ -58,7 +63,7 @@ const userStore = useUserStore()
 const formRef = ref(null)
 const loading = ref(false)
 
-// Remember-me travels with the login payload so persistence policy stays owned by the auth store.
+// 登录状态的持久化策略由用户状态仓库决定。
 const rememberMe = ref(false)
 
 const form = reactive({
@@ -91,7 +96,8 @@ const showForgotPasswordHint = () => {
 }
 
 const handleLogin = async () => {
-  // Reuse form validation so keyboard submit and button click share one path.
+  if (loading.value) return
+  // 键盘和按钮提交共用表单校验。
   const valid = await validateForm()
   if (!valid) return
 
@@ -100,9 +106,9 @@ const handleLogin = async () => {
     await userStore.login({ ...form, rememberMe: rememberMe.value })
     showSuccess('登录成功，欢迎回来！')
 
-    // Prefer an intercepted redirect, then fall back to the first dashboard that matches the signed-in role.
+    // 优先返回登录前页面，否则进入当前角色首页。
     const redirect = route.query.redirect
-    if (redirect && typeof redirect === 'string') {
+    if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
       await router.push(redirect)
     } else if (userStore.isAdmin) {
       await router.push({ name: 'AdminDashboard' })
@@ -126,104 +132,73 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-view {
-  width: 100%;
-}
-
+.form-heading { margin-bottom: 32px; }
 .form-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: clamp(27px, 3vw, 34px);
+  font-weight: 760;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  margin: 0 0 10px;
 }
-
 .form-desc {
   font-size: 14px;
-  color: #909399;
-  margin: 0 0 32px;
+  color: var(--text-secondary);
+  margin: 0;
 }
-
+.login-form :deep(.n-form-item-label) {
+  color: var(--text-regular);
+  font-weight: 650;
+}
 .login-form :deep(.n-input) {
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  min-height: 46px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: #fff;
 }
-
-.login-form :deep(.n-input:hover) {
-  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.12);
-}
-
 .login-form :deep(.n-input.n-input--focus) {
-  box-shadow: 0 2px 12px rgba(20, 184, 166, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(15, 108, 189, 0.12);
 }
-
 .form-options {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .forgot-link {
-  color: var(--accent-cyan);
-  font-size: 14px;
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-.forgot-link:hover {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
   color: var(--primary-color);
+  font-size: 14px;
+  cursor: pointer;
 }
-
+.forgot-link:hover { color: var(--primary-dark); text-decoration: underline; }
 .submit-btn {
   width: 100%;
-  height: 46px;
-  font-size: 16px;
+  height: 48px;
+  font-size: 15px;
   font-weight: 700;
-  border-radius: 14px;
-  background: rgba(109, 146, 125, 0.1) !important;
-  border: 1px solid rgba(78, 111, 93, 0.34) !important;
-  color: var(--primary-dark) !important;
-  box-shadow: 0 10px 20px rgba(78, 111, 93, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(15, 108, 189, 0.2);
 }
-
 .submit-btn:hover {
-  transform: translateY(-1px);
-  background: rgba(109, 146, 125, 0.16) !important;
-  border-color: rgba(78, 111, 93, 0.5) !important;
-  box-shadow: 0 14px 24px rgba(78, 111, 93, 0.12);
+  background: var(--primary-dark) !important;
+  box-shadow: 0 12px 25px rgba(15, 108, 189, 0.24);
 }
-
-.submit-btn:active {
-  transform: translateY(0);
-}
-
 .form-footer {
   text-align: center;
   font-size: 14px;
-  color: #666;
-  margin-top: 16px;
+  color: var(--text-secondary);
 }
-
 .register-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  margin-left: 10px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(109, 146, 125, 0.18);
-  background: rgba(109, 146, 125, 0.08);
-  color: var(--primary-dark);
+  margin-left: 8px;
+  color: var(--primary-color);
   text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 700;
 }
-
-.register-link:hover {
-  background: rgba(109, 146, 125, 0.14);
-  border-color: rgba(78, 111, 93, 0.36);
-}
+.register-link:hover { color: var(--primary-dark); text-decoration: underline; }
 </style>

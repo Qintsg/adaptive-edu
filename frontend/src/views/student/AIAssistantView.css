@@ -24,14 +24,6 @@
   gap: 12px;
 }
 
-.panel-header-tags {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .chat-stage-status {
   color: var(--text-secondary);
   font-size: 13px;

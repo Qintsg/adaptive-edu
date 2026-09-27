@@ -1,5 +1,6 @@
+<!-- 教师首页：教学数据与常用操作的工作区概览。 -->
 <template>
-  <div class="dashboard-view">
+  <div class="dashboard-view management-dashboard">
     <n-row :gutter="20">
       <!-- 欢迎卡片 -->
       <n-col :span="24">
@@ -17,7 +18,7 @@
     <n-row :gutter="20" class="stats-row">
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="stat-icon stat-icon--users">
             <n-icon>
               <User />
             </n-icon>
@@ -30,7 +31,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+          <div class="stat-icon stat-icon--courses">
             <n-icon>
               <Reading />
             </n-icon>
@@ -43,7 +44,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="stat-icon stat-icon--classes">
             <n-icon>
               <School />
             </n-icon>
@@ -56,7 +57,7 @@
       </n-col>
       <n-col :xs="24" :sm="12" :md="6">
         <n-card class="stat-card" shadow="hover">
-          <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="stat-icon stat-icon--work">
             <n-icon>
               <Document />
             </n-icon>
@@ -95,38 +96,38 @@
             <span>快捷操作</span>
           </template>
           <div class="quick-actions">
-            <div class="action-item" @click="router.push('/teacher/exams')">
-              <div class="action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <button class="action-item" type="button" @click="router.push('/teacher/exams')">
+              <div class="action-icon stat-icon--users">
                 <n-icon>
                   <Document />
                 </n-icon>
               </div>
               <span class="action-label">作业管理</span>
-            </div>
-            <div class="action-item" @click="router.push('/teacher/classes')">
-              <div class="action-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            </button>
+            <button class="action-item" type="button" @click="router.push('/teacher/classes')">
+              <div class="action-icon stat-icon--courses">
                 <n-icon>
                   <School />
                 </n-icon>
               </div>
               <span class="action-label">班级管理</span>
-            </div>
-            <div class="action-item" @click="router.push('/teacher/resources')">
-              <div class="action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            </button>
+            <button class="action-item" type="button" @click="router.push('/teacher/resources')">
+              <div class="action-icon stat-icon--classes">
                 <n-icon>
                   <Reading />
                 </n-icon>
               </div>
               <span class="action-label">资源管理</span>
-            </div>
-            <div class="action-item" @click="router.push('/teacher/knowledge')">
-              <div class="action-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            </button>
+            <button class="action-item" type="button" @click="router.push('/teacher/knowledge')">
+              <div class="action-icon stat-icon--work">
                 <n-icon>
                   <DataAnalysis />
                 </n-icon>
               </div>
               <span class="action-label">知识图谱</span>
-            </div>
+            </button>
           </div>
         </n-card>
       </n-col>

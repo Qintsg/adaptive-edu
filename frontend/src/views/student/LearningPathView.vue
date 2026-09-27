@@ -1,3 +1,4 @@
+<!-- 学生学习路径：可通过键盘选择路径节点。 -->
 <template>
   <div class="learning-path-view">
     <n-alert v-if="needAssessment" type="warning" :title="assessmentHint" show-icon :closable="false"
@@ -61,7 +62,7 @@
         <n-button type="primary" @click="loadLearningPath">重新加载</n-button>
       </n-empty>
       <n-empty v-else-if="!courseStore.courseId" description="请先在顶部选择课程" />
-      <n-empty v-else-if="!pathNodes.length && needAssessment" description="请先完成初始测评以生成个性化学习路径">
+      <n-empty v-else-if="!pathNodes.length && needAssessment" description="先完成初始测评，才能查看学习路径。">
         <n-button type="primary" @click="goToAssessment">前往初始测评</n-button>
       </n-empty>
       <n-empty v-else-if="!pathNodes.length" description="暂无学习路径数据" />
@@ -71,7 +72,10 @@
         <div class="subway-track-wrapper" ref="trackWrapperRef">
           <div class="subway-track" ref="trackRef">
             <div v-for="(pathNode, idx) in pathNodes" :key="pathNode.nodeId" class="subway-station"
-              :class="{ active: selectedNode?.nodeId === pathNode.nodeId }" @click="selectNode(pathNode)">
+              role="button" tabindex="0" :aria-label="`查看路径节点：${pathNode.titleText}`"
+              :aria-pressed="selectedNode?.nodeId === pathNode.nodeId"
+              :class="{ active: selectedNode?.nodeId === pathNode.nodeId }" @click="selectNode(pathNode)"
+              @keydown.enter="selectNode(pathNode)" @keydown.space.prevent="selectNode(pathNode)">
               <!-- 连接线（第一个节点前不加） -->
               <div v-if="idx > 0" class="station-line"
                 :class="{ done: pathNodes[idx - 1].learningStatus === 'completed' }" />

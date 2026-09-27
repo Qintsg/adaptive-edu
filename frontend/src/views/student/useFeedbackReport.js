@@ -87,7 +87,7 @@ export function useFeedbackReport() {
   function finishAIProgress() {
     stopAIProgress()
     aiProgressPercent.value = 100
-    aiProgressStageText.value = 'AI 报告已生成'
+    aiProgressStageText.value = '反馈报告已生成'
   }
 
   function clearPollTimer() {
@@ -166,7 +166,7 @@ export function useFeedbackReport() {
       pollAttempts.value = 0
       startAIProgress()
       await loadAIFeedback(reportId)
-      appMessage.success('AI 报告已重新排队生成')
+      appMessage.success('反馈报告已重新开始生成')
     } catch (error) {
       console.error('重新获取 AI 分析失败:', error)
       appMessage.error('重新获取 AI 分析失败')

@@ -28,10 +28,12 @@ export interface AssessmentAnswerPayload {
 }
 
 export interface AbilityAssessmentSubmitPayload {
+  course_id?: number | null
   answers: AssessmentAnswerPayload[]
 }
 
 export interface HabitSurveySubmitPayload {
+  course_id?: number | null
   responses: AssessmentAnswerPayload[]
 }
 
@@ -67,6 +69,7 @@ export function getAbilityAssessment(courseId: number | null = null): Promise<As
 /**
  * 提交能力评测答案
  * @param {Object} data
+ * @param {number} [data.course_id] - 当前课程ID
  * @param {Array<{question_id: number, answer: string}>} data.answers - 答题数据
  * @returns {Promise} 提交结果
  */

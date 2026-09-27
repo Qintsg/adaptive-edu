@@ -1,3 +1,4 @@
+/** 知识图谱的 D3 渲染、筛选与交互逻辑。 */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import * as d3 from 'd3'
 import { appMessage } from '@/utils/feedback'
@@ -54,6 +55,8 @@ export function useKnowledgeGraphD3(props, emit) {
       return chapterMatch && keywordMatch
     })
   })
+  const visibleNodeCount = computed(() => visibleNodes.value.length)
+  const totalNodeCount = computed(() => localNodes.value.length)
 
   const visibleNodeIds = computed(() => new Set(visibleNodes.value.map((node) => node.nodeId)))
   const visibleEdges = computed(() =>
@@ -150,6 +153,7 @@ export function useKnowledgeGraphD3(props, emit) {
     const heightValue = graphSurfaceRef.value.clientHeight || 640
     const searchKeyword = normalizeText(searchText.value).toLowerCase()
     const nodes = visibleNodes.value.map((node) => ({ ...node }))
+    const denseOverview = props.mode === 'view' && nodes.length > 30 && !chapterFilter.value && !searchKeyword
     const edges = visibleEdges.value.map((edge) => ({
       edgeId: edge.edgeId,
       source: edge.sourceNodeId,
@@ -198,7 +202,8 @@ export function useKnowledgeGraphD3(props, emit) {
       .attr('stroke', (edge) => getRelationStroke(edge.relationType).color)
       .attr('stroke-width', (edge) => getRelationStroke(edge.relationType).width)
       .attr('stroke-dasharray', (edge) => getRelationStroke(edge.relationType).dash)
-      .attr('marker-end', 'url(#graph-arrow)')
+      .attr('stroke-opacity', denseOverview ? 0.28 : 0.58)
+      .attr('marker-end', denseOverview ? null : 'url(#graph-arrow)')
       .attr('stroke-linecap', 'round')
 
     const node = contentLayer
@@ -208,8 +213,16 @@ export function useKnowledgeGraphD3(props, emit) {
       .data(nodes, (item) => item.nodeId)
       .join('g')
       .attr('class', 'graph-node')
+      .attr('tabindex', 0)
+      .attr('role', 'button')
+      .attr('aria-label', (datum) => `查看知识点：${datum.nodeName}`)
       .style('cursor', 'pointer')
-      .on('click', (_event, datum) => handleNodeClick(datum))
+      .on('click', (_event, datum) => { void handleNodeClick(datum) })
+      .on('keydown', (event, datum) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        void handleNodeClick(datum)
+      })
 
     node
       .append('circle')
@@ -222,7 +235,12 @@ export function useKnowledgeGraphD3(props, emit) {
       .attr('stroke-width', 2.5)
 
     node
+      .append('title')
+      .text((datum) => datum.nodeName)
+
+    node
       .append('text')
+      .attr('class', denseOverview ? 'graph-node-label graph-node-label--muted' : 'graph-node-label')
       .attr('text-anchor', 'middle')
       .attr('dy', 36)
       .attr('fill', 'var(--text-primary)')
@@ -268,6 +286,7 @@ export function useKnowledgeGraphD3(props, emit) {
     })
 
     simulationRef.value = simulation
+    simulation.on('end', () => fitView())
     requestAnimationFrame(() => fitView())
   }
 
@@ -376,6 +395,8 @@ export function useKnowledgeGraphD3(props, emit) {
     selectedNode,
     svgRef,
     updateNodeData,
+    visibleNodeCount,
+    totalNodeCount,
     zoomIn,
     zoomOut
   }

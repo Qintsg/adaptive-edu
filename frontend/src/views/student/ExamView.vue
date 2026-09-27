@@ -2,7 +2,6 @@
   <div class="exam-view">
     <n-card class="page-header" shadow="never">
       <h2>在线作业</h2>
-      <p>通过作业检验学习成果，获取详细反馈报告</p>
     </n-card>
 
     <n-tabs v-model="activeTab" class="exam-tabs">

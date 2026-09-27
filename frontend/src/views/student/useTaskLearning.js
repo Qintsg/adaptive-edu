@@ -198,7 +198,7 @@ export function useTaskLearning() {
   const completeTask = async () => {
     try {
       await completePathNode(currentNodeId.value, courseStore.courseId)
-      appMessage.success('恭喜！任务学习完成！')
+        appMessage.success('任务已完成')
       await router.push('/student/learning-path?refreshing=1')
     } catch (error) {
       console.error('完成任务失败:', error)

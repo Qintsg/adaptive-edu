@@ -1,3 +1,4 @@
+<!-- 学生课程资源页：筛选、搜索及资源入口支持键盘操作。 -->
 <template>
   <div class="resource-list-view">
     <n-card class="page-header" shadow="never">
@@ -31,7 +32,8 @@
       </div>
 
       <div v-loading="loading" class="resource-grid">
-        <div v-for="resourceRecord in resourceRecords" :key="resourceRecord.resourceId" class="resource-card"
+        <button v-for="resourceRecord in resourceRecords" :key="resourceRecord.resourceId" type="button"
+          class="resource-card" :aria-label="`打开资源：${resourceRecord.titleText}`"
           @click="openResource(resourceRecord)">
           <div class="resource-icon">
             <n-icon :size="32">
@@ -57,7 +59,7 @@
                 size="small" type="info" class="knowledge-point-tag">{{ knowledgePoint.pointName }}</n-tag>
             </div>
           </div>
-        </div>
+        </button>
         <n-empty v-if="!loading && !resourceRecords.length" description="暂无学习资源" />
       </div>
 
@@ -393,7 +395,7 @@ const loadKnowledgePoints = async () => {
 const openResource = (resourceRecord) => {
   const target = resourceRecord.openUrl
   if (target) {
-    window.open(target, '_blank')
+    window.open(target, '_blank', 'noopener,noreferrer')
   } else {
     appMessage.info('该资源暂无可打开的链接')
   }

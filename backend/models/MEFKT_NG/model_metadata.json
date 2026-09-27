@@ -1,0 +1,38 @@
+{
+  "schema": "mefkt-ng-inference-bundle-v1",
+  "run_id": "mefkt-ng-20260924-4src-g4",
+  "selected_epoch": 136,
+  "source_checkpoint_sha256": "861aca24ccc2a13f2211377c17b16a99f7e64fa2febf6ec161a9585819d99b0b",
+  "source_data_sha256": "347cf1087d996b3c4bf30ca9d0be1893cca404d76834e416ffce1a3e47c28469",
+  "source_content_sha256": "9ad1b4e52969bbdce5496015e564b20eab67f672d41f0949b60d06841cf3a3dd",
+  "content_encoder_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "runtime_schema": "mefkt_ng_v1",
+  "training_dataset": "SLAM+ASSISTments2009+EdNet-KT1+Junyi-v9",
+  "architecture_sha256": "3d413abfe2cf200195ee2b91a8f30fe3bc3ac0deb89f916e440e6eeb5362e5b6",
+  "weights_sha256": "d13aad408cf233f967eff02439109b62c8ff154bd6567e6ef5df4fc14cfc8cd9",
+  "catalog_sha256": "394c283bb4200cf91592997bd98f683940eb03adc8b6648f00e9049f8a0d114a",
+  "model_config": {
+    "hidden_dim": 1024,
+    "graph_layers": 0,
+    "bottleneck_mix": 0.5,
+    "bottleneck_temperature": 0.7,
+    "dropout": 0.1,
+    "prior_variance": 1.5,
+    "process_noise": 0.03,
+    "max_update": 1.0,
+    "repeat_weight": 0.5
+  },
+  "items": 28248,
+  "skills": 1805,
+  "subjects": [
+    "slam:es-en",
+    "assistments2009:math",
+    "ednet:english",
+    "junyi:math"
+  ],
+  "trainable_parameters": 5393411,
+  "optimizer_and_rng_included": false,
+  "compatible_with_legacy_mefkt_loader": false,
+  "test_set_status": "already_evaluated_before_continuation",
+  "exported_at_utc": "2026-09-24T13:50:28.436243+00:00"
+}

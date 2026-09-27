@@ -18,6 +18,7 @@ getKnowledgeAssessment:
     tags: [Assessments]
     operationId: getKnowledgeAssessment
     summary: 获取课程知识测评题目
+    description: 仅已选修学生或可管理课程的教师可访问；只下发可见题目，交卷前不返回标准答案或解析。
     parameters:
       - name: course_id
         in: query
@@ -33,6 +34,8 @@ getKnowledgeAssessment:
               $ref: ../components/schemas/ApiEnvelope.yaml
       "400":
         $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
       "404":
         $ref: ../components/responses.yaml#/NotFound
 
@@ -41,7 +44,7 @@ submitKnowledgeAssessment:
     tags: [Assessments]
     operationId: submitKnowledgeAssessment
     summary: 提交课程知识测评
-    description: 提交后会保存本次测评掌握度快照；题目级 MEFKT 会接收所有作答题目，未绑定知识点的题目以 question_id 参与历史序列。
+    description: 仅已选修学生可提交；只评分提交时仍可见的题目。提交后保存本次测评掌握度快照，解析随结果返回。
     requestBody:
       required: true
       content:
@@ -71,6 +74,8 @@ submitKnowledgeAssessment:
               $ref: ../components/schemas/ApiEnvelope.yaml
       "400":
         $ref: ../components/responses.yaml#/BadRequest
+      "403":
+        $ref: ../components/responses.yaml#/Forbidden
 
 getKnowledgeAssessmentResult:
   get:

@@ -1,3 +1,4 @@
+/** 学习路径页面的状态与操作逻辑。 */
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appMessage, appDialog } from '@/utils/feedback'
@@ -24,12 +25,9 @@ export function useLearningPath() {
   const courseStore = useCourseStore()
   const aiProgress = useAIProgress({
     stages: [
-      { at: 0, text: '正在分析知识图谱结构...' },
-      { at: 15, text: '学习画像匹配中...' },
-      { at: 35, text: '知识追踪模型推理中...' },
-      { at: 55, text: '规划最优学习路径...' },
-      { at: 75, text: '渲染学习节点...' },
-      { at: 90, text: '即将完成...' }
+      { at: 0, text: '正在读取学习记录…' },
+      { at: 50, text: '正在生成学习路径…' },
+      { at: 90, text: '仍在处理中，请稍候…' }
     ]
   })
 
@@ -39,7 +37,7 @@ export function useLearningPath() {
   const assessmentHint = ref('请先完成初始评测')
   const refreshingPath = ref(false)
   const generating = ref(false)
-  const refreshingMessage = ref('正在为您刷新个性化学习路径...')
+  const refreshingMessage = ref('正在更新学习路径…')
   const pathNodes = ref([])
   const selectedNode = ref(null)
   const trackWrapperRef = ref(null)
@@ -172,19 +170,19 @@ export function useLearningPath() {
       }
       const wasLastVisibleNode = totalNodes.value > 0 && completedNodes.value + 1 >= totalNodes.value
       if (wasLastVisibleNode) {
-        refreshingMessage.value = '当前路径已学习完成，系统正在为你规划下一阶段内容，请稍候。'
+        refreshingMessage.value = '当前路径已完成，正在生成下一阶段任务…'
         refreshingPath.value = true
         aiProgress.start()
       }
       await completePathNode(liveNode.nodeId, courseStore.courseId)
-      appMessage.success('恭喜完成学习！')
+      appMessage.success('该任务已完成')
       await loadLearningPath()
     } catch (error) {
       if (error !== 'cancel') console.error('标记完成失败:', error)
     } finally {
       aiProgress.complete()
       refreshingPath.value = false
-      refreshingMessage.value = '正在为您刷新个性化学习路径...'
+      refreshingMessage.value = '正在更新学习路径…'
     }
   }
 
@@ -240,7 +238,7 @@ export function useLearningPath() {
 
   const refreshPath = async () => {
     if (!courseStore.courseId) return
-    refreshingMessage.value = '系统正在根据你最新的掌握度与学习进度重规划路径，请稍候。'
+    refreshingMessage.value = '正在根据掌握度和学习进度更新路径…'
     refreshingPath.value = true
     aiProgress.start()
     try {
@@ -248,13 +246,13 @@ export function useLearningPath() {
         await refreshLearningPathWithAI(courseStore.courseId)
       )
 
-      const summaryParts = [`保留节点 ${refreshSummary.preservedCount} 个，新规划节点 ${refreshSummary.newCount} 个。`]
-      if (refreshSummary.changeSummary.preservedContext > 0) summaryParts.push(`已保留当前节点上下文，避免学习进度被重置。`)
-      if (refreshSummary.changeSummary.removedCount > 0) summaryParts.push(`替换未来节点 ${refreshSummary.changeSummary.removedCount} 个。`)
-      if (refreshSummary.ktInfo.answerCount > 0) summaryParts.push(`基于 ${refreshSummary.ktInfo.answerCount} 条答题记录的知识追踪分析。`)
-      if (refreshSummary.profile.summaryText) summaryParts.push(`画像：${refreshSummary.profile.summaryText.slice(0, 80)}`)
+      const summaryParts = [`保留 ${refreshSummary.preservedCount} 个任务，新增 ${refreshSummary.newCount} 个。`]
+      if (refreshSummary.changeSummary.preservedContext > 0) summaryParts.push('已保留当前任务进度。')
+      if (refreshSummary.changeSummary.removedCount > 0) summaryParts.push(`替换后续 ${refreshSummary.changeSummary.removedCount} 个任务。`)
+      if (refreshSummary.ktInfo.answerCount > 0) summaryParts.push(`参考了 ${refreshSummary.ktInfo.answerCount} 条答题记录。`)
+      if (refreshSummary.profile.summaryText) summaryParts.push(`学习情况：${refreshSummary.profile.summaryText.slice(0, 80)}`)
 
-      appMessage.success({ message: `学习路径已刷新：${summaryParts.join(' ')}`, duration: 5000 })
+      appMessage.success(`学习路径已更新。${summaryParts.join(' ')}`)
     } catch (error) {
       console.error('刷新学习路径失败:', error)
       appMessage.error('刷新失败，请稍后重试')
@@ -262,7 +260,7 @@ export function useLearningPath() {
       aiProgress.complete()
       await loadLearningPath()
       refreshingPath.value = false
-      refreshingMessage.value = '正在为您刷新个性化学习路径...'
+      refreshingMessage.value = '正在更新学习路径…'
     }
   }
 

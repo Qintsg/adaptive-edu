@@ -64,7 +64,7 @@ import { appMessage } from '@/utils/feedback'
 // Local reactive state keeps the demo form editable even before backend persistence is wired in.
 const basicSettings = reactive({
   siteName: '自适应学习系统',
-  siteDesc: '知识图谱驱动的个性化自适应学习系统',
+  siteDesc: '课程学习与教学管理平台',
   contactEmail: 'admin@adaptive-edu.com'
 })
 

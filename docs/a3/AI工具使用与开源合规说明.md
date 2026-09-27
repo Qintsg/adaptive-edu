@@ -36,7 +36,7 @@ backend/uv.lock
 
 ```text
 frontend/package.json
-frontend/package-lock.json
+frontend/pnpm-lock.yaml
 ```
 
 主要类别：

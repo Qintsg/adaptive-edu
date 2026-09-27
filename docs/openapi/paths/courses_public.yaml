@@ -18,6 +18,7 @@ selectCourse:
     tags: [Courses]
     operationId: selectCourse
     summary: 选择当前课程上下文
+    description: 同一课程属于多个班级时，传入 class_id 精确选择班级；该班级必须对当前用户可访问且已发布此课程。省略时使用首个可访问班级。
     requestBody:
       required: true
       content:
@@ -30,7 +31,7 @@ selectCourse:
                 type: integer
               class_id:
                 type: integer
-                nullable: true
+                description: 可选班级 ID；用于区分同一课程在不同班级中的上下文。
     responses:
       "200":
         description: data 包含 course_id、course_name、class_id、class_name。

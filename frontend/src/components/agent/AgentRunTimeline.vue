@@ -37,14 +37,14 @@ function statusText(status: string): string {
 
 function agentLabel(agent: string): string {
   const map: Record<string, string> = {
-    profile_agent: '画像智能体',
+    profile_agent: '整理学习情况',
     knowledge_agent: '知识检索',
     path_agent: '路径规划',
     resource_agent: '资源生成',
-    multimodal_agent: '多模态',
-    evaluation_agent: '评测校验',
+    multimodal_agent: '导图与脚本',
+    evaluation_agent: '质量评估',
     package_agent: '资源包',
-    quality_guard: '质量守卫'
+    quality_guard: '内容核对'
   }
   return map[agent] || agent
 }
@@ -54,8 +54,7 @@ function agentLabel(agent: string): string {
   <section class="agent-timeline">
     <div class="timeline-header">
       <div>
-        <h3>编排进度</h3>
-        <p>展示每个智能体角色的处理状态与可复核提示。</p>
+        <h3>生成进度</h3>
       </div>
       <n-progress
         type="circle"

@@ -8,9 +8,8 @@
       <!-- Empty state appears only when the student has not produced any usable profile signals yet. -->
       <div v-if="noAssessmentDone" class="assessment-empty-card">
         <div>
-          <p class="empty-eyebrow">Profile signals needed</p>
-          <h3>完成初始测评后，画像会变得可解释</h3>
-          <p>系统会结合能力测评、知识测评和学习轨迹生成画像，而不是只展示静态标签。</p>
+          <h3>先完成初始测评</h3>
+          <p>测评结果和学习记录会显示在这里。</p>
         </div>
         <n-button type="primary" @click="$router.push('/student/assessment')">
           前往测评中心
@@ -24,21 +23,14 @@
             {{ username.charAt(0).toUpperCase() }}
           </n-avatar>
           <div class="user-info">
-            <p class="hero-eyebrow">Learner Profile</p>
             <h2>{{ username }} 的学习画像</h2>
-            <p>基于学习数据、评测结果与知识追踪生成的个性化画像。</p>
             <div class="tags">
               <n-tag v-for="tag in learnerTags" :key="tag" effect="plain">{{ tag }}</n-tag>
-              <n-tag v-if="!learnerTags.length" type="info" effect="plain">等待更多学习信号</n-tag>
+              <n-tag v-if="!learnerTags.length" type="info" effect="plain">暂无标签</n-tag>
             </div>
           </div>
         </div>
         <div class="hero-side">
-          <div class="profile-score-card">
-            <span>画像完整度</span>
-            <strong>{{ profileCompleteness }}%</strong>
-            <n-progress :percentage="profileCompleteness" :stroke-width="8" :show-text="false" />
-          </div>
           <n-button :icon="Refresh" type="primary" class="refresh-btn" :loading="refreshing" @click="refreshProfile">
             刷新画像
           </n-button>
@@ -49,7 +41,7 @@
         <div class="metric-card">
           <span>画像完整度</span>
           <strong>{{ profileCompleteness }}%</strong>
-          <em>{{ learnerTags.length ? '已形成标签' : '等待更多信号' }}</em>
+          <em>{{ learnerTags.length ? '已生成标签' : '暂无标签' }}</em>
         </div>
         <div class="metric-card">
           <span>能力均分</span>
@@ -64,12 +56,12 @@
         <div class="metric-card warning">
           <span>薄弱项</span>
           <strong>{{ lowMasteryCount }}</strong>
-          <em>{{ lowMasteryCount ? '需要优先突破' : '暂无明显短板' }}</em>
+          <em>{{ lowMasteryCount ? '建议先复习' : '暂无明显薄弱项' }}</em>
         </div>
         <div class="metric-card accent">
           <span>AI 建议</span>
           <strong>{{ aiSuggestions.length }}</strong>
-          <em>{{ assessmentReady ? '可持续刷新' : '完成测评后生成' }}</em>
+          <em>{{ assessmentReady ? '可刷新' : '完成测评后生成' }}</em>
         </div>
       </div>
 
@@ -79,7 +71,6 @@
           <template #header>
             <div class="card-header stacked">
               <div>
-                <span class="card-eyebrow">Ability radar</span>
                 <strong>能力画像</strong>
               </div>
               <n-tag v-if="abilityData.length" type="success" effect="plain">{{ abilityData.length }} 项能力</n-tag>
@@ -116,7 +107,6 @@
           <template #header>
             <div class="card-header stacked">
               <div>
-                <span class="card-eyebrow">Knowledge map</span>
                 <strong>知识掌握度</strong>
               </div>
               <span class="mastery-meta">{{ masteryData.length }} 个知识点</span>
@@ -148,7 +138,7 @@
             </div>
 
             <div v-if="topWeakMasteries.length" class="focus-cluster">
-              <span>优先突破</span>
+              <span>建议先复习</span>
               <n-tag v-for="item in topWeakMasteries" :key="item.pointId || item.name" type="warning" effect="plain">
                 {{ item.name }} · {{ item.value }}%
               </n-tag>
@@ -174,7 +164,6 @@
           <template #header>
             <div class="card-header stacked">
               <div>
-                <span class="card-eyebrow">Interpretation</span>
                 <strong>画像总结</strong>
               </div>
             </div>

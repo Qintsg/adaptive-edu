@@ -111,7 +111,7 @@ export const useAssessmentStore = defineStore('assessment', () => {
   /**
    * 开始测评
    * @param {string} type - 测评类型：ability/habit/knowledge
-   * @param {number} [courseId] - 课程ID（知识测评必需）
+   * @param {number} [courseId] - 当前课程ID（知识测评必需）
    * @returns {Promise<boolean>} 是否成功获取题目
    */
   async function startAssessment(type: AssessmentStage, courseId?: number | null): Promise<boolean> {
@@ -199,8 +199,8 @@ export const useAssessmentStore = defineStore('assessment', () => {
     }))
 
     const submitAssessmentMap: Record<AssessmentStage, () => Promise<unknown>> = {
-      ability: () => submitAbilityAssessment({ answers: answerArray }),
-      habit: () => submitHabitSurvey({ responses: answerArray }),
+      ability: () => submitAbilityAssessment({ course_id: courseId, answers: answerArray }),
+      habit: () => submitHabitSurvey({ course_id: courseId, responses: answerArray }),
       knowledge: () => submitKnowledgeAssessment({
         course_id: courseId,
         answers: answerArray

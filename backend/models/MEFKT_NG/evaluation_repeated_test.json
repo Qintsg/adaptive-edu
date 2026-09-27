@@ -1,0 +1,126 @@
+{
+  "run_id": "mefkt-ng-20260924-4src-g4",
+  "completed_epochs": 156,
+  "best_checkpoint": "checkpoints/epoch_0136_77be5462f4aa4914b21e3f06f8102215.pt",
+  "best_checkpoint_sha256": "861aca24ccc2a13f2211377c17b16a99f7e64fa2febf6ec161a9585819d99b0b",
+  "best_validation": {
+    "overall": {
+      "nll": 0.5651956888531585,
+      "auc": 0.7103766353537257,
+      "brier": 0.19250564680664475,
+      "ece": 0.0023191908533683673,
+      "accuracy": 0.7049355041067369,
+      "samples": 444757,
+      "positives": 299832,
+      "positive_rate": 0.6741479054854673
+    },
+    "subjects": {
+      "slam:es-en": {
+        "nll": 0.4668884835288582,
+        "auc": 0.7984537855111649,
+        "brier": 0.15315092095874264,
+        "ece": 0.00415466908101299,
+        "accuracy": 0.7772343375772092,
+        "samples": 79330,
+        "positives": 57458,
+        "positive_rate": 0.7242909365939746
+      },
+      "assistments2009:math": {
+        "nll": 0.562687589025662,
+        "auc": 0.714830149971511,
+        "brier": 0.191025094684553,
+        "ece": 0.03259921858372512,
+        "accuracy": 0.711468466679902,
+        "samples": 30222,
+        "positives": 20446,
+        "positive_rate": 0.6765270332870095
+      },
+      "ednet:english": {
+        "nll": 0.6225254174005967,
+        "auc": 0.6440003605051063,
+        "brier": 0.21649917734468688,
+        "ece": 0.004765827908277694,
+        "accuracy": 0.6571451063303382,
+        "samples": 177842,
+        "positives": 113490,
+        "positive_rate": 0.6381507180531033
+      },
+      "junyi:math": {
+        "nll": 0.5504455684756225,
+        "auc": 0.7225597180902527,
+        "brier": 0.1855135215281581,
+        "ece": 0.006097017922178429,
+        "accuracy": 0.721243240151751,
+        "samples": 157363,
+        "positives": 108438,
+        "positive_rate": 0.6890946410528523
+      }
+    },
+    "predictions": {
+      "file": "validation_epoch_0136_77be5462f4aa4914b21e3f06f8102215.csv.gz",
+      "sha256": "6de33a3d107129239d77355de779bf5fe03ddfd93ed9eefdf0d5e6908d831b09",
+      "rows": 444757
+    }
+  },
+  "test": {
+    "overall": {
+      "nll": 0.551755435710915,
+      "auc": 0.7152203729817056,
+      "brier": 0.1869736415948667,
+      "ece": 0.005604229041123846,
+      "accuracy": 0.7151333184670765,
+      "samples": 376692,
+      "positives": 260041,
+      "positive_rate": 0.6903279071496077
+    },
+    "subjects": {
+      "slam:es-en": {
+        "nll": 0.4697314277903788,
+        "auc": 0.7936015075564584,
+        "brier": 0.15482246313202183,
+        "ece": 0.005182468866711109,
+        "accuracy": 0.7702428288281715,
+        "samples": 82239,
+        "positives": 59683,
+        "positive_rate": 0.7257262369435425
+      },
+      "assistments2009:math": {
+        "nll": 0.5678060609303904,
+        "auc": 0.7184382456225301,
+        "brier": 0.19279103610786535,
+        "ece": 0.022699062552143684,
+        "accuracy": 0.7077129348669818,
+        "samples": 28342,
+        "positives": 18783,
+        "positive_rate": 0.662726695363771
+      },
+      "ednet:english": {
+        "nll": 0.6209115233758413,
+        "auc": 0.6378323979424045,
+        "brier": 0.21584603729998886,
+        "ece": 0.007833982981090476,
+        "accuracy": 0.6575423105224429,
+        "samples": 122310,
+        "positives": 79115,
+        "positive_rate": 0.6468399967296214
+      },
+      "junyi:math": {
+        "nll": 0.5366803283410737,
+        "auc": 0.7177414373259452,
+        "brier": 0.17965673456101441,
+        "ece": 0.006699384365139215,
+        "accuracy": 0.7340630454586546,
+        "samples": 143801,
+        "positives": 102460,
+        "positive_rate": 0.7125124303725286
+      }
+    },
+    "predictions": {
+      "file": "test_final_epoch_0156.csv.gz",
+      "sha256": "41a4d6199578385a78c89da166748d8ee71997fdece26df6b0cbc2eb986614d3",
+      "rows": 376692
+    }
+  },
+  "source_sha256": "347cf1087d996b3c4bf30ca9d0be1893cca404d76834e416ffce1a3e47c28469",
+  "recorded_at_utc": "2026-09-24T13:09:31.225793+00:00"
+}

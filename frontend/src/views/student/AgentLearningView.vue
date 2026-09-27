@@ -88,15 +88,15 @@ async function extractProfile(): Promise<void> {
   }
   const message = form.profileMessage.trim()
   if (!message) {
-    showWarning('请输入画像描述')
+    showWarning('请描述当前学习情况')
     return
   }
   try {
     const result = await submitProfileDialog(currentCourseId.value, message)
     form.profile = result.profile
-    showSuccess(result.next_question ? `画像已更新：${result.next_question}` : '画像已更新')
+    showSuccess(result.next_question ? `学习信息已更新。还可以补充：${result.next_question}` : '学习信息已更新')
   } catch {
-    showError('画像抽取失败')
+    showError('提取学习信息失败')
   }
 }
 
@@ -148,9 +148,9 @@ async function markRunComplete(): Promise<void> {
   if (!currentCourseId.value || !packageResult.value) return
   try {
     await completeAgentRun(currentCourseId.value, packageResult.value.run_id)
-    showSuccess('本次智能体学习已收口')
+    showSuccess('本次资源生成已完成')
   } catch {
-    showError('运行收口失败')
+    showError('完成失败')
   }
 }
 
@@ -204,9 +204,8 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
 <template>
   <div class="agent-learning-view">
     <PageHero
-      eyebrow="A3 Agent"
-      title="个性化智能体"
-      description="把学习画像、课程证据、资源生成、路径绑定和反馈闭环放在同一张工作台里。"
+      title="生成学习资源"
+      description="描述学习目标并选择资源类型。生成后可查看依据，或加入学习路径。"
     >
       <template #actions>
         <n-button type="primary" :loading="loadingPackage" :disabled="!canGenerate" @click="generatePackage">
@@ -230,9 +229,9 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
 
     <div class="agent-grid">
       <div class="main-column">
-        <SectionCard title="学习目标与画像" description="先抽取画像，再生成个性化资源包。">
+        <SectionCard title="学习目标与情况">
           <n-form label-placement="top" class="agent-form">
-            <n-form-item label="画像描述">
+            <n-form-item label="当前学习情况">
               <n-input
                 v-model:value="form.profileMessage"
                 type="textarea"
@@ -262,7 +261,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
             <template #start>
               <n-button @click="extractProfile">
                 <template #icon><AppIcon name="User" /></template>
-                抽取画像
+                提取学习信息
               </n-button>
             </template>
             <template #end>
@@ -280,8 +279,8 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
           </div>
         </SectionCard>
 
-        <SectionCard title="生成资源" description="每张卡片保留证据追溯与学习反馈入口。">
-          <n-empty v-if="!resources.length && !loadingPackage" description="暂无生成资源，先生成一个学习资源包。" />
+        <SectionCard title="生成资源">
+          <n-empty v-if="!resources.length && !loadingPackage" description="尚无资源包。填写学习目标后点击“生成资源包”。" />
           <n-skeleton v-if="loadingPackage" :rows="8" animated />
           <div v-else class="resource-grid">
             <GeneratedResourceCard
@@ -296,15 +295,15 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
       </div>
 
       <aside class="side-column">
-        <SectionCard title="运行轨迹" description="同步编排结果，供演示和排查使用。">
+        <SectionCard title="生成过程">
           <AgentRunTimeline
             :trace="packageResult?.agent_trace || []"
             :progress-events="packageResult?.progress_events || []"
           />
         </SectionCard>
 
-        <SectionCard title="路径绑定" description="生成资源优先绑定到相同知识点节点。">
-          <n-empty v-if="!pathBindings.length" description="生成资源包后显示路径建议。" />
+        <SectionCard title="加入学习路径">
+          <n-empty v-if="!pathBindings.length" description="生成资源包后显示可加入的路径节点。" />
           <div v-else class="binding-list">
             <article v-for="binding in pathBindings" :key="binding.resource_id" class="binding-item">
               <strong>{{ binding.title }}</strong>
@@ -324,11 +323,11 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
             应用到学习路径
           </n-button>
           <n-button block :disabled="!packageResult" class="path-action" @click="markRunComplete">
-            标记本次学习完成
+            结束本次生成
           </n-button>
         </SectionCard>
 
-        <SectionCard title="效果摘要" description="基于生成资源反馈形成下一轮画像和路径输入。">
+        <SectionCard title="使用情况">
           <div class="effect-grid">
             <div>
               <strong>{{ effectSummary?.resource_count || 0 }}</strong>

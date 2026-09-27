@@ -1,40 +1,40 @@
+<!-- 认证页面布局：以知识路径图形呈现平台的学习闭环。 -->
 <template>
-  <div class="auth-layout">
-    <!-- 左侧品牌区域 -->
-    <div class="auth-brand">
-      <div class="brand-background">
-        <div class="bg-shape shape-1"></div>
-        <div class="bg-shape shape-2"></div>
-        <div class="bg-shape shape-3"></div>
+  <div class="auth-layout min-h-dvh">
+    <section class="auth-brand" aria-labelledby="brand-heading">
+      <div class="brand-top">
+        <router-link to="/" class="brand-logo" aria-label="自适应学习系统首页">
+          <img src="/images/logo.svg" alt="" class="auth-logo" />
+          <span>自适应学习系统</span>
+        </router-link>
+        <span class="brand-edition">知识图谱 · 个性化学习</span>
       </div>
-      <div class="brand-content">
-        <div class="brand-logo" @click="goHome">
-          <img src="/images/logo.svg" alt="Logo" class="auth-logo" />
-          <h1 class="brand-title">自适应学习系统</h1>
-        </div>
-        <p class="brand-subtitle">知识图谱驱动的个性化自适应学习系统</p>
-        <div class="brand-features">
-          <div class="feature-item">
-            <div class="feature-icon">📊</div>
-            <div><strong>知识图谱</strong><br><span>可视化知识结构，精准定位薄弱点</span></div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">🎯</div>
-            <div><strong>个性化路径</strong><br><span>AI 规划最优学习路径</span></div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">🤖</div>
-            <div><strong>智能辅导</strong><br><span>AI 助手实时答疑解惑</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="brand-footer">
-        <p>© {{ currentYear }} 自适应学习系统</p>
-      </div>
-    </div>
 
-    <!-- 右侧表单区域 -->
-    <div class="auth-form-area">
+      <div class="brand-content">
+        <h1 id="brand-heading">看清进度，<br /><em>知道下一步。</em></h1>
+        <p class="brand-subtitle">测评后查看掌握情况和学习路径。</p>
+
+        <div class="learning-map" aria-hidden="true">
+          <svg viewBox="0 0 540 270" role="presentation">
+            <path class="map-track" d="M70 188 C130 188 137 74 235 74 S350 174 457 93" />
+            <path class="map-active" d="M70 188 C130 188 137 74 235 74" />
+            <circle class="map-halo" cx="235" cy="74" r="30" />
+            <circle class="map-node" cx="70" cy="188" r="10" />
+            <circle class="map-node map-node--active" cx="235" cy="74" r="13" />
+            <circle class="map-node" cx="457" cy="93" r="10" />
+            <text x="40" y="224">01 · 学习诊断</text>
+            <text x="204" y="40">02 · 规划路径</text>
+            <text x="424" y="132">03 · 巩固提升</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="brand-footer">
+        <span>© {{ currentYear }} 自适应学习系统</span>
+      </div>
+    </section>
+
+    <main class="auth-form-area">
       <div class="form-container">
         <router-view v-slot="{ Component, route }">
           <transition name="auth-fade" mode="out-in">
@@ -42,252 +42,92 @@
           </transition>
         </router-view>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
+/**
+ * 认证布局组件。
+ */
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const currentYear = computed(() => new Date().getFullYear())
-const goHome = () => router.push('/')
 </script>
 
 <style scoped>
-.auth-layout {
-  min-height: 100vh;
-  display: flex;
-}
-
-/* 左侧品牌区 */
+.auth-layout { display: grid; grid-template-columns: minmax(460px, 52%) minmax(0, 1fr); }
 .auth-brand {
-  flex: 0 0 45%;
-  background: #e6eee8;
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 48px;
-  position: relative;
+  justify-content: space-between;
   overflow: hidden;
+  min-height: 100dvh;
+  padding: 40px clamp(36px, 5vw, 88px);
+  color: #eaf4ff;
+  background: radial-gradient(circle at 12% 12%, #245987 0%, transparent 38%),
+    linear-gradient(150deg, #153b62 0%, #0d2743 76%);
 }
-
-.brand-background {
+.auth-brand::before {
+  content: '';
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  opacity: 0.2;
+  background-image: linear-gradient(rgba(195, 223, 245, 0.17) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(195, 223, 245, 0.17) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, transparent, #000 34%, #000 82%, transparent);
   pointer-events: none;
 }
-
-.bg-shape {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(109, 146, 125, 0.1);
-  animation: float 20s infinite ease-in-out;
-}
-
-.shape-1 {
-  width: 350px;
-  height: 350px;
-  top: -80px;
-  left: -80px;
-}
-
-.shape-2 {
-  width: 250px;
-  height: 250px;
-  bottom: -40px;
-  right: -40px;
-  animation-delay: -5s;
-}
-
-.shape-3 {
-  width: 180px;
-  height: 180px;
-  top: 50%;
-  left: 55%;
-  animation-delay: -10s;
-}
-
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  25% {
-    transform: translate(20px, -20px) rotate(5deg);
-  }
-
-  50% {
-    transform: translate(-10px, 20px) rotate(-5deg);
-  }
-
-  75% {
-    transform: translate(-20px, -10px) rotate(3deg);
-  }
-}
-
-.brand-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  color: var(--hero-text);
-}
-
-.brand-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.brand-logo:hover {
-  transform: scale(1.05);
-}
-
-.auth-logo {
-  width: 52px;
-  height: 52px;
-  filter: drop-shadow(0 4px 8px rgba(37, 59, 49, 0.12));
-}
-
-.brand-title {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.brand-subtitle {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin: 14px 0 0;
-}
-
-.brand-features {
-  margin-top: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  text-align: left;
-}
-
-.feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  color: var(--text-regular);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.feature-icon {
-  font-size: 28px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.feature-item strong {
-  font-size: 15px;
-  color: var(--text-primary);
-}
-
-.feature-item span {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.brand-footer {
-  position: absolute;
-  bottom: 24px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  z-index: 1;
-}
-
-.brand-footer p {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* 右侧表单区 */
+.brand-top, .brand-content, .brand-footer { position: relative; z-index: 1; }
+.brand-top, .brand-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand-logo { display: inline-flex; align-items: center; gap: 12px; color: inherit; font-size: 16px; font-weight: 750; text-decoration: none; }
+.brand-logo:hover { color: #fff; text-decoration: none; }
+.auth-logo { width: 42px; height: 42px; padding: 4px; border-radius: 12px; background: #fff; }
+.brand-edition { color: #a9cee9; font-size: 12px; letter-spacing: 0.06em; }
+.brand-content { width: min(100%, 640px); margin: 44px auto 0; }
+.brand-content h1 { margin: 0; font-size: clamp(42px, 4.3vw, 68px); font-weight: 760; line-height: 1.22; letter-spacing: -0.045em; }
+.brand-content h1 em { color: #bce5fa; font-style: normal; }
+.brand-subtitle { max-width: 34ch; margin: 24px 0 0; color: #c2d6e7; font-size: 16px; line-height: 1.9; }
+.learning-map { max-width: 540px; margin: 16px -12px -8px; }
+.learning-map svg { display: block; width: 100%; height: auto; overflow: visible; }
+.learning-map text { fill: #cce2f3; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+.map-track, .map-active { fill: none; stroke-linecap: round; stroke-width: 3; }
+.map-track { stroke: rgba(203, 227, 246, 0.4); stroke-dasharray: 6 11; }
+.map-active { stroke: #8cdded; }
+.map-halo { fill: rgba(110, 208, 233, 0.15); }
+.map-node { fill: #d6eaf8; stroke: #153b62; stroke-width: 5; }
+.map-node--active { fill: #74d9ed; }
+.brand-footer { color: #95b6cf; font-size: 12px; }
 .auth-form-area {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-page);
-  padding: 48px;
-  overflow-y: auto;
+  min-width: 0;
+  padding: 40px clamp(24px, 5vw, 92px);
+  background: #f5f8fb;
 }
+.form-container { width: min(100%, 420px); }
+.auth-fade-enter-active, .auth-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.auth-fade-enter-from { opacity: 0; transform: translateY(10px); }
+.auth-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
-.form-container {
-  width: 100%;
-  max-width: 420px;
-}
-
-/* 页面切换动画 */
-.auth-fade-enter-active,
-.auth-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
-.auth-fade-enter-from {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.auth-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-12px);
-}
-
-/* 响应式：平板及以下 */
 @media (max-width: 900px) {
-  .auth-layout {
-    flex-direction: column;
-  }
-
-  .auth-brand {
-    flex: 0 0 auto;
-    padding: 32px 24px;
-  }
-
-  .brand-features {
-    display: none;
-  }
-
-  .brand-footer {
-    display: none;
-  }
-
-  .auth-form-area {
-    padding: 32px 20px;
-  }
+  .auth-layout { display: flex; flex-direction: column; }
+  .auth-brand { min-height: auto; padding: 24px clamp(20px, 5vw, 48px) 28px; }
+  .brand-content { margin: 32px auto 0; }
+  .brand-content h1 { font-size: clamp(28px, 5vw, 42px); }
+  .brand-subtitle { margin-top: 12px; font-size: 14px; }
+  .brand-edition, .learning-map, .brand-footer { display: none; }
+  .auth-form-area { flex: 1; padding: 40px 24px; }
 }
-
 @media (max-width: 480px) {
-  .auth-brand {
-    padding: 24px 16px;
-  }
-
-  .brand-title {
-    font-size: 24px;
-  }
-
-  .auth-logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  .auth-form-area {
-    padding: 24px 16px;
-  }
+  .brand-content { margin-top: 22px; }
+  .brand-content h1 br { display: none; }
+  .auth-form-area { align-items: flex-start; padding: 38px 20px 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-fade-enter-active, .auth-fade-leave-active { transition: none; }
 }
 </style>

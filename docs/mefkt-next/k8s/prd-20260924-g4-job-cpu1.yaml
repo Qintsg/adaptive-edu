@@ -1,0 +1,103 @@
+# MEFKT-NG g4 仅 Job 修订清单；保留现有 PVC 和已上传数据
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: mefkt-ng-20260924-g4
+  namespace: advisor-rhw
+  labels:
+    app.kubernetes.io/name: mefkt-ng
+    mefkt-ng-run: mefkt-ng-20260924-g4
+    mefkt-ng-job: mefkt-ng-20260924-g4
+spec:
+  schedulerName: volcano
+  queue: advisor-rhw-gpu
+  priorityClassName: gpu-job-high
+  minAvailable: 2
+  maxRetry: 2
+  plugins:
+    svc:
+      - --publish-not-ready-addresses=true
+  tasks:
+    - name: worker
+      replicas: 2
+      template:
+        metadata:
+          labels:
+            mefkt-ng-job: mefkt-ng-20260924-g4
+        spec:
+          nodeSelector:
+            kubernetes.io/hostname: g4
+          restartPolicy: OnFailure
+          containers:
+            - name: trainer
+              image: nvcr.io/nvidia/pytorch:26.04-py3
+              imagePullPolicy: IfNotPresent
+              command: ["bash", "-lc"]
+              args:
+                - |
+                  set -euo pipefail
+                  until test -f /workspace/jobs/mefkt-ng-20260924-g4/.ready; do sleep 5; done
+                  export PYTHONUNBUFFERED=1
+                  export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+                  export OMP_NUM_THREADS=2
+                  export MKL_NUM_THREADS=2
+                  export MASTER_ADDR="${VC_WORKER_HOSTS%%,*}"
+                  export MASTER_PORT=23456
+                  export WORLD_SIZE="${VC_WORKER_NUM}"
+                  if [ -n "${VK_TASK_INDEX:-}" ]; then
+                    export RANK="${VK_TASK_INDEX}"
+                  elif [[ "${HOSTNAME:-}" =~ -worker-([0-9]+)$ ]]; then
+                    export RANK="${BASH_REMATCH[1]}"
+                  else
+                    export RANK=0
+                  fi
+                  export LOCAL_RANK=0
+                  mkdir -p /results/mefkt-ng-runs/mefkt-ng-20260924-g4/logs
+                  set +e
+                  torchrun --nnodes="${WORLD_SIZE}" --node_rank="${RANK}" --nproc_per_node=1 \
+                    --master_addr="${MASTER_ADDR}" --master_port="${MASTER_PORT}" \
+                    /workspace/jobs/mefkt-ng-20260924-g4/mefkt_ng_train.py \
+                    --events-file /data/mefkt-ng-inputs/mefkt-ng-20260924-g4/train.csv --content-embeddings-file /data/mefkt-ng-inputs/mefkt-ng-20260924-g4/item_content_embeddings.npz  \
+                    --data-root /results/mefkt-ng-prepared/mefkt-ng-20260924-g4 --output-dir /results/mefkt-ng-runs/mefkt-ng-20260924-g4 \
+                    --epochs 200 --batch-size 128 --sequence-length 200 \
+                    --context-length 64 --hidden-dim 1024 \
+                    --learning-rate 0.0001 --num-workers 0 --device cuda --amp  \
+                    2>&1 | tee -a /results/mefkt-ng-runs/mefkt-ng-20260924-g4/logs/rank-${RANK}.log
+                  status=${PIPESTATUS[0]}
+                  set -e
+                  exit "$status"
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: 16Gi
+                  nvidia.com/gpu: "1"
+                limits:
+                  cpu: "4"
+                  memory: 64Gi
+                  nvidia.com/gpu: "1"
+              ports:
+                - name: torchrun
+                  containerPort: 23456
+              volumeMounts:
+                - name: code
+                  mountPath: /workspace
+                - name: data
+                  mountPath: /data
+                - name: results
+                  mountPath: /results
+                - name: shm
+                  mountPath: /dev/shm
+          volumes:
+            - name: code
+              persistentVolumeClaim:
+                claimName: mefkt-code
+            - name: data
+              persistentVolumeClaim:
+                claimName: mefkt-data
+            - name: results
+              persistentVolumeClaim:
+                claimName: mefkt-ng-results
+            - name: shm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 16Gi

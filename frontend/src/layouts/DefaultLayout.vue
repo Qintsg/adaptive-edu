@@ -1,14 +1,20 @@
+<!-- 默认工作区布局：桌面侧栏与移动端抽屉共享同一套角色导航。 -->
 <template>
   <div class="default-layout">
-    <aside class="layout-sidebar glass-sidebar" :style="{ width: isCollapsed ? '72px' : '252px' }">
-      <div class="sidebar-logo" :class="{ 'is-collapsed': isCollapsed }" @click="goHome">
+    <button v-if="isMobile && isMobileMenuOpen" class="mobile-backdrop" type="button"
+      aria-label="关闭导航菜单" @click="closeMobileMenu" />
+    <aside class="layout-sidebar glass-sidebar" :class="{ 'is-mobile-open': isMobileMenuOpen }"
+      :style="{ width: isMobile ? '264px' : isCollapsed ? '72px' : '252px' }"
+      :aria-hidden="isMobile && !isMobileMenuOpen" :inert="isMobile && !isMobileMenuOpen">
+      <button class="sidebar-logo" :class="{ 'is-collapsed': isCollapsed && !isMobile }" type="button"
+        aria-label="返回首页" @click="goHome">
         <img src="/images/logo.svg" alt="Logo" class="logo-image" />
         <transition name="fade">
-          <span v-show="!isCollapsed" class="logo-text">{{ systemTitle }}</span>
+          <span v-show="isMobile || !isCollapsed" class="logo-text">{{ systemTitle }}</span>
         </transition>
-      </div>
+      </button>
 
-      <TheSidebar :is-collapse="isCollapsed" />
+      <TheSidebar :is-collapse="!isMobile && isCollapsed" @navigate="closeMobileMenu" />
     </aside>
 
     <section class="layout-main-container">
@@ -19,8 +25,9 @@
 
       <header class="layout-header glass-header">
         <div class="header-left">
-          <button class="collapse-trigger" type="button" aria-label="切换侧边栏" @click="toggleCollapse">
-            <AppIcon :name="isCollapsed ? 'Navigation' : 'List'" :size="22" />
+          <button class="collapse-trigger" type="button" :aria-label="isMobile ? '打开导航菜单' : '切换侧边栏'"
+            :aria-expanded="isMobile ? isMobileMenuOpen : !isCollapsed" @click="toggleCollapse">
+            <AppIcon :name="isMobile || !isCollapsed ? 'List' : 'Navigation'" :size="22" />
           </button>
 
           <nav class="breadcrumb" aria-label="当前位置">
@@ -41,7 +48,7 @@
         </div>
       </header>
 
-      <main class="layout-main">
+      <main ref="mainScrollRef" class="layout-main">
         <router-view v-slot="{ Component, route: viewRoute }">
           <transition name="page-fade" mode="out-in">
             <component :is="Component" :key="resolveRouteKey(viewRoute)" />
@@ -106,6 +113,9 @@ const resolveRouteKey = (value) => {
 }
 
 const isCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true')
+const isMobile = ref(window.innerWidth < 992)
+const isMobileMenuOpen = ref(false)
+const mainScrollRef = ref(null)
 const userRole = computed(() => userStore.userRole)
 
 const currentUserProfile = computed(() => normalizeUserProfile(userStore.user))
@@ -155,27 +165,48 @@ onMounted(async () => {
  * 切换侧边栏折叠状态
  */
 const toggleCollapse = () => {
+  if (isMobile.value) {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value
+    return
+  }
   isCollapsed.value = !isCollapsed.value
   localStorage.setItem('sidebar_collapsed', isCollapsed.value)
 }
 
+/**
+ * 关闭移动端导航抽屉。
+ */
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
 const handleResize = () => {
-  if (window.innerWidth < 992 && !isCollapsed.value) {
-    isCollapsed.value = true
-  }
+  isMobile.value = window.innerWidth < 992
+  closeMobileMenu()
+}
+
+/**
+ * 支持 Escape 键关闭移动端导航。
+ * :param {KeyboardEvent} event - 键盘事件
+ */
+const handleKeydown = (event) => {
+  if (event.key === 'Escape') closeMobileMenu()
 }
 onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize)
+  window.addEventListener('keydown', handleKeydown)
 })
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 /**
  * 返回首页
  */
 const goHome = () => {
+  closeMobileMenu()
   void router.push(homeRoute.value)
 }
 
@@ -277,6 +308,8 @@ onMounted(() => {
 watch(
   () => resolveRouteKey(route),
   () => {
+    closeMobileMenu()
+    if (mainScrollRef.value) mainScrollRef.value.scrollTop = 0
     if (showCourseSelector.value && (!courses.value.length || !currentCourse.value)) {
       void courseStore.fetchCourses()
     }

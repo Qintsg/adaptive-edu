@@ -33,7 +33,7 @@
 
 - 已实现 A3 Agent 数据底座：`AgentRun`、`ProfileDialogTurn`、`GeneratedLearningResource`、`GeneratedResourceFeedback`。
 - 已实现学生端 Agent API：画像对话、资源生成、学习包、路径绑定、运行详情、资源列表、反馈、运行完成和效果摘要。
-- 已实现学生端页面 `/student/agent-learning`，包含画像输入、生成进度、资源卡片、证据抽屉、路径绑定建议和反馈面板。
+- 已实现学生端“生成学习资源”页面 `/student/agent-learning`，包含学习情况输入、生成进度、资源卡片、资料来源、路径建议和反馈面板。
 - 已实现至少 5 类资源生成：讲解文档、思维导图、练习题、拓展阅读、代码实操案例；可选生成视频脚本。
 - 已实现质量守卫和防幻觉提示：证据为空时返回 warnings，不伪造来源。
 - 已实现 OpenAPI 契约和 `docs/api.yaml` 打包产物。
@@ -43,8 +43,8 @@
 - `cd backend && uv run python manage.py check`
 - `cd backend && uv run python manage.py makemigrations --check --dry-run`
 - `cd backend && uv run python manage.py test ai_services.tests --verbosity 2`
-- `cd frontend && npm run typecheck`
-- `cd frontend && npm run build`
+- `cd frontend && pnpm typecheck`
+- `cd frontend && pnpm build`
 - `npx @redocly/cli lint adaptiveedu@v1`
 - `npx @redocly/cli bundle adaptiveedu@v1`
 - 本地服务启动后访问 `/health/`、`/student/agent-learning` 并完成一次生成资源包、应用到路径、提交反馈。

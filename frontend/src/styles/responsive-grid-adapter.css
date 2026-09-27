@@ -1,0 +1,25 @@
+/* Element 风格网格兼容样式，断点与现有页面的 xs/sm/md/lg/xl 属性一致。 */
+.n-row-adapter {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  margin-inline: calc(var(--adapter-column-gap, 0px) / -2);
+  row-gap: var(--adapter-row-gap, 0px);
+  min-width: 0;
+}
+.n-col-adapter {
+  grid-column: span var(--adapter-col-xs, 24);
+  min-width: 0;
+  padding-inline: calc(var(--adapter-column-gap, 0px) / 2);
+}
+@media (min-width: 768px) {
+  .n-col-adapter { grid-column: span var(--adapter-col-sm, 24); }
+}
+@media (min-width: 992px) {
+  .n-col-adapter { grid-column: span var(--adapter-col-md, 24); }
+}
+@media (min-width: 1200px) {
+  .n-col-adapter { grid-column: span var(--adapter-col-lg, 24); }
+}
+@media (min-width: 1920px) {
+  .n-col-adapter { grid-column: span var(--adapter-col-xl, 24); }
+}

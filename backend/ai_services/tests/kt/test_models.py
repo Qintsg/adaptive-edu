@@ -1,4 +1,11 @@
-"""Regression tests for AI-facing student and search services."""
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""Regression tests for AI-facing student and search services.
+@Project : adaptive-edu
+@File : test_models.py
+@Author : Qintsg
+@Date : 2026-09-25
+"""
 
 from pathlib import Path
 from random import Random
@@ -42,38 +49,37 @@ class MEFKTServiceTests(SimpleTestCase):
         info = service.get_model_info()
         self.assertNotIn("dkt", info["models"])
         self.assertIn("mefkt", info["models"])
-        self.assertEqual(
-            info["models"]["mefkt"]["paper_doi"], "10.11896/jsjkx.250700092"
-        )
+        self.assertEqual(info["models"]["mefkt"]["name"], "MEFKT-NG")
+        self.assertIsNone(info["models"]["mefkt"]["paper_doi"])
         self.assertTrue(info["models"]["mefkt"]["is_enabled"])
 
     def test_kt_service_should_use_backend_model_path_by_default(self):
-        """KT service should use backend/models as the default MEFKT checkpoint path."""
+        """KT service should default to the verified MEFKT-NG model bundle."""
         from ai_services.services.kt.service import KnowledgeTracingService
 
         backend_root = Path(__file__).resolve().parents[3]
-        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+        expected_path = backend_root / "models" / "MEFKT_NG"
 
         with patch.dict("os.environ", {}, clear=True):
             service = KnowledgeTracingService()
 
         self.assertEqual(Path(service.model_paths["mefkt"]), expected_path)
 
-    def test_kt_service_should_fallback_when_env_model_path_is_stale(self):
-        """A stale KT_MEFKT_MODEL_PATH should not hide the checked-in default model."""
+    def test_kt_service_should_ignore_legacy_path_in_ng_mode(self):
+        """旧 `.env` 中的 .pt 路径不应覆盖新的默认模型。"""
         from ai_services.services.kt.service import KnowledgeTracingService
 
         backend_root = Path(__file__).resolve().parents[3]
         stale_path = backend_root / "old-project" / "models" / "MEFKT" / "mefkt_model.pt"
-        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+        expected_path = backend_root / "models" / "MEFKT_NG"
 
         with patch.dict("os.environ", {"KT_MEFKT_MODEL_PATH": str(stale_path)}, clear=True):
             service = KnowledgeTracingService()
 
         self.assertEqual(Path(service.model_paths["mefkt"]), expected_path)
 
-    def test_auto_load_model_should_fallback_when_env_model_path_is_stale(self):
-        """MEFKT auto loader should load the default checkpoint when env path is stale."""
+    def test_auto_load_model_should_ignore_legacy_path_in_ng_mode(self):
+        """新模式自动加载时不读取遗留的 KT_MEFKT_MODEL_PATH。"""
         from ai_services.services.mefkt.loader import auto_load_mefkt_model
 
         class FakePredictor:
@@ -91,7 +97,7 @@ class MEFKTServiceTests(SimpleTestCase):
 
         backend_root = Path(__file__).resolve().parents[3]
         stale_path = str(backend_root / "old-project" / "mefkt_model.pt")
-        expected_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+        expected_path = backend_root / "models" / "MEFKT_NG"
         predictor = FakePredictor()
 
         loaded = auto_load_mefkt_model(
@@ -103,6 +109,25 @@ class MEFKTServiceTests(SimpleTestCase):
         self.assertTrue(loaded)
         self.assertEqual(Path(predictor.model_path), expected_path)
         self.assertIsNone(predictor.metadata_path)
+
+    def test_stale_ng_bundle_path_should_fallback_to_checked_in_bundle(self):
+        """新的 bundle 路径失效时仍使用仓库内已校验的模型包。"""
+        from ai_services.services.kt.service import KnowledgeTracingService
+
+        backend_root = Path(__file__).resolve().parents[3]
+        with patch.dict("os.environ", {"KT_MEFKT_NG_BUNDLE_PATH": "missing/ng-bundle"}, clear=True):
+            service = KnowledgeTracingService()
+        self.assertEqual(Path(service.model_paths["mefkt"]), backend_root / "models" / "MEFKT_NG")
+
+    def test_legacy_runtime_switch_should_keep_old_model_for_rollback(self):
+        """显式 legacy 配置仍可定位原模型以便回滚。"""
+        from ai_services.services.kt.service import KnowledgeTracingService
+
+        backend_root = Path(__file__).resolve().parents[3]
+        with patch.dict("os.environ", {"KT_MEFKT_RUNTIME": "legacy"}, clear=True):
+            service = KnowledgeTracingService()
+        self.assertEqual(Path(service.model_paths["mefkt"]),
+                         backend_root / "models" / "MEFKT" / "mefkt_model.pt")
 
     def test_mefkt_predictor_should_load_checkpoint_and_return_predictions(self):
         """A minimal MEFKT checkpoint should be loadable for KT prediction."""

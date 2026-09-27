@@ -1,5 +1,10 @@
+/**
+ * Vite 构建与开发代理配置。
+ * Tailwind CSS 由官方 Vite 插件处理。
+ */
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 /**
@@ -27,6 +32,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
+      tailwindcss(),
       /* 构建结束后生成 SPA fallback 文件，解决静态部署刷新 404 问题 */
       {
         name: 'spa-fallback',

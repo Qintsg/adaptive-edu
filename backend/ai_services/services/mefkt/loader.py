@@ -1,6 +1,11 @@
 #!/user/bin/env python
 # -*- coding: UTF-8 -*-
-"""MEFKT 模型自动加载辅助。"""
+"""MEFKT 模型自动加载辅助。
+@Project : adaptive-edu
+@File : loader.py
+@Author : Qintsg
+@Date : 2026-09-25
+"""
 
 from __future__ import annotations
 
@@ -18,23 +23,39 @@ class MEFKTLoaderProtocol(Protocol):
         """加载模型。"""
 
 
+def default_mefkt_model_path(backend_root: Path, environ: Mapping[str, str]) -> Path:
+    """默认启用 MEFKT-NG，显式 legacy 开关才使用原版模型。
+
+    :param backend_root: 后端项目根目录。
+    :param environ: 运行环境变量。
+    :returns: 默认模型包目录或旧版权重路径。
+    """
+    runtime = environ.get("KT_MEFKT_RUNTIME", "ng").strip().lower()
+    if runtime == "legacy":
+        return backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+    return backend_root / "models" / "MEFKT_NG"
+
+
 def auto_load_mefkt_model(
     predictor: MEFKTLoaderProtocol,
     backend_root: Path,
     environ: Mapping[str, str],
 ) -> bool:
     """从环境变量或默认路径加载 MEFKT 模型。"""
-    model_path = environ.get("KT_MEFKT_MODEL_PATH", "").strip()
-    metadata_path = environ.get("KT_MEFKT_META_PATH", "").strip()
-    default_model_path = backend_root / "models" / "MEFKT" / "mefkt_model.pt"
+    legacy = environ.get("KT_MEFKT_RUNTIME", "ng").strip().lower() == "legacy"
+    path_variable = "KT_MEFKT_MODEL_PATH" if legacy else "KT_MEFKT_NG_BUNDLE_PATH"
+    model_path = environ.get(path_variable, "").strip()
+    metadata_path = environ.get("KT_MEFKT_META_PATH", "").strip() if legacy else ""
+    default_model_path = default_mefkt_model_path(backend_root, environ)
     if not model_path:
         if not default_model_path.exists():
-            logger.debug("未配置 KT_MEFKT_MODEL_PATH 且默认模型不存在，跳过自动加载")
+            logger.debug("未配置 %s 且默认模型不存在，跳过自动加载", path_variable)
             return False
         model_path = str(default_model_path)
     elif not _resolve_model_path(model_path, backend_root).exists() and default_model_path.exists():
         logger.warning(
-            "KT_MEFKT_MODEL_PATH 指向的模型不存在，已回退到默认模型: configured=%s fallback=%s",
+            "%s 指向的模型不存在，已回退到默认模型: configured=%s fallback=%s",
+            path_variable,
             model_path,
             default_model_path,
         )

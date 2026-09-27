@@ -1,11 +1,7 @@
 export const aiProgressStages = [
-  { at: 0, text: '正在准备分析环境...' },
-  { at: 12, text: '正在解析答题数据...' },
-  { at: 28, text: '正在评估知识掌握度...' },
-  { at: 45, text: '正在生成个性化建议...' },
-  { at: 65, text: '正在整合分析报告...' },
-  { at: 82, text: '正在优化报告内容...' },
-  { at: 92, text: '即将完成，请稍候...' }
+  { at: 0, text: '正在整理答题结果…' },
+  { at: 50, text: '正在生成反馈报告…' },
+  { at: 90, text: '仍在处理中，请稍候…' }
 ]
 
 export function normalizeText(value, fallback = '') {
@@ -148,7 +144,7 @@ export function normalizeAiFeedbackPayload(feedbackData) {
     analysis: {
       summary: normalizeText(
         feedbackData?.['summary'] ?? overview['summary'],
-        normalizedStatus === 'pending' ? '成绩已生成，AI 报告正在生成中...' : '暂无分析摘要'
+        normalizedStatus === 'pending' ? '成绩已生成，反馈报告正在生成…' : '暂无分析摘要'
       ),
       analysis: normalizeText(feedbackData?.['analysis']),
       knowledgeGaps: normalizeListFromPayload(feedbackData?.['knowledge_gaps'] ?? overview['knowledge_gaps'])

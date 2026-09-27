@@ -486,6 +486,12 @@ paths:
               - admin
         - name: is_used
           in: query
+          description: 是否已使用；查询可用激活码时请同时传 expired=false。
+          schema:
+            type: boolean
+        - name: expired
+          in: query
+          description: true 仅返回已过期且未使用的激活码；false 排除已过期激活码。
           schema:
             type: boolean
         - $ref: '#/components/parameters/Page'
@@ -1022,6 +1028,7 @@ paths:
         - Courses
       operationId: selectCourse
       summary: 选择当前课程上下文
+      description: 同一课程属于多个班级时，传入 class_id 精确选择班级；该班级必须对当前用户可访问且已发布此课程。省略时使用首个可访问班级。
       requestBody:
         required: true
         content:
@@ -1035,7 +1042,7 @@ paths:
                   type: integer
                 class_id:
                   type: integer
-                  nullable: true
+                  description: 可选班级 ID；用于区分同一课程在不同班级中的上下文。
       responses:
         '200':
           description: data 包含 course_id、course_name、class_id、class_name。
@@ -2962,6 +2969,7 @@ paths:
         - Assessments
       operationId: getKnowledgeAssessment
       summary: 获取课程知识测评题目
+      description: 仅已选修学生或可管理课程的教师可访问；只下发可见题目，交卷前不返回标准答案或解析。
       parameters:
         - name: course_id
           in: query
@@ -2977,6 +2985,8 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/student/assessments/initial/knowledge/submit:
@@ -2985,7 +2995,7 @@ paths:
         - Assessments
       operationId: submitKnowledgeAssessment
       summary: 提交课程知识测评
-      description: 提交后会保存本次测评掌握度快照；题目级 MEFKT 会接收所有作答题目，未绑定知识点的题目以 question_id 参与历史序列。
+      description: 仅已选修学生可提交；只评分提交时仍可见的题目。提交后保存本次测评掌握度快照，解析随结果返回。
       requestBody:
         required: true
         content:
@@ -3019,6 +3029,8 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/student/assessments/initial/knowledge/result:
     get:
       tags:

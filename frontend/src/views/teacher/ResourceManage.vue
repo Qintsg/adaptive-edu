@@ -1,6 +1,7 @@
+<!-- 教师资源管理页：资源筛选、预览与编辑操作。 -->
 <template>
   <div class="resource-manage">
-    <PageHero eyebrow="Resource Library" title="资源库管理" description="维护课程视频、文档与外部链接资源，并将资源精确挂接到知识点和课程上下文中。">
+    <PageHero title="资源库管理" description="管理本课程的视频、文档和链接，并关联知识点。">
       <template #actions>
         <n-button type="primary" @click="showCreateDialog">
           <n-icon>
@@ -55,11 +56,13 @@
             {{ formatTime(row.createdAtText) }}
           </template>
         </n-table-column>
-        <n-table-column label="操作" width="180" fixed="right">
+        <n-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
-            <n-button type="primary" link @click="editResource(row)">编辑</n-button>
-            <n-button type="primary" link @click="previewResource(row)">预览</n-button>
-            <n-button type="danger" link @click="deleteResource(row)">删除</n-button>
+            <div class="row-actions">
+              <n-button size="small" type="primary" link @click="editResource(row)">编辑</n-button>
+              <n-button size="small" type="primary" link @click="previewResource(row)">预览</n-button>
+              <n-button size="small" type="danger" link @click="deleteResource(row)">删除</n-button>
+            </div>
           </template>
         </n-table-column>
       </n-table>

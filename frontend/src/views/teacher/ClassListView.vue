@@ -1,3 +1,4 @@
+<!-- 教师班级列表：卡片可用鼠标与键盘进入班级。 -->
 <template>
   <div class="class-list-view">
     <n-card class="page-header" shadow="never">
@@ -19,7 +20,9 @@
     <!-- 班级列表 -->
     <n-row v-else :gutter="20" class="class-grid">
       <n-col v-for="cls in classes" :key="cls.id" :xs="24" :sm="12" :lg="8">
-        <n-card class="class-card" shadow="hover" @click="viewClass(cls)">
+        <n-card class="class-card" shadow="hover" role="button" tabindex="0"
+          :aria-label="`查看班级：${cls.name}`" @click="viewClass(cls)"
+          @keydown.enter="viewClass(cls)" @keydown.space.prevent="viewClass(cls)">
           <div class="class-header">
             <div class="class-avatar">{{ cls.name.charAt(0) }}</div>
             <div class="class-info">
@@ -236,6 +239,11 @@ onMounted(() => {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+.class-card:focus-visible {
+  outline: 3px solid rgba(15, 108, 189, 0.5);
+  outline-offset: 3px;
+}
+
 .class-header {
   display: flex;
   align-items: center;
@@ -246,12 +254,12 @@ onMounted(() => {
 .class-avatar {
   width: 52px;
   height: 52px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e7f2ff;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--primary-dark);
   font-size: 22px;
   font-weight: 600;
   flex-shrink: 0;

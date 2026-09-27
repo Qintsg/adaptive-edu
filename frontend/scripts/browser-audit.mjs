@@ -1,9 +1,11 @@
+/** 前端浏览器巡检命令入口。 */
 import process from 'node:process'
 import { chromium } from 'playwright'
 
 import { parseArgs } from './browser-audit/args.mjs'
 import { ensureBackendReady } from './browser-audit/api.mjs'
 import { runAuditScenario } from './browser-audit/audit-scenario.mjs'
+import { runInteractionScenario } from './browser-audit/interaction-scenario.mjs'
 import {
   prepareDemoScenario,
   simulateDemoScenario
@@ -12,7 +14,8 @@ import {
 const SCENARIO_HANDLERS = {
   'prepare-demo': prepareDemoScenario,
   'simulate-demo': simulateDemoScenario,
-  audit: (_apiBaseUrl, browser, args) => runAuditScenario(browser, args)
+  audit: (_apiBaseUrl, browser, args) => runAuditScenario(browser, args),
+  interaction: (_apiBaseUrl, browser, args) => runInteractionScenario(browser, args)
 }
 
 async function main() {

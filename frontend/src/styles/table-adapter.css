@@ -1,0 +1,25 @@
+/* 表格的横向滚动只发生在表格区域，不挤压页面标题与操作栏。 */
+.app-table-scroll {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 12px;
+}
+
+.app-table-scroll:focus-visible {
+  outline: 3px solid rgba(15, 108, 189, 0.4);
+  outline-offset: 2px;
+}
+
+.app-adapter-table th,
+.app-adapter-table td {
+  vertical-align: middle;
+}
+
+.app-adapter-table .app-table-cell--ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

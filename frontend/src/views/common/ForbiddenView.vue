@@ -6,7 +6,7 @@
       </div>
       <div class="error-code">403</div>
       <h1 class="error-title">访问被拒绝</h1>
-      <p class="error-desc">抱歉，您没有权限访问此页面</p>
+      <p class="error-desc">请返回可访问的页面。</p>
       <div class="error-actions">
         <n-button type="primary" size="large" class="error-button" @click="goHome">
           <template #icon>

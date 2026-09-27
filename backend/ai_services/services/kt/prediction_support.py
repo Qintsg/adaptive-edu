@@ -1,11 +1,18 @@
-"""KT prediction result helpers."""
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""KT prediction result helpers.
+@Project : adaptive-edu
+@File : prediction_support.py
+@Author : Qintsg
+@Date : 2026-09-25
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
 
-MEFKT_MODEL_TYPES = frozenset({"mefkt_real", "mefkt_question_online"})
+MEFKT_MODEL_TYPES = frozenset({"mefkt_real", "mefkt_question_online", "mefkt_ng"})
 
 
 def is_mefkt_prediction(result: Mapping[str, object] | None) -> bool:

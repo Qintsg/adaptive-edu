@@ -1,4 +1,11 @@
-"""修复初始知识评测后异常聚集的掌握度数据。"""
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""修复初始知识评测后异常聚集的掌握度数据。
+@Project : adaptive-edu
+@File : repair_initial_mastery.py
+@Author : Qintsg
+@Date : 2026-09-25
+"""
 
 from __future__ import annotations
 
@@ -14,6 +21,7 @@ from assessments.services.assessment_helpers import (
 )
 from assessments.models import AnswerHistory
 from ai_services.services.kt.prediction_support import (
+    MEFKT_MODEL_TYPES,
     answered_point_ids,
     is_mefkt_prediction,
     normalize_prediction_map,
@@ -270,12 +278,7 @@ class Command(BaseCommand):
     ) -> dict[int, float]:
         """合并直接初测结果和 KT/MEFKT 预测结果。"""
         merged = dict(direct_mastery)
-        uses_mefkt = prediction_source in {
-            "mefkt_real",
-            "mefkt_question_online",
-            "mefkt_fusion",
-            "mefkt_ensemble",
-        }
+        uses_mefkt = prediction_source in MEFKT_MODEL_TYPES | {"mefkt_fusion", "mefkt_ensemble"}
         for point_id, predicted_rate in prediction_map.items():
             normalized_rate = max(0.0, min(INITIAL_MASTERY_MAX, float(predicted_rate)))
             if point_id not in merged:

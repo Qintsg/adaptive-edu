@@ -4,7 +4,6 @@
       <div class="header-content">
         <div>
           <h2>我的班级</h2>
-          <p>管理您加入的班级，参与班级学习活动</p>
         </div>
         <n-button type="primary" @click="showJoinDialog = true">
           <n-icon>

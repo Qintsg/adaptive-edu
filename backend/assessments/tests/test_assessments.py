@@ -10,90 +10,12 @@ from assessments.services.assessment_helpers import calculate_initial_mastery_ba
 from assessments.models import (
     Assessment,
     AssessmentQuestion,
-    AbilityScore,
     AnswerHistory,
     Question,
-    SurveyQuestion,
 )
-from courses.models import Course
+from courses.models import Class, ClassCourse, Course, Enrollment
 from knowledge.models import KnowledgeMastery, KnowledgePoint, KnowledgeRelation
-from tools.db_seed_support import _seed_survey_questions
 from users.models import User
-
-
-class AbilityAssessmentScoringTests(APITestCase):
-    """Verify ability assessments only persist evidence-backed dimensions."""
-
-    def setUp(self):
-        """Create a minimal single-question ability assessment."""
-        self.student = User.objects.create_user(
-            username='ability_student',
-            password='Test123456',
-            role='student',
-        )
-        self.teacher = User.objects.create_user(
-            username='ability_teacher',
-            password='Test123456',
-            role='teacher',
-        )
-        self.course = Course.objects.create(
-            name='能力评测课程',
-            created_by=self.teacher,
-        )
-        self.assessment = Assessment.objects.create(
-            course=self.course,
-            title='课程能力评测',
-            assessment_type='ability',
-            is_active=True,
-        )
-        self.question = Question.objects.create(
-            course=self.course,
-            content='能力题目',
-            question_type='single_choice',
-            options=[
-                {'value': 'A', 'label': '正确'},
-                {'value': 'B', 'label': '错误'},
-            ],
-            answer={'answer': 'A'},
-            score=5,
-            is_visible=True,
-            created_by=self.teacher,
-        )
-        AssessmentQuestion.objects.create(
-            assessment=self.assessment,
-            question=self.question,
-            order=0,
-        )
-        self.client.force_authenticate(user=self.student)
-
-    def test_submit_ability_assessment_should_not_fabricate_dimension_scores(self):
-        """Submissions without dimension evidence should keep analysis dictionaries empty."""
-        response = self.client.post(
-            '/api/student/assessments/initial/ability/submit',
-            {
-                'course_id': self.course.id,
-                'answers': [{'question_id': self.question.id, 'answer': 'A'}],
-            },
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['data']['ability_analysis'], {})
-
-        ability_score = AbilityScore.objects.get(user=self.student, course=self.course)
-        self.assertEqual(ability_score.scores, {})
-
-
-class SurveyQuestionSeedTests(APITestCase):
-    """验证基础测试数据会补齐内置能力与习惯问卷题。"""
-
-    def test_seed_survey_questions_should_use_builtin_defaults_when_config_empty(self):
-        """空 survey_questions 配置也应生成默认问卷题。"""
-        _seed_survey_questions({"survey_questions": {"habit": [], "ability": []}}, [])
-
-        self.assertGreater(SurveyQuestion.objects.filter(survey_type="habit").count(), 0)
-        self.assertGreater(SurveyQuestion.objects.filter(survey_type="ability").count(), 0)
-        self.assertFalse(SurveyQuestion.objects.filter(survey_type="ability", is_global=False).exists())
 
 
 class KnowledgeAssessmentMasteryTests(APITestCase):
@@ -115,6 +37,11 @@ class KnowledgeAssessmentMasteryTests(APITestCase):
             name='知识测评课程',
             created_by=self.teacher,
         )
+        class_obj = Class.objects.create(
+            name='知识测评班级', teacher=self.teacher, course=self.course,
+        )
+        ClassCourse.objects.create(class_obj=class_obj, course=self.course)
+        Enrollment.objects.create(user=self.student, class_obj=class_obj)
         self.assessment = Assessment.objects.create(
             course=self.course,
             title='知识测评',

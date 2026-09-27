@@ -11,6 +11,12 @@ listActivationCodes:
           enum: [teacher, admin]
       - name: is_used
         in: query
+        description: 是否已使用；查询可用激活码时请同时传 expired=false。
+        schema:
+          type: boolean
+      - name: expired
+        in: query
+        description: true 仅返回已过期且未使用的激活码；false 排除已过期激活码。
         schema:
           type: boolean
       - $ref: ../components/parameters.yaml#/Page

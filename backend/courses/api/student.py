@@ -1,10 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """
 课程模块 - 学生接口
 
 包含：课程列表、选课、班级加入/退出/查看
+@Project : adaptive-edu
+@File : student.py
+@Author : Qintsg
+@Date : 2026-09-24 20:00
 """
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 from django.db.models import Count, Q
 from django.db import transaction
 
@@ -126,10 +134,12 @@ def course_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def course_select(request):
+def course_select(request: Request) -> Response:
     """
-    切换当前课程
-    POST /api/courses/select
+    切换当前课程及其班级上下文。
+
+    :param request: 包含 course_id 与可选 class_id 的请求。
+    :returns: 选中的课程和班级摘要。
     """
     serializer = CourseSelectSerializer(data=request.data)
     if not serializer.is_valid():
@@ -147,27 +157,30 @@ def course_select(request):
     # 验证用户权限
     user = request.user
     if user.role == 'student':
-        enrollment = Enrollment.objects.filter(
+        eligible_enrollments = Enrollment.objects.filter(
             user=user,
         ).filter(
             Q(class_obj__course_id=course_id)
             | Q(class_obj__class_courses__course_id=course_id, class_obj__class_courses__is_active=True)
-        ).select_related('class_obj').first()
+        ).select_related('class_obj').distinct()
+        if class_id is not None:
+            eligible_enrollments = eligible_enrollments.filter(class_obj_id=class_id)
+        enrollment = eligible_enrollments.first()
         if not enrollment:
             return error_response(msg='您未选修该课程', code=403)
         class_obj = enrollment.class_obj
     else:
         # 教师验证
-        class_obj = Class.objects.filter(
+        eligible_classes = Class.objects.filter(
             Q(course_id=course_id)
             | Q(class_courses__course_id=course_id, class_courses__is_active=True),
             teacher=user,
-        ).first()
-        if not class_obj and not user.is_superuser:
+        ).distinct()
+        if class_id is not None:
+            eligible_classes = eligible_classes.filter(id=class_id)
+        class_obj = eligible_classes.first()
+        if not class_obj and (not user.is_superuser or class_id is not None):
             return error_response(msg='您未教授该课程', code=403)
-        
-        if class_id:
-            class_obj = Class.objects.filter(id=class_id, teacher=user).first()
     
     # 更新用户课程上下文
     context, created = UserCourseContext.objects.get_or_create(user=user)

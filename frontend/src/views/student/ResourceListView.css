@@ -1,3 +1,4 @@
+/* 课程资源筛选与卡片布局。 */
 .page-header {
   margin-bottom: 20px;
 }
@@ -10,6 +11,7 @@
 .filter-bar {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
@@ -28,16 +30,21 @@
 .resource-card {
   display: flex;
   gap: 16px;
+  width: 100%;
   padding: 16px;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .resource-card:hover {
-  border-color: rgba(20, 184, 166, 0.32);
-  box-shadow: 0 10px 24px rgba(18, 154, 116, 0.12);
+  border-color: rgba(15, 108, 189, 0.32);
+  box-shadow: 0 10px 24px rgba(15, 108, 189, 0.1);
 }
 
 .resource-icon {
@@ -47,9 +54,9 @@
   justify-content: center;
   width: 56px;
   height: 56px;
-  background: rgba(20, 184, 166, 0.08);
-  border-radius: 8px;
-  color: var(--accent-cyan);
+  background: #eaf5fb;
+  border-radius: 12px;
+  color: var(--primary-color);
 }
 
 .resource-info {
@@ -90,4 +97,11 @@
 
 .knowledge-point-tag {
   margin-right: 4px;
+}
+
+@media (max-width: 640px) {
+  .resource-grid { grid-template-columns: minmax(0, 1fr); }
+  .resource-card { padding: 14px; }
+  .resource-icon { width: 44px; height: 44px; }
+  .filter-bar { gap: 8px; }
 }

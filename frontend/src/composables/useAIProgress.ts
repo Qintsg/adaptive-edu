@@ -34,13 +34,7 @@ export interface AIProgressOptions {
 
 /* ---- 默认阶段（通用 AI 任务） ---- */
 const DEFAULT_STAGES: ProgressStage[] = [
-  { at: 0, text: '正在连接 AI 服务…' },
-  { at: 10, text: '正在分析你的学习数据…' },
-  { at: 25, text: '知识追踪模型推理中…' },
-  { at: 40, text: '正在查询知识图谱关联…' },
-  { at: 55, text: '生成个性化方案中…' },
-  { at: 70, text: '优化学习路径排序…' },
-  { at: 85, text: '即将完成，请稍候…' },
+  { at: 0, text: '正在处理，请稍候…' },
 ]
 
 /* ---- composable 主体 ---- */

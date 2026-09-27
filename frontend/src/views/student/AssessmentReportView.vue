@@ -51,7 +51,7 @@
           </n-icon>
           <div class="generating-text">
             <p class="generating-title">{{ aiProgress.stageText.value }}</p>
-            <p class="generating-desc">AI 正在分析你的答题数据，生成学习路径和反馈报告，请稍候（约30~60秒）</p>
+            <p class="generating-desc">正在根据答题结果生成学习路径和反馈报告，请稍候。</p>
             <n-progress :percentage="aiProgress.progress.value" :show-text="true" :stroke-width="6"
               style="margin-top: 12px; max-width: 400px;" />
           </div>
@@ -97,7 +97,7 @@
 
         <!-- 反馈为空但生成已完成 -->
         <div v-else class="feedback-section">
-          <p style="color: #909399;">暂无 AI 学习建议</p>
+          <p style="color: #909399;">暂无学习建议</p>
         </div>
       </n-card>
 
@@ -186,13 +186,9 @@ const pollTimer = ref(null)
 const aiProgress = useAIProgress({
   maxDuration: 180_000,
   stages: [
-    { at: 0, text: '正在为你生成个性化学习建议…' },
-    { at: 10, text: '正在分析你的答题数据…' },
-    { at: 25, text: '知识追踪模型评估中…' },
-    { at: 40, text: '正在检测薄弱知识点…' },
-    { at: 55, text: '生成学习反馈报告中…' },
-    { at: 70, text: '规划后续学习路径…' },
-    { at: 85, text: '即将完成，请稍候…' },
+    { at: 0, text: '正在整理答题结果…' },
+    { at: 50, text: '正在生成学习路径和反馈报告…' },
+    { at: 90, text: '仍在处理中，请稍候…' },
   ],
 })
 

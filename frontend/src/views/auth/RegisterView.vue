@@ -1,12 +1,14 @@
+<!-- 注册页面：角色选择使用可聚焦按钮，表单与登录页保持一致。 -->
 <template>
   <div class="register-view">
     <h2 class="form-title">创建新账号</h2>
-    <p class="form-desc">注册账号，加入自适应学习系统</p>
 
-    <n-form ref="formRef" :model="form" :rules="rules" class="register-form" @submit.prevent="handleRegister">
+    <n-form ref="formRef" :model="form" :rules="rules" label-placement="top" class="register-form"
+      @submit.prevent="handleRegister">
       <!-- 用户名 -->
-      <n-form-item prop="username">
-        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
+      <n-form-item prop="username" label="用户名">
+        <n-input v-model:value="form.username" placeholder="请输入用户名" size="large" clearable
+          :input-props="{ autocomplete: 'username', name: 'username' }">
           <template #prefix>
             <AppIcon name="User" />
           </template>
@@ -14,8 +16,9 @@
       </n-form-item>
 
       <!-- 邮箱 -->
-      <n-form-item prop="email">
-        <n-input v-model:value="form.email" placeholder="请输入邮箱（选填）" size="large" clearable>
+      <n-form-item prop="email" label="邮箱（选填）">
+        <n-input v-model:value="form.email" placeholder="请输入邮箱" size="large" clearable
+          :input-props="{ autocomplete: 'email', name: 'email' }">
           <template #prefix>
             <AppIcon name="Mail" />
           </template>
@@ -23,9 +26,9 @@
       </n-form-item>
 
       <!-- 密码 -->
-      <n-form-item prop="password">
+      <n-form-item prop="password" label="密码">
         <n-input v-model:value="form.password" type="password" placeholder="请输入密码（至少8位，包含大写字母和数字）" size="large"
-          show-password-on="click">
+          show-password-on="click" :input-props="{ autocomplete: 'new-password', name: 'password' }">
           <template #prefix>
             <AppIcon name="Lock" />
           </template>
@@ -33,9 +36,9 @@
       </n-form-item>
 
       <!-- 确认密码 -->
-      <n-form-item prop="confirmPassword">
+      <n-form-item prop="confirmPassword" label="确认密码">
         <n-input v-model:value="form.confirmPassword" type="password" placeholder="请再次输入密码" size="large"
-          show-password-on="click">
+          show-password-on="click" :input-props="{ autocomplete: 'new-password', name: 'confirm-password' }">
           <template #prefix>
             <AppIcon name="Lock" />
           </template>
@@ -43,18 +46,20 @@
       </n-form-item>
 
       <!-- 角色选择 -->
-      <n-form-item prop="role">
+      <n-form-item prop="role" label="身份">
         <div class="role-selector">
-          <div v-for="role in roles" :key="role.value" :class="['role-card', { active: form.role === role.value }]"
+          <button v-for="role in roles" :key="role.value" type="button"
+            :class="['role-card', { active: form.role === role.value }]"
+            :aria-pressed="form.role === role.value"
             @click="form.role = role.value">
             <AppIcon class="role-icon" :name="role.icon" :size="28" />
             <span class="role-label">{{ role.label }}</span>
-          </div>
+          </button>
         </div>
       </n-form-item>
 
       <!-- 激活码（教师/管理员需要） -->
-      <n-form-item v-if="needActivationCode" prop="activation_code">
+      <n-form-item v-if="needActivationCode" prop="activation_code" label="教师激活码">
         <n-input v-model:value="form.activation_code" placeholder="请输入激活码" size="large">
           <template #prefix>
             <AppIcon name="Key" />
@@ -64,8 +69,8 @@
 
       <!-- 注册按钮 -->
       <n-form-item>
-        <n-button type="primary" size="large" class="submit-btn" :loading="loading" @click="handleRegister">
-          {{ loading ? '注册中...' : '注 册' }}
+        <n-button attr-type="submit" type="primary" size="large" class="submit-btn" :loading="loading">
+          {{ loading ? '正在注册…' : '注册' }}
         </n-button>
       </n-form-item>
 
@@ -175,6 +180,7 @@ const validateForm = async () => {
  * 处理注册
  */
 const handleRegister = async () => {
+  if (loading.value) return
   // 验证表单
   const valid = await validateForm()
   if (!valid) return
@@ -225,15 +231,15 @@ const handleRegister = async () => {
 }
 
 .form-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: clamp(27px, 3vw, 34px);
+  font-weight: 760;
   color: var(--text-primary);
   margin: 0 0 8px;
 }
 
 .form-desc {
   font-size: 14px;
-  color: #909399;
+  color: var(--text-secondary);
   margin: 0 0 24px;
 }
 
@@ -241,25 +247,26 @@ const handleRegister = async () => {
   width: 100%;
 }
 
+.register-form :deep(.n-form-item-label) {
+  color: var(--text-regular);
+  font-weight: 650;
+}
 .register-form :deep(.n-input) {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  min-height: 46px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: #fff;
 }
-
-.register-form :deep(.n-input:hover) {
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.12);
-}
-
 .register-form :deep(.n-input.n-input--focus) {
-  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(15, 108, 189, 0.12);
 }
 
 /* 角色选择器 */
 .role-selector {
   width: 100%;
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .role-card {
@@ -268,94 +275,79 @@ const handleRegister = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  border: 2px solid #e4e7ed;
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
+  background: #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .role-card:hover {
-  border-color: var(--accent-cyan);
-  background: rgba(20, 184, 166, 0.06);
+  border-color: var(--primary-color);
+  background: #f1f8fe;
 }
 
 .role-card.active {
-  border-color: var(--accent-cyan);
-  background: rgba(109, 146, 125, 0.12);
-  box-shadow: 0 10px 18px rgba(78, 111, 93, 0.08);
+  border-color: var(--primary-color);
+  background: #eaf5ff;
+  box-shadow: 0 0 0 2px rgba(15, 108, 189, 0.1);
 }
 
 .role-icon {
   font-size: 28px;
-  color: #909399;
+  color: var(--text-secondary);
   margin-bottom: 8px;
   transition: color 0.3s;
 }
 
 .role-card.active .role-icon {
-  color: var(--accent-cyan);
+  color: var(--primary-color);
 }
 
 .role-label {
   font-size: 14px;
-  color: #606266;
-  font-weight: 500;
+  color: var(--text-regular);
+  font-weight: 650;
 }
 
 .role-card.active .role-label {
-  color: var(--accent-cyan);
+  color: var(--primary-dark);
 }
 
 .submit-btn {
   width: 100%;
-  height: 46px;
-  font-size: 16px;
+  height: 48px;
+  font-size: 15px;
   font-weight: 700;
-  border-radius: 14px;
-  background: rgba(109, 146, 125, 0.1) !important;
-  border: 1px solid rgba(78, 111, 93, 0.34) !important;
-  color: var(--primary-dark) !important;
-  box-shadow: 0 10px 20px rgba(78, 111, 93, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(15, 108, 189, 0.2);
 }
 
 .submit-btn:hover {
-  transform: translateY(-1px);
-  background: rgba(109, 146, 125, 0.16) !important;
-  border-color: rgba(78, 111, 93, 0.5) !important;
-  box-shadow: 0 14px 24px rgba(78, 111, 93, 0.12);
-}
-
-.submit-btn:active {
-  transform: translateY(0);
+  background: var(--primary-dark) !important;
+  box-shadow: 0 12px 25px rgba(15, 108, 189, 0.24);
 }
 
 .form-footer {
   text-align: center;
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
   margin-top: 16px;
 }
 
 .login-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  margin-left: 10px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(109, 146, 125, 0.18);
-  background: rgba(109, 146, 125, 0.08);
-  color: var(--primary-dark);
+  margin-left: 8px;
+  color: var(--primary-color);
   text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 700;
 }
 
 .login-link:hover {
-  background: rgba(109, 146, 125, 0.14);
-  border-color: rgba(78, 111, 93, 0.36);
+  color: var(--primary-dark);
+  text-decoration: underline;
 }
 </style>

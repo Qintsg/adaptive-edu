@@ -1,6 +1,6 @@
 <template>
   <div class="course-list-view">
-    <PageHero eyebrow="Teacher Workspace" title="课程管理" description="统一管理课程基本信息，并从课程详情进入题库、资源、图谱与作业工作台。">
+    <PageHero title="课程管理" description="管理课程，并进入题库、资源、知识图谱和作业。">
       <template #actions>
         <n-button type="primary" @click="createCourse">
           <n-icon>

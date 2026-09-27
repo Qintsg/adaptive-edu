@@ -2,6 +2,7 @@
   "name": "adaptive-edu-web",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "pnpm@11.24.0",
   "license": "AFL-3.0",
   "type": "module",
   "scripts": {
@@ -23,9 +24,11 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^25.5.2",
     "@vitejs/plugin-vue": "^6.0.5",
     "playwright": "^1.59.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.2",
     "vite": "^8.0.3",
     "vue-tsc": "^3.2.6"

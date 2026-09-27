@@ -1,16 +1,22 @@
+<!-- 当前课程切换入口，未选课程时仍提供学生选课操作。 -->
 <template>
-  <!-- Only render the trigger when course context exists, avoiding an empty header affordance. -->
+  <!-- 学生未选课程时仍显示入口，方便进入选课页。 -->
   <n-dropdown
-    v-if="visible && currentCourse"
+    v-if="visible && (currentCourse || userRole === 'student')"
     trigger="click"
     :options="courseOptions"
     @select="handleSelect"
   >
-    <span class="course-selector">
+    <button class="course-selector" type="button" :aria-label="currentCourseLabel" :title="currentCourseLabel">
       <AppIcon name="Reading" />
-      <span class="course-name">{{ currentCourse.course_name }}</span>
+      <span class="course-name">
+        <span class="course-name-main">{{ currentCourse?.course_name || '选择课程' }}</span>
+        <small v-if="hasDuplicateCurrentCourse && currentCourse?.class_name" class="course-class">
+          {{ currentCourse.class_name }}
+        </small>
+      </span>
       <AppIcon name="ChevronDown" class="dropdown-arrow" />
-    </span>
+    </button>
   </n-dropdown>
 </template>
 
@@ -19,7 +25,7 @@ import { computed } from 'vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import { renderIcon } from '@/theme/icons'
 
-// The command payload is either a full course object or the student-only "switch" sentinel action.
+// 切换命令可以是课程对象，也可以是学生端的选课入口标识。
 const props = defineProps({
   visible: { type: Boolean, default: false },
   currentCourse: { type: Object, default: null },
@@ -29,19 +35,45 @@ const props = defineProps({
 
 const emit = defineEmits(['change'])
 
+/**
+ * 为同一课程在不同班级的记录生成唯一菜单键。
+ * :param {Object} course - 课程与班级摘要
+ * :returns {string} 菜单键
+ */
+const getCourseKey = (course) => {
+  const courseId = course?.course_id ?? course?.id ?? 'none'
+  const classId = course?.class_id ?? course?.class_obj_id ?? 'none'
+  return `course:${courseId}:class:${classId}`
+}
+
+const hasDuplicateCurrentCourse = computed(() => {
+  if (!props.currentCourse) return false
+  return props.courses.filter(course => (
+    String(course.course_id) === String(props.currentCourse.course_id)
+  )).length > 1
+})
+
+const currentCourseLabel = computed(() => {
+  if (!props.currentCourse) return '选择课程'
+  const className = props.currentCourse.class_name
+  return className ? `切换当前课程：${props.currentCourse.course_name} · ${className}` : `切换当前课程：${props.currentCourse.course_name}`
+})
+
 const courseCommandMap = computed(() => {
   const commandMap = new Map()
   props.courses.forEach(course => {
-    commandMap.set(`course:${course.course_id}`, course)
+    commandMap.set(getCourseKey(course), course)
   })
   return commandMap
 })
 
 const courseOptions = computed(() => {
   const options = props.courses.map(course => ({
-    label: course.course_name,
-    key: `course:${course.course_id}`,
-    icon: renderIcon(course.course_id === props.currentCourse?.course_id ? 'CheckCircle' : 'Reading')
+    label: props.userRole === 'student' && course.class_name
+      ? `${course.course_name} · ${course.class_name}`
+      : course.course_name,
+    key: getCourseKey(course),
+    icon: renderIcon(getCourseKey(course) === getCourseKey(props.currentCourse) ? 'CheckCircle' : 'Reading')
   }))
 
   if (props.userRole === 'student') {
@@ -67,7 +99,7 @@ const handleSelect = (key) => {
 </script>
 
 <style scoped>
-/* Pill styling helps the current course read like navigational context rather than a plain button. */
+/* 当前课程以胶囊样式显示为导航上下文。 */
 .course-selector {
   display: flex;
   align-items: center;
@@ -79,6 +111,7 @@ const handleSelect = (key) => {
   background: rgba(15, 108, 189, 0.08);
   border: 1px solid rgba(15, 108, 189, 0.12);
   transition: all 0.3s;
+  font: inherit;
 }
 
 .course-selector:hover {
@@ -87,13 +120,28 @@ const handleSelect = (key) => {
 }
 
 .course-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   max-width: 150px;
+  line-height: 1.2;
+}
+
+.course-name-main,
+.course-class {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.course-class { margin-top: 2px; color: var(--text-secondary); font-size: 10px; }
+
 .dropdown-arrow {
   color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .course-selector { padding: 8px 10px; }
+  .course-name { max-width: min(25vw, 100px); }
 }
 </style>

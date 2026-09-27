@@ -1,6 +1,7 @@
+<!-- 学生作答页：题目、计时器与答题卡保持清晰且可用键盘操作。 -->
 <template>
   <div class="exam-taking-view" v-loading.fullscreen.lock="loading || submitting"
-    :element-loading-text="submitting ? '正在提交作业，成绩已同步计算，AI 报告将稍后补齐...' : '正在加载作业...'">
+    :element-loading-text="submitting ? '正在提交作业，成绩会先显示，反馈报告稍后生成…' : '正在加载作业…'">
     <!-- 作业信息栏 (吸顶) -->
     <div class="exam-header-wrapper">
       <n-card class="exam-header" shadow="always" :body-style="{ padding: '15px 20px' }">
@@ -29,7 +30,7 @@
             <template #header>
               <div class="card-header">
                 <span class="question-index">
-                  Question {{ currentIndex + 1 }}
+                  第 {{ currentIndex + 1 }} 题
                   <span class="total">/ {{ questions.length }}</span>
                 </span>
                 <n-tag :type="currentQuestion?.questionTagType" effect="dark">
@@ -132,12 +133,14 @@
               </template>
 
               <div class="answer-grid">
-                <div v-for="(q, index) in questions" :key="q.questionId" class="answer-cell" :class="{
+                <button v-for="(q, index) in questions" :key="q.questionId" type="button" class="answer-cell"
+                  :aria-label="`第 ${index + 1} 题，${isAnswered(index) ? '已答' : '未答'}`"
+                  :aria-current="index === currentIndex ? 'step' : undefined" :class="{
                   'is-answered': isAnswered(index),
                   'is-current': index === currentIndex
                 }" @click="goToQuestion(index)">
                   {{ index + 1 }}
-                </div>
+                </button>
               </div>
 
               <div class="answer-legend">

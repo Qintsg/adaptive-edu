@@ -63,9 +63,9 @@
 
         <div class="analysis-content">
           <!-- Status alert changes first so the student immediately knows whether to wait or retry. -->
-          <n-alert v-if="feedbackStatus === 'pending'" :title="aiAnalysis.summary || '成绩已生成，AI 报告正在生成中...'" type="info"
+          <n-alert v-if="feedbackStatus === 'pending'" :title="aiAnalysis.summary || '成绩已生成，反馈报告正在生成…'" type="info"
             :closable="false" show-icon />
-          <n-alert v-else-if="feedbackStatus === 'failed'" title="AI 报告生成失败，可以重新获取" type="warning" :closable="false"
+          <n-alert v-else-if="feedbackStatus === 'failed'" title="反馈报告生成失败，可以重试" type="warning" :closable="false"
             show-icon />
           <n-alert v-else :title="aiAnalysis.summary || '暂无分析摘要'" type="info" :closable="false" show-icon />
 

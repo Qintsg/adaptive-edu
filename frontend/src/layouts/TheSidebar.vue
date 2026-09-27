@@ -1,5 +1,6 @@
+<!-- 角色导航菜单，桌面侧栏与移动端抽屉复用。 -->
 <template>
-  <!-- Sidebar reads its structure from the user store so role changes update navigation centrally. -->
+  <!-- 菜单从用户状态读取，角色变化时集中更新导航。 -->
   <n-scrollbar class="menu-scrollbar" content-class="scrollbar-wrapper">
     <n-menu
       :value="activeMenu"
@@ -20,6 +21,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { renderIcon } from '@/theme/icons'
 
+const emit = defineEmits(['navigate'])
+
 defineProps({
   isCollapse: {
     type: Boolean,
@@ -31,7 +34,7 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// Route path drives the active state because menu indexes already mirror router records.
+// 菜单路径与路由一致，使用当前路由决定激活项。
 const menuList = computed(() => userStore.menu)
 const activeMenu = computed(() => route.path)
 
@@ -48,11 +51,12 @@ const handleMenuSelect = (key) => {
   if (key && key !== route.path) {
     void router.push(String(key))
   }
+  emit('navigate')
 }
 </script>
 
 <style scoped>
-/* Remove the stock menu chrome so the sidebar can inherit the shell's custom surface styling. */
+/* 移除菜单默认边框，使侧栏沿用工作区表面样式。 */
 .sidebar-menu {
   border-right: none;
   background-color: transparent;
@@ -76,10 +80,10 @@ const handleMenuSelect = (key) => {
 }
 
 .sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected) {
-  /* Elevated active state makes the current workspace destination scan quickly. */
+  /* 当前菜单项使用明显的高亮表面。 */
   color: var(--sidebar-active-text) !important;
   background: var(--sidebar-active-bg) !important;
-  box-shadow: 0 12px 24px rgba(15, 108, 189, 0.24);
+  box-shadow: 0 8px 18px rgba(3, 20, 38, 0.18);
 }
 
 .sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content__icon),
@@ -98,8 +102,17 @@ const handleMenuSelect = (key) => {
   color: var(--sidebar-icon) !important;
 }
 
+.sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected:hover) {
+  background: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
+}
+
+.sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected:hover .n-menu-item-content__icon) {
+  color: var(--sidebar-active-text) !important;
+}
+
 .sidebar-menu :deep(.n-submenu-children) {
-  /* Nested menu background creates a clear second level without adding extra separators. */
+  /* 子菜单通过背景区分层级。 */
   background-color: var(--sidebar-submenu-bg) !important;
   border: 1px solid var(--border-light);
   border-radius: 18px;
@@ -108,7 +121,7 @@ const handleMenuSelect = (key) => {
 }
 
 .sidebar-menu :deep(.n-menu-item-content--collapsed) {
-  /* Collapsed mode centers icons on the actual collapsed menu root, not a nonexistent child wrapper. */
+  /* 折叠状态在菜单根节点居中图标。 */
   justify-content: center;
   width: 100%;
   min-width: 0;

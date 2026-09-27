@@ -1,6 +1,6 @@
 # 知识图谱驱动的个性化自适应学习系统
 
-本项目是面向课程教学、学习诊断与个性化辅导的一体化 Web 平台。系统以知识图谱为课程结构底座，结合学习画像、MEFKT 知识追踪、GraphRAG 检索增强生成、在线测评与 AI 学习助手，为学生提供可追溯的学习路径、资源推荐、阶段反馈与问答支持，同时为教师和管理员提供课程、题库、班级、资源与账号治理能力。
+AdaptiveEdu 是用于课程学习、测评和教学管理的 Web 平台。学生可以查看知识点掌握情况和学习路径，完成作业并获得反馈；教师管理课程、题库、班级和资源，管理员管理账号与日志。知识追踪使用 MEFKT，课程问答使用 GraphRAG。
 
 ## 项目元信息
 
@@ -18,19 +18,19 @@ Supported by the Shanghai Undergraduate Training Program on Innovation and Entre
 
 ## 核心能力
 
-- 学生、教师、管理员三端统一 Web 应用，覆盖学习、教学与平台治理。
+- 学生、教师和管理员共用一个 Web 应用。
 - 课程知识图谱可视化，支持知识点详情、关系查询、课程资源与学习状态联动。
-- 个性化学习路径、任务学习、初始测评、阶段测试、在线作业与反馈报告闭环。
+- 初始测评、学习路径、任务学习、阶段测试、在线作业和反馈报告。
 - 学习画像、资源推荐、课程问答、图谱增强解释和 GraphRAG 证据召回。
-- A3 多智能体个性化资源生成，支持画像对话、学习资源包、证据追溯、路径绑定和反馈闭环。
+- A3 多智能体生成学习资源包，标注资料来源，支持加入学习路径并记录反馈。
 - MEFKT 知识追踪与规则兜底并行，输出掌握度、薄弱点和学习建议。
 - 基础测试数据、课程资产导入、API 回归和浏览器巡检覆盖开发与验收场景。
 
 ## 技术架构
 
 - 前端：`frontend/`
-  - Vue 3、Vite、TypeScript、Pinia、Vue Router。
-  - Naive UI + Fluent 2 风格组件体系。
+  - Vue 3、Vite、TypeScript、Pinia、Vue Router，使用 pnpm 管理依赖。
+  - Tailwind CSS 工具类与 Naive UI + Fluent 2 风格组件体系。
   - D3.js / ECharts 用于知识图谱、画像和统计可视化。
 - 后端：`backend/`
   - Python 3.12、Django、Django REST Framework、Channels。
@@ -66,8 +66,8 @@ uv sync --frozen
 
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 默认开发地址：
@@ -96,8 +96,8 @@ uv run python tools.py django-check
 
 ```bash
 cd frontend
-npm run typecheck
-npm run build
+pnpm typecheck
+pnpm build
 ```
 
 ### 测试数据、课程资产与浏览器巡检
@@ -109,11 +109,18 @@ uv run python tools.py bootstrap-course-assets --course-name "大数据技术与
 uv run python tools.py browser-audit --scenario audit --frontend-url http://127.0.0.1:3000 --api-base-url http://127.0.0.1:8000
 ```
 
+三端关键交互巡检（使用现有测试账号，不创建业务数据）：
+
+```bash
+cd frontend
+pnpm browser:audit --scenario interaction --frontend-url http://127.0.0.1:3000 --api-base-url http://127.0.0.1:8000
+```
+
 ## 目录结构
 
 ```text
 backend/   Django + DRF + Channels + GraphRAG + MEFKT + LLM 服务
-frontend/  Vue 3 + Vite + TypeScript + Fluent 2 风格界面
+frontend/  Vue 3 + Vite + TypeScript + Tailwind CSS + Naive UI 界面
 docs/      使用说明、OpenAPI 契约、变更记录与项目材料
 ```
 
@@ -132,7 +139,7 @@ docs/      使用说明、OpenAPI 契约、变更记录与项目材料
 
 - 运行配置、密钥、缓存、依赖目录、Playwright 产物和本地代理状态不进入版本库。
 - 后端依赖以 `backend/pyproject.toml` 与 `backend/uv.lock` 为准，不再维护 `requirements.txt`。
-- 前端依赖以 `frontend/package.json` 与 `frontend/package-lock.json` 为准，`node_modules/` 仅本地生成。
+- 前端依赖以 `frontend/package.json` 与 `frontend/pnpm-lock.yaml` 为准，`node_modules/` 仅本地生成。
 - API 契约源以 `docs/openapi/openapi.yaml` 为准；接口变化后优先更新 `docs/openapi/`，再打包生成 `docs/api.yaml` 并同步相关说明和 `docs/CHANGELOG.md`。
 - 涉及 RAG / KT / KG / LLM / Agent、数据库结构、配置、部署或关键交互的改动必须同步文档并完成验证。
 

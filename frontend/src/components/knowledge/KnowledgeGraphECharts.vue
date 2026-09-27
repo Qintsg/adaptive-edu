@@ -1,6 +1,7 @@
+<!-- 知识图谱视图：大图概览减少标签噪声，节点可用键盘打开详情。 -->
 <template>
   <div class="knowledge-graph-container" ref="containerRef">
-    <!-- Toolbar keeps filtering, search, zoom, and edit actions in one stable control band. -->
+    <!-- 工具栏集中放置筛选、搜索、缩放与编辑操作。 -->
     <div class="graph-toolbar glass-panel">
       <template v-if="mode === 'edit'">
         <n-button-group>
@@ -18,9 +19,12 @@
         <n-button size="small" title="缩小" @click="zoomOut">-</n-button>
         <n-button size="small" title="适配" @click="fitView">⊡</n-button>
       </n-button-group>
+      <span v-if="mode === 'view'" class="graph-count" aria-live="polite">
+        {{ visibleNodeCount }} / {{ totalNodeCount }} 个知识点 · 悬停或聚焦查看名称
+      </span>
     </div>
 
-    <!-- Legend swaps node meaning between learner view and graph editing view. -->
+    <!-- 图例根据学习视图或编辑视图切换节点含义。 -->
     <div class="graph-legend glass-panel">
       <template v-if="mode === 'view'">
         <span class="legend-item"><span class="legend-dot mastered"></span>已掌握</span>
@@ -36,17 +40,17 @@
       <span class="legend-item"><span class="legend-line includes"></span>包含关系</span>
     </div>
 
-    <!-- SVG stays inside a dedicated surface so resize and fit logic can read stable bounds. -->
+    <!-- SVG 使用固定表面，供尺寸监听与适配视图读取边界。 -->
     <div ref="graphSurfaceRef" class="graph-surface"
       :style="{ height: typeof height === 'number' ? `${height}px` : height }">
       <svg ref="svgRef" class="graph-svg"></svg>
     </div>
 
-    <!-- Drawer shows either readonly detail or inline edit controls for the selected node. -->
+    <!-- 抽屉展示选中节点的详情或编辑表单。 -->
     <n-drawer v-model:show="drawerVisible" width="30%" display-directive="if">
       <n-drawer-content :title="drawerTitle" closable>
         <div v-if="selectedNode" class="node-drawer">
-        <!-- Base node fields are always shown so selection has a predictable detail layout. -->
+        <!-- 基础字段始终显示，保证节点详情结构稳定。 -->
         <n-form label-placement="top">
           <n-form-item label="名称">
             <n-input v-model:value="selectedNode.nodeName" :disabled="mode === 'view'" />
@@ -64,7 +68,7 @@
           </n-form-item>
         </n-form>
 
-        <!-- Resource links are loaded lazily only for the active node in student view. -->
+        <!-- 学生视图仅为当前节点按需加载资源链接。 -->
         <div v-if="nodeResources.length" class="resources-section">
           <h4>相关资源</h4>
           <div class="drawer-resource-list">
@@ -132,6 +136,8 @@ const {
   selectedNode,
   svgRef,
   updateNodeData,
+  visibleNodeCount,
+  totalNodeCount,
   zoomIn,
   zoomOut
 } = useKnowledgeGraphD3(props, emit)

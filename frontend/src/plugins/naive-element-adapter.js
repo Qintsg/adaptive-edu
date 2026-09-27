@@ -1,4 +1,11 @@
-import { defineComponent, h, Fragment, ref } from 'vue'
+/** Naive UI 与旧版 Element 风格模板的兼容注册入口。 */
+import { defineComponent, h, ref } from 'vue'
+import { NColAdapter, NRowAdapter } from './responsive-grid-adapter'
+import { loadingDirective } from './loading-directive'
+import { NTabPaneAdapter, NTabsAdapter } from './tabs-adapter'
+import { NPaginationAdapter, NTableAdapter, NTableColumnAdapter } from './table-adapter'
+import { NDialogAdapter, NDrawerAdapter } from './overlay-adapter'
+import { NOptionAdapter, NSelectAdapter } from './select-adapter'
 import {
   NAlert as NaiveAlert,
   NAvatar as NaiveAvatar,
@@ -14,7 +21,6 @@ import {
   NDescriptionsItem as NaiveDescriptionsItem,
   NDivider as NaiveDivider,
   NDropdown as NaiveDropdown,
-  NDrawer as NaiveDrawer,
   NDrawerContent as NaiveDrawerContent,
   NEmpty as NaiveEmpty,
   NForm as NaiveForm,
@@ -24,21 +30,15 @@ import {
   NInputGroup as NaiveInputGroup,
   NInputNumber as NaiveInputNumber,
   NMenu as NaiveMenu,
-  NModal as NaiveModal,
   NPageHeader as NaivePageHeader,
-  NPagination as NaivePagination,
   NProgress as NaiveProgress,
   NRadio as NaiveRadio,
   NRadioGroup as NaiveRadioGroup,
   NScrollbar as NaiveScrollbar,
-  NSelect as NaiveSelect,
   NSkeleton as NaiveSkeleton,
   NSpace as NaiveSpace,
   NStatistic as NaiveStatistic,
   NSwitch as NaiveSwitch,
-  NTabPane as NaiveTabPane,
-  NTable as NaiveTable,
-  NTabs as NaiveTabs,
   NTag as NaiveTag,
   NTimeline as NaiveTimeline,
   NTimelineItem as NaiveTimelineItem,
@@ -58,18 +58,6 @@ const typeMap = {
 
 function mapType(type) {
   return typeMap[type] || type || 'default'
-}
-
-function toArray(nodes) {
-  return Array.isArray(nodes) ? nodes : nodes ? [nodes] : []
-}
-
-function flattenVNodes(nodes) {
-  return toArray(nodes).flatMap(node => {
-    if (node?.type === Fragment) return flattenVNodes(node.children)
-    if (Array.isArray(node?.children)) return flattenVNodes(node.children)
-    return node ? [node] : []
-  })
 }
 
 function readModelValue(props) {
@@ -276,43 +264,6 @@ const NDatePickerAdapter = defineComponent({
   }
 })
 
-const NOptionAdapter = defineComponent({
-  name: 'NOption',
-  props: ['label', 'value', 'disabled'],
-  setup() {
-    return () => null
-  }
-})
-
-const NSelectAdapter = defineComponent({
-  name: 'NSelect',
-  inheritAttrs: false,
-  props: ['modelValue', 'value', 'options', 'placeholder', 'clearable', 'disabled', 'size', 'multiple'],
-  emits: ['update:modelValue', 'update:value', 'change'],
-  setup(props, { attrs, slots, emit }) {
-    const extractOptions = () => flattenVNodes(slots.default?.()).map(node => ({
-      label: node.props?.label ?? node.children,
-      value: node.props?.value,
-      disabled: node.props?.disabled
-    })).filter(option => option.value !== undefined)
-
-    return () => h(NaiveSelect, {
-      ...attrs,
-      value: props.value ?? props.modelValue,
-      options: props.options || extractOptions(),
-      placeholder: props.placeholder,
-      clearable: props.clearable,
-      disabled: props.disabled,
-      size: props.size,
-      multiple: props.multiple,
-      onUpdateValue: value => {
-        emitModel(emit, value)
-        emit('change', value)
-      }
-    })
-  }
-})
-
 const NTagAdapter = defineComponent({
   name: 'NTag',
   inheritAttrs: false,
@@ -348,165 +299,6 @@ const NValueGroupAdapter = (name, Component) => defineComponent({
 
 const NRadioGroupAdapter = NValueGroupAdapter('NRadioGroup', NaiveRadioGroup)
 const NCheckboxGroupAdapter = NValueGroupAdapter('NCheckboxGroup', NaiveCheckboxGroup)
-
-const NTabsAdapter = defineComponent({
-  name: 'NTabs',
-  inheritAttrs: false,
-  props: ['modelValue', 'value', 'type'],
-  emits: ['update:modelValue', 'update:value', 'change'],
-  setup(props, { attrs, slots, emit }) {
-    const mappedType = () => {
-      if (props.type === 'border-card') return 'card'
-      return props.type
-    }
-    return () => h(NaiveTabs, {
-      ...attrs,
-      value: props.value ?? props.modelValue,
-      type: mappedType(),
-      onUpdateValue: value => {
-        emitModel(emit, value)
-        emit('change', value)
-      }
-    }, slots)
-  }
-})
-
-const NDialogAdapter = defineComponent({
-  name: 'NDialog',
-  inheritAttrs: false,
-  props: ['modelValue', 'title', 'width', 'destroyOnClose'],
-  emits: ['update:modelValue', 'close'],
-  setup(props, { attrs, slots, emit }) {
-    return () => h(NaiveModal, {
-      ...attrs,
-      show: props.modelValue,
-      preset: 'card',
-      title: props.title,
-      style: props.width ? { width: typeof props.width === 'number' ? `${props.width}px` : props.width } : undefined,
-      displayDirective: props.destroyOnClose ? 'if' : 'show',
-      onUpdateShow: value => emit('update:modelValue', value),
-      onClose: () => emit('close')
-    }, slots)
-  }
-})
-
-const NDrawerAdapter = defineComponent({
-  name: 'NDrawer',
-  inheritAttrs: false,
-  props: ['modelValue', 'show', 'title', 'size', 'width', 'destroyOnClose', 'direction'],
-  emits: ['update:modelValue', 'update:show', 'close'],
-  setup(props, { attrs, slots, emit }) {
-    const width = props.width || props.size
-    return () => h(NaiveDrawer, {
-      ...attrs,
-      show: props.show ?? props.modelValue,
-      width,
-      placement: props.direction === 'ltr' ? 'left' : 'right',
-      displayDirective: props.destroyOnClose ? 'if' : 'show',
-      onUpdateShow: value => {
-        emit('update:show', value)
-        emit('update:modelValue', value)
-      },
-      onClose: () => emit('close')
-    }, {
-      default: () => h(NaiveDrawerContent, { title: props.title, closable: true }, slots)
-    })
-  }
-})
-
-const NTableColumnAdapter = defineComponent({
-  name: 'NTableColumn',
-  props: ['prop', 'property', 'label', 'width', 'minWidth', 'align', 'formatter', 'type', 'fixed'],
-  setup() {
-    return () => null
-  }
-})
-
-function renderCell(column, row, index) {
-  if (column.children?.default) return column.children.default({ row, $index: index })
-  if (column.props?.type === 'index') return index + 1
-  const prop = column.props?.prop ?? column.props?.property
-  const value = prop ? row?.[prop] : undefined
-  if (column.props?.formatter) return column.props.formatter(row, column.props, value, index)
-  return value ?? ''
-}
-
-const NTableAdapter = defineComponent({
-  name: 'NTable',
-  inheritAttrs: false,
-  props: ['data', 'stripe', 'border', 'height', 'maxHeight'],
-  setup(props, { attrs, slots }) {
-    return () => {
-      const columns = flattenVNodes(slots.default?.()).filter(node => node.type?.name === 'NTableColumn')
-      const rows = props.data || []
-      return h(NaiveTable, { ...attrs, striped: props.stripe, bordered: props.border !== false, class: 'app-adapter-table' }, {
-        default: () => [
-          h('thead', [h('tr', columns.map(column => h('th', {
-            style: {
-              width: column.props?.width ? `${column.props.width}px` : undefined,
-              textAlign: column.props?.align
-            }
-          }, column.props?.label || '')))]),
-          h('tbody', rows.length
-            ? rows.map((row, rowIndex) => h('tr', { key: row.id ?? rowIndex }, columns.map(column => h('td', {
-              style: { textAlign: column.props?.align }
-            }, renderCell(column, row, rowIndex)))))
-            : [h('tr', [h('td', { colspan: Math.max(columns.length, 1), class: 'app-adapter-table__empty' }, slots.empty?.() || '暂无数据')])])
-        ]
-      })
-    }
-  }
-})
-
-const NRowAdapter = defineComponent({
-  name: 'NRow',
-  inheritAttrs: false,
-  props: ['gutter'],
-  setup(props, { attrs, slots }) {
-    const gap = Array.isArray(props.gutter) ? props.gutter[0] : props.gutter
-    return () => h('div', { ...attrs, class: ['n-row-adapter', attrs.class], style: { '--adapter-row-gap': `${gap || 0}px`, ...attrs.style } }, slots)
-  }
-})
-
-const NColAdapter = defineComponent({
-  name: 'NCol',
-  inheritAttrs: false,
-  props: ['span', 'xs', 'sm', 'md', 'lg', 'xl'],
-  setup(props, { attrs, slots }) {
-    const span = props.span || props.md || props.sm || props.xs || 24
-    return () => h('div', {
-      ...attrs,
-      class: ['n-col-adapter', attrs.class],
-      style: { '--adapter-col-span': Number(span), ...attrs.style }
-    }, slots)
-  }
-})
-
-const NPaginationAdapter = defineComponent({
-  name: 'NPagination',
-  inheritAttrs: false,
-  props: ['modelValue', 'currentPage', 'pageSize', 'total', 'pageSizes', 'layout'],
-  emits: ['update:modelValue', 'update:currentPage', 'update:pageSize', 'current-change', 'size-change'],
-  setup(props, { attrs, emit }) {
-    return () => h(NaivePagination, {
-      ...attrs,
-      page: props.currentPage ?? props.modelValue,
-      pageSize: props.pageSize,
-      itemCount: props.total,
-      pageSizes: props.pageSizes,
-      showSizePicker: String(props.layout || '').includes('sizes'),
-      onUpdatePage: value => {
-        emit('update:modelValue', value)
-        emit('update:currentPage', value)
-        emit('current-change', value)
-      },
-      onUpdatePageSize: value => {
-        emit('update:pageSize', value)
-        emit('size-change', value)
-      }
-    })
-  }
-})
 
 const NSwitchAdapter = defineComponent({
   name: 'NSwitch',
@@ -608,21 +400,6 @@ const NTreeAdapter = defineComponent({
   }
 })
 
-const NTabPaneAdapter = defineComponent({
-  name: 'NTabPane',
-  inheritAttrs: false,
-  props: ['name', 'label', 'tab', 'disabled', 'displayDirective'],
-  setup(props, { attrs, slots }) {
-    return () => h(NaiveTabPane, {
-      ...attrs,
-      name: props.name,
-      tab: props.tab ?? props.label,
-      disabled: props.disabled,
-      displayDirective: props.displayDirective
-    }, slots)
-  }
-})
-
 function createSemanticAdapter(tagName) {
   return defineComponent({
     name: tagName,
@@ -699,109 +476,6 @@ const adapters = {
   NTag: NTagAdapter,
   NTree: NTreeAdapter,
   NUpload: NUploadAdapter
-}
-
-const loadingStyle = `
-.app-loading-host {
-  position: relative;
-}
-.app-loading-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 3000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--primary-color, #0f6cbd);
-  background: rgba(255, 255, 255, 0.74);
-  backdrop-filter: blur(2px);
-}
-.app-loading-overlay.is-fullscreen {
-  position: fixed;
-}
-.app-loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(15, 108, 189, 0.18);
-  border-top-color: var(--primary-color, #0f6cbd);
-  border-radius: 50%;
-  animation: app-loading-spin 0.8s linear infinite;
-}
-.app-loading-text {
-  max-width: 520px;
-  padding: 0 24px;
-  color: var(--text-secondary, #616161);
-  font-size: 14px;
-  line-height: 1.6;
-  text-align: center;
-}
-@keyframes app-loading-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-`
-
-function ensureLoadingStyle() {
-  if (typeof document === 'undefined' || document.getElementById('app-loading-directive-style')) return
-  const style = document.createElement('style')
-  style.id = 'app-loading-directive-style'
-  style.textContent = loadingStyle
-  document.head.appendChild(style)
-}
-
-function getLoadingText(el) {
-  return el.getAttribute('element-loading-text') || el.getAttribute('data-element-loading-text') || ''
-}
-
-function removeLoadingOverlay(el) {
-  const state = el.__appLoadingState
-  if (!state) return
-  state.overlay.remove()
-  if (state.target === el && state.restorePosition) {
-    el.style.position = state.originalPosition
-  }
-  if (state.target === el) {
-    el.classList.remove('app-loading-host')
-  }
-  delete el.__appLoadingState
-}
-
-function updateLoading(el, binding) {
-  const active = Boolean(binding.value)
-  if (!active) {
-    removeLoadingOverlay(el)
-    return
-  }
-  ensureLoadingStyle()
-  const fullscreen = Boolean(binding.modifiers?.fullscreen)
-  const target = fullscreen ? document.body : el
-  if (el.__appLoadingState) {
-    const textNode = el.__appLoadingState.overlay.querySelector('.app-loading-text')
-    if (textNode) textNode.textContent = getLoadingText(el)
-    return
-  }
-  const overlay = document.createElement('div')
-  overlay.className = fullscreen ? 'app-loading-overlay is-fullscreen' : 'app-loading-overlay'
-  overlay.innerHTML = `<span class="app-loading-spinner"></span><span class="app-loading-text"></span>`
-  overlay.querySelector('.app-loading-text').textContent = getLoadingText(el)
-
-  const originalPosition = el.style.position
-  const restorePosition = !fullscreen && getComputedStyle(el).position === 'static'
-  if (!fullscreen) {
-    el.classList.add('app-loading-host')
-    if (restorePosition) el.style.position = 'relative'
-  }
-  target.appendChild(overlay)
-  el.__appLoadingState = { overlay, target, originalPosition, restorePosition }
-}
-
-const loadingDirective = {
-  mounted: updateLoading,
-  updated: updateLoading,
-  beforeUnmount: removeLoadingOverlay
 }
 
 export function installNaiveElementAdapter(app) {

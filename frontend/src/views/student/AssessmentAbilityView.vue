@@ -129,6 +129,7 @@ const submitAnswers = async () => {
   submitting.value = true
   try {
     const submissionData = {
+      course_id: courseStore.courseId,
       answers: questions.value.map((q, index) => ({
         question_id: q.id,
         answer: answers.value[index] || ''

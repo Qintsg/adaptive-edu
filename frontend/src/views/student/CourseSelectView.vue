@@ -1,3 +1,4 @@
+<!-- 学生选课页：支持键盘选择课程，并明确展示空列表下一步。 -->
 <template>
   <div class="course-select-view">
     <n-container class="main-container">
@@ -7,7 +8,7 @@
             <Collection />
           </n-icon>
           <h1>选择学习课程</h1>
-          <p>请选择您要学习的课程，开启智个性化学习之旅</p>
+          <p>选择课程后，查看测评、任务和学习进度。</p>
         </div>
       </n-header>
 
@@ -21,19 +22,18 @@
         </div>
 
         <div v-else-if="courses.length === 0" class="empty-state">
-          <n-empty description="暂无可选课程" :image-size="200">
-            <template #description>
-              <p>暂无可选课程，请先使用老师提供的邀请码加入班级。</p>
-            </template>
-            <n-button type="primary" size="large" :loading="joiningClass" @click="showJoinDialog = true">
-              加入班级
-            </n-button>
-          </n-empty>
+          <span class="empty-icon"><n-icon><Collection /></n-icon></span>
+          <h2>还没有可选课程</h2>
+          <p>使用老师提供的邀请码加入班级后，就能在这里选择课程。</p>
+          <n-button type="primary" size="large" :loading="joiningClass" @click="showJoinDialog = true">
+            加入班级
+          </n-button>
         </div>
 
         <n-row v-else :gutter="24" class="course-grid">
           <n-col v-for="course in courses" :key="course.selectionKey" :xs="24" :sm="12" :md="8" :lg="6">
-            <div class="course-card-wrapper" :class="{ 'is-selected': isSelected(course) }"
+            <button class="course-card-wrapper" type="button" :class="{ 'is-selected': isSelected(course) }"
+              :aria-pressed="isSelected(course)"
               @click="handleSelectCourse(course)">
               <n-card class="course-card" shadow="hover" :body-style="{ padding: '0px' }">
                 <div class="card-cover" :style="getCoverStyle(course)">
@@ -56,7 +56,7 @@
                   </div>
                 </div>
               </n-card>
-            </div>
+            </button>
           </n-col>
         </n-row>
       </n-main>
@@ -303,11 +303,7 @@ const confirmSelect = async () => {
       class_name: course.className
     })
 
-    appMessage.success({
-      message: `欢迎进入 ${course.name}`,
-      type: 'success',
-      duration: 2000
-    })
+    appMessage.success(`欢迎进入 ${course.name}`)
 
     // 跳转到学生仪表盘
     await router.push('/student/dashboard')
@@ -355,8 +351,8 @@ onMounted(() => {
 
 .header-icon {
   font-size: 48px;
-  color: var(--accent-cyan);
-  background: rgba(14, 165, 164, 0.12);
+  color: var(--primary-color);
+  background: #e6f2fc;
   padding: 16px;
   border-radius: 50%;
   margin-bottom: 8px;
@@ -365,13 +361,13 @@ onMounted(() => {
 .page-header h1 {
   font-size: 32px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .page-header p {
   font-size: 16px;
-  color: #909399;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -381,10 +377,15 @@ onMounted(() => {
 }
 
 .course-card-wrapper {
+  display: block;
+  width: 100%;
   margin-bottom: 24px;
   padding: 4px;
-  /* Space for border effect */
+  border: 0;
   border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -393,10 +394,15 @@ onMounted(() => {
   transform: translateY(-5px);
 }
 
+.course-card-wrapper:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
 .course-card-wrapper.is-selected {
   background: var(--primary-color);
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 10px 24px rgba(18, 154, 116, 0.22);
+  box-shadow: 0 10px 24px rgba(15, 108, 189, 0.2);
 }
 
 .course-card {
@@ -406,10 +412,11 @@ onMounted(() => {
   height: 100%;
 }
 
+.course-card :deep(.n-card-content) { padding: 0 !important; }
+
 .card-cover {
   height: 140px;
-  /* background fallback */
-  background: #b9ccc2;
+  background: #dceaf8;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -445,7 +452,7 @@ onMounted(() => {
 .course-name {
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0 0 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -470,10 +477,10 @@ onMounted(() => {
   padding: 12px 60px;
   font-size: 18px;
   height: 50px;
-  box-shadow: 0 10px 24px rgba(18, 154, 116, 0.24);
+  box-shadow: 0 10px 24px rgba(15, 108, 189, 0.2);
 }
 
-/* Loading & Empty */
+/* 加载与空列表提示 */
 .loading-container {
   max-width: 800px;
   margin: 0 auto;
@@ -485,8 +492,12 @@ onMounted(() => {
   gap: 20px;
 }
 
-.empty-state :deep(.n-empty__description) {
-  max-width: 420px;
-  line-height: 1.7;
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 42px 16px; text-align: center; }
+.empty-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 17px; background: #e6f2fc; color: var(--primary-color); font-size: 28px; }
+.empty-state h2 { margin: 0; color: var(--text-primary); font-size: 18px; }
+.empty-state p { max-width: 420px; margin: 0 0 8px; color: var(--text-secondary); line-height: 1.7; }
+
+@media (prefers-reduced-motion: reduce) {
+  .course-card-wrapper { transition: none; }
 }
 </style>

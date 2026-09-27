@@ -1,6 +1,6 @@
 <template>
   <div class="question-list-view">
-    <PageHero eyebrow="Content Bank" title="题库管理" description="围绕当前课程维护题目内容、知识点关联、难度与分值，为组卷和阶段测评提供稳定题源。">
+    <PageHero title="题库管理" description="管理本课程的题目、知识点关联、难度和分值。">
       <template #actions>
         <n-upload :auto-upload="false" :show-file-list="false" accept=".xlsx,.xls,.csv" :on-change="handleImportFile">
           <n-button plain><n-icon>

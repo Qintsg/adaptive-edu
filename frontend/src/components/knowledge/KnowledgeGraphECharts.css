@@ -1,3 +1,4 @@
+/* 图谱表面、工具栏和节点交互提示。 */
 .knowledge-graph-container {
   display: flex;
   flex-direction: column;
@@ -22,6 +23,13 @@
   width: 1px;
   height: 28px;
   background: rgba(100, 116, 139, 0.18);
+}
+
+.graph-count {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .graph-legend {
@@ -104,6 +112,22 @@
   z-index: 1;
 }
 
+.graph-surface :deep(.graph-node-label--muted) {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.graph-surface :deep(.graph-node:hover .graph-node-label--muted),
+.graph-surface :deep(.graph-node:focus .graph-node-label--muted) {
+  opacity: 1;
+}
+
+.graph-surface :deep(.graph-node:focus-visible) { outline: none; }
+.graph-surface :deep(.graph-node:focus-visible circle) {
+  stroke: var(--primary-color);
+  stroke-width: 4;
+}
+
 .node-drawer {
   display: flex;
   flex-direction: column;
@@ -144,4 +168,6 @@
   .graph-legend {
     gap: 12px;
   }
+
+  .graph-count { width: 100%; margin-left: 0; white-space: normal; }
 }

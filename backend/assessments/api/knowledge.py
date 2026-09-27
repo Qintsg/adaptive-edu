@@ -9,6 +9,7 @@ import logging
 import threading
 
 from django.db import transaction
+from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -16,10 +17,11 @@ from rest_framework.response import Response
 
 from common.http.permissions import IsStudent
 from common.http.responses import error_response, success_response
+from courses.models import Course, Enrollment
+from users.models import User
 from assessments.services.assessment_helpers import (
     clean_text,
     get_authenticated_user,
-    get_question_title,
     normalize_options,
     persist_mastery_snapshot,
     upsert_knowledge_assessment_result,
@@ -44,6 +46,35 @@ from assessments.models import (
 logger = logging.getLogger(__name__)
 
 
+def _assessment_course_for_user(
+    user: User, raw_course_id: object,
+) -> tuple[Course | None, Response | None]:
+    """只允许已选修学生或可管理课程的教师读取测评题库。
+
+    :param user: 已认证用户。
+    :param raw_course_id: 请求中的课程 ID。
+    :returns: 课程与错误响应，二者至多一个非空。
+    """
+    try:
+        course_id = int(raw_course_id)
+    except (TypeError, ValueError):
+        return None, error_response(msg='课程ID格式错误')
+    course = Course.objects.filter(pk=course_id).first()
+    if course is None:
+        return None, error_response(msg='课程不存在', code=404)
+    if user.role == 'student':
+        allowed = Enrollment.objects.filter(user=user).filter(
+            Q(class_obj__course=course)
+            | Q(class_obj__class_courses__course=course,
+                class_obj__class_courses__is_active=True)
+        ).exists()
+    else:
+        allowed = course.can_edit(user)
+    if not allowed:
+        return None, error_response(msg='无权访问该课程的知识测评', code=403)
+    return course, None
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_knowledge_assessment(request: Request) -> Response:
@@ -54,6 +85,10 @@ def get_knowledge_assessment(request: Request) -> Response:
     course_id = request.query_params.get('course_id')
     if not course_id:
         return error_response(msg='缺少课程ID')
+    course, access_error = _assessment_course_for_user(request.user, course_id)
+    if access_error is not None:
+        return access_error
+    course_id = course.id
 
     assessment = Assessment.objects.filter(
         course_id=course_id,
@@ -62,7 +97,7 @@ def get_knowledge_assessment(request: Request) -> Response:
     ).first()
 
     if not assessment:
-        course_questions_qs = Question.objects.filter(course_id=course_id)
+        course_questions_qs = Question.objects.filter(course_id=course_id, is_visible=True)
         preferred_questions = course_questions_qs.filter(for_initial_assessment=True).order_by('id')
         course_questions = preferred_questions if preferred_questions.exists() else course_questions_qs.order_by('id')
 
@@ -71,12 +106,6 @@ def get_knowledge_assessment(request: Request) -> Response:
                 msg='该课程暂无知识测评题目，请联系教师添加题库',
                 code=404,
             )
-
-        from courses.models import Course
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return error_response(msg='课程不存在', code=404)
 
         assessment = Assessment.objects.create(
             course=course,
@@ -91,14 +120,16 @@ def get_knowledge_assessment(request: Request) -> Response:
         ])
 
     questions: list[Question] = list(
-        assessment.questions.all()
+        assessment.questions.filter(is_visible=True)
         .prefetch_related('knowledge_points')
         .order_by('assessmentquestion__order', 'id')
     )
+    if not questions:
+        return error_response(msg='该课程暂无可见知识测评题目', code=404)
     question_payload = []
     for index, question in enumerate(questions, start=1):
         normalized_options = normalize_options(question.options, question.question_type)
-        title = get_question_title(question)
+        title = clean_text(question.content) or f'题干缺失（题目ID {question.id}），请联系教师补充'
         question_payload.append({
             'question_id': question.id,
             'order': index,
@@ -109,7 +140,6 @@ def get_knowledge_assessment(request: Request) -> Response:
             'question_type': question.question_type,
             'score': float(question.score),
             'difficulty': question.difficulty,
-            'analysis': clean_text(question.analysis),
             'points': list(question.knowledge_points.values_list('id', flat=True)),
         })
 
@@ -132,6 +162,10 @@ def submit_knowledge_assessment(request: Request) -> Response:
 
     if not course_id or not answers:
         return error_response(msg='缺少必要参数')
+    course, access_error = _assessment_course_for_user(request.user, course_id)
+    if access_error is not None:
+        return access_error
+    course_id = course.id
 
     user = get_authenticated_user(request)
     existing_status = AssessmentStatus.objects.filter(user=user, course_id=course_id).first()
@@ -161,7 +195,11 @@ def submit_knowledge_assessment(request: Request) -> Response:
         return error_response(msg='未找到该课程的知识测评', code=404)
 
     answer_dict = {str(answer['question_id']): answer['answer'] for answer in answers}
-    questions: list[Question] = list(assessment.questions.all().prefetch_related('knowledge_points'))
+    questions: list[Question] = list(
+        assessment.questions.filter(is_visible=True).prefetch_related('knowledge_points')
+    )
+    if not questions:
+        return error_response(msg='该课程暂无可见知识测评题目', code=404)
     evaluation = evaluate_knowledge_answers(
         user=user,
         course_id=course_id,

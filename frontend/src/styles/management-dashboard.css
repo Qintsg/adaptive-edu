@@ -1,0 +1,48 @@
+/* 教师与管理端共用的概览卡片色阶，避免在模板中写死渐变。 */
+.management-dashboard .stat-card { padding: 0; }
+.management-dashboard .stat-card .n-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 116px;
+  padding: 20px !important;
+}
+.management-dashboard .stat-card .stat-value {
+  color: var(--text-primary);
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+.management-dashboard .stat-card .stat-label { color: var(--text-secondary); }
+.management-dashboard :is(.stat-card, .quick-actions) .stat-icon--users {
+  color: #2167a7 !important;
+  background: #e7f2ff;
+}
+.management-dashboard :is(.stat-card, .quick-actions) .stat-icon--courses {
+  color: #1b7c70 !important;
+  background: #e6f4f1;
+}
+.management-dashboard :is(.stat-card, .quick-actions) .stat-icon--classes {
+  color: #6c5bac !important;
+  background: #f0edfb;
+}
+.management-dashboard :is(.stat-card, .quick-actions) .stat-icon--work {
+  color: #a46a10 !important;
+  background: #fff2dc;
+}
+.management-dashboard .quick-actions .action-item {
+  border: 1px solid var(--border-light);
+  background: #f6f9fc;
+  color: var(--text-regular);
+  font: inherit;
+  cursor: pointer;
+}
+.management-dashboard .quick-actions .action-item:hover {
+  border-color: rgba(15, 108, 189, 0.24);
+  background: #ebf5fd;
+}
+.management-dashboard .welcome-card.n-card {
+  color: #fff !important;
+  background: linear-gradient(125deg, #173f68, #10304f) !important;
+}
+.management-dashboard .welcome-card .n-card-content { padding: 24px 28px !important; }
+.management-dashboard .welcome-card p { color: #c8deef !important; }

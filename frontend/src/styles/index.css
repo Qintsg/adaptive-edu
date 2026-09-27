@@ -1,3 +1,4 @@
+/* 全局组件视觉规则与页面基础样式。 */
 @import '../assets/styles/variables.css';
 
 :root {
@@ -43,9 +44,9 @@ a {
 .n-card {
   border-radius: var(--card-radius) !important;
   border: 1px solid var(--border-light) !important;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94)) !important;
+  background: var(--bg-card) !important;
   box-shadow: var(--card-shadow) !important;
-  transition: var(--transition-base);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -53,7 +54,6 @@ a {
 
 .n-card:hover {
   box-shadow: var(--card-shadow-hover) !important;
-  transform: translateY(-2px);
 }
 
 .n-card .n-card__header {
@@ -62,7 +62,7 @@ a {
   font-weight: 700;
   font-size: 15px;
   color: var(--text-primary);
-  background: linear-gradient(180deg, var(--bg-soft), var(--bg-soft-alt));
+  background: var(--bg-card);
 }
 
 .n-card .n-card__body {
@@ -82,8 +82,12 @@ a {
 }
 
 .n-button--primary:hover {
-  transform: translateY(-1px);
   box-shadow: 0 18px 30px rgba(15, 108, 189, 0.24);
+}
+
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 3px solid rgba(15, 108, 189, 0.45);
+  outline-offset: 3px;
 }
 
 .n-button--default,
@@ -197,6 +201,10 @@ a {
   color: var(--hero-text) !important;
   box-shadow: var(--hero-shadow) !important;
 }
+
+/* Naive UI 的内容节点需要占满卡片，避免标题与操作按钮挤在中央。 */
+.n-card.page-header { display: block; }
+.n-card.page-header .n-card-content { width: 100%; }
 
 .n-card.page-header .n-card__body,
 .welcome-card .n-card__body,
@@ -370,5 +378,28 @@ a {
 
   .page-title {
     font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .n-modal .n-form-item--left-labelled {
+    grid-template-areas: 'label' 'blank' 'feedback' !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .n-modal .n-form-item--left-labelled .n-form-item-label {
+    width: 100% !important;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0 0 6px !important;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

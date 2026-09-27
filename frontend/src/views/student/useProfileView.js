@@ -34,12 +34,9 @@ export function useProfileView() {
 
   const aiProgress = useAIProgress({
     stages: [
-      { at: 0, text: '正在准备分析...' },
-      { at: 15, text: '正在读取学习记录...' },
-      { at: 30, text: '正在评估能力画像...' },
-      { at: 50, text: '正在生成个性化建议...' },
-      { at: 75, text: '正在整合分析结果...' },
-      { at: 90, text: '即将完成...' }
+      { at: 0, text: '正在读取学习记录…' },
+      { at: 50, text: '正在生成学习建议…' },
+      { at: 90, text: '仍在处理中，请稍候…' }
     ],
     tickInterval: 600
   })
@@ -82,7 +79,7 @@ export function useProfileView() {
   const topWeakMasteries = computed(() => [...masteryData.value].sort((left, right) => left.value - right.value).slice(0, 3))
   const learningFocusLabel = computed(() => {
     if (!masteryData.value.length) return '暂无知识追踪数据'
-    if (lowMasteryCount.value) return `${lowMasteryCount.value} 个薄弱项待突破`
+    if (lowMasteryCount.value) return `${lowMasteryCount.value} 个知识点需复习`
     if (mediumMasteryCount.value) return `${mediumMasteryCount.value} 个知识点待巩固`
     return '整体掌握稳定'
   })

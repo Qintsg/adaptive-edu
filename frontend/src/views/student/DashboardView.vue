@@ -1,29 +1,35 @@
+<!-- 学生首页：以当前课程、下一步学习和真实进度为核心。 -->
 <template>
   <div class="dashboard-view" v-loading="loading">
-    <n-row :gutter="20">
-      <!-- 欢迎卡片 -->
-      <n-col :span="24">
-        <n-card class="welcome-card" shadow="hover">
-          <div class="welcome-content">
-            <div class="welcome-text">
-              <h2>欢迎回来，{{ username }}！</h2>
-              <p>{{ greeting }}</p>
-            </div>
-            <div class="welcome-actions">
-              <n-button type="primary" @click="goToLearningPath">
-                <n-icon>
-                  <Guide />
-                </n-icon>
-                继续学习
-              </n-button>
-            </div>
+    <section class="dashboard-hero" aria-labelledby="dashboard-title">
+      <div class="hero-copy">
+        <p class="hero-eyebrow">学习总览 <span aria-hidden="true">/</span> {{ currentCourseName }}</p>
+        <h1 id="dashboard-title">欢迎回来，{{ username }}<span class="hero-title-mark">。</span></h1>
+        <div class="hero-actions flex flex-wrap gap-3">
+          <n-button type="primary" @click="goToLearningPath">
+            <template #icon><n-icon><Guide /></n-icon></template>
+            继续学习
+          </n-button>
+          <button class="hero-secondary" type="button" @click="$router.push('/student/knowledge-map')">
+            查看知识图谱 <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+      <div class="hero-progress" :aria-label="`当前学习进度 ${learningProgress}%`">
+        <div class="progress-orbit" :style="{ '--progress': `${learningProgress}%` }">
+          <span class="orbit-point orbit-point--one" />
+          <span class="orbit-point orbit-point--two" />
+          <span class="orbit-point orbit-point--three" />
+          <div class="progress-core">
+            <span class="progress-caption">当前课程进度</span>
+            <strong>{{ learningProgress }}<small>%</small></strong>
           </div>
-        </n-card>
-      </n-col>
-    </n-row>
+        </div>
+      </div>
+    </section>
 
     <!-- 未选课程提示 -->
-    <n-alert v-if="!courseStore.courseId" title="请先选择课程" type="info" show-icon description="请在左上角的课程选择器中选择一门课程以查看学习数据"
+    <n-alert v-if="!courseStore.courseId" title="请先选择课程" type="info" show-icon description="请在顶部课程选择器中选择一门课程，以查看学习数据"
       :closable="false" style="margin-top: 20px;" />
 
     <n-row :gutter="20" class="stats-row">
@@ -56,7 +62,7 @@
             </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ studyHours }}h</div>
-            <div class="stat-label">本周学习时长</div>
+            <div class="stat-label">累计学习时长</div>
           </div>
         </n-card>
       </n-col>
@@ -67,7 +73,7 @@
             </n-icon></div>
           <div class="stat-info">
             <div class="stat-value">{{ completedTasks }}</div>
-            <div class="stat-label">完成任务数</div>
+            <div class="stat-label">已完成路径节点</div>
           </div>
         </n-card>
       </n-col>
@@ -98,14 +104,12 @@
             </n-timeline>
           </div>
           <div v-else class="empty-path">
-            <n-empty description="暂无学习路径" :image-size="80">
-              <template #description>
-                <p>完成初始评测后将自动为您生成个性化学习路径</p>
-              </template>
-              <n-button type="primary" size="small" @click="$router.push('/student/assessment')">
-                前往初始评测
-              </n-button>
-            </n-empty>
+            <span class="empty-path-symbol"><n-icon><Guide /></n-icon></span>
+            <h3>还没有学习路径</h3>
+            <p>完成初始测评后，系统会生成适合你的学习顺序。</p>
+            <n-button type="primary" size="small" @click="$router.push('/student/assessment')">
+              前往初始测评
+            </n-button>
           </div>
         </n-card>
 
@@ -135,36 +139,36 @@
         <n-card class="quick-card" shadow="hover">
           <template #header><span>快捷入口</span></template>
           <div class="quick-actions">
-            <div class="quick-item" @click="$router.push('/student/knowledge-map')">
+            <button class="quick-item" type="button" @click="$router.push('/student/knowledge-map')">
               <n-icon>
                 <Share />
               </n-icon>
               <span>知识图谱</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/student/exams')">
+            </button>
+            <button class="quick-item" type="button" @click="$router.push('/student/exams')">
               <n-icon>
                 <Document />
               </n-icon>
               <span>在线作业</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/student/profile')">
+            </button>
+            <button class="quick-item" type="button" @click="$router.push('/student/profile')">
               <n-icon>
                 <User />
               </n-icon>
               <span>学习画像</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/student/resources')">
+            </button>
+            <button class="quick-item" type="button" @click="$router.push('/student/resources')">
               <n-icon>
                 <FolderOpened />
               </n-icon>
               <span>课程资源</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/student/ai-assistant')">
+            </button>
+            <button class="quick-item" type="button" @click="$router.push('/student/ai-assistant')">
               <n-icon>
                 <ChatDotRound />
               </n-icon>
               <span>AI助手</span>
-            </div>
+            </button>
           </div>
         </n-card>
 
@@ -207,17 +211,9 @@ const courseStore = useCourseStore()
 
 const loading = ref(true)
 const username = computed(() => userStore.username || '同学')
+const currentCourseName = computed(() => courseStore.courseName || '请选择课程')
 
 // 动态问候语
-const greeting = computed(() => {
-  const hour = new Date().getHours()
-  if (hour < 6) return '夜深了，注意休息哦'
-  if (hour < 12) return '早上好！新的一天，让我们开始学习吧'
-  if (hour < 14) return '中午好！午休后继续加油'
-  if (hour < 18) return '下午好！保持专注，继续前进'
-  return '晚上好！适当学习，注意劳逸结合'
-})
-
 const normalizeText = (value) => {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -271,8 +267,8 @@ const normalizeLearningProgressSummary = (value) => {
   const progressRate = normalizeNumber(payload?.['progress'] ?? payload?.['progress_rate'])
   const studyMinutes = normalizeNumber(payload?.['study_time'] ?? payload?.['studyTime'])
   return {
-    progressPercent: Math.round(progressRate * 100),
-    studyHours: Math.round(studyMinutes / 60),
+    progressPercent: Math.min(100, Math.max(0, Math.round(progressRate * 100))),
+    studyHours: Math.round(studyMinutes / 6) / 10,
     completedTasks: normalizeNumber(payload?.['completed_nodes'] ?? payload?.['completedNodes'])
   }
 }
@@ -308,7 +304,7 @@ const normalizeProfileSummary = (value) => {
       .slice(0, 5)
       .map((mastery) => ({
         name: mastery.name,
-        value: Math.round(mastery.masteryRate * 100)
+        value: Math.min(100, Math.max(0, Math.round(mastery.masteryRate * 100)))
       }))
   }
 }
@@ -358,12 +354,30 @@ const getProgressColor = (value) => {
   return '#d45050'
 }
 
+let dashboardRequestVersion = 0
+
+/**
+ * 清空当前课程的概览，避免切换课程时显示上一门课的数据。
+ */
+const resetDashboardSummary = () => {
+  learningProgress.value = 0
+  masteredPoints.value = 0
+  studyHours.value = 0
+  completedTasks.value = 0
+  learningNodes.value = []
+  pendingExams.value = []
+  recentMastery.value = []
+}
+
 /**
  * 加载仪表盘数据
  */
 const loadDashboardData = async () => {
+  const requestVersion = ++dashboardRequestVersion
+  const courseId = courseStore.courseId
+  resetDashboardSummary()
   // 检查课程ID
-  if (!courseStore.courseId) {
+  if (!courseId) {
     loading.value = false
     return
   }
@@ -372,10 +386,11 @@ const loadDashboardData = async () => {
   try {
     // 并行加载多个数据（注意：拦截器已返回 data 字段本身）
     const [progressRes, pathRes, profileRes] = await Promise.allSettled([
-      getLearningProgress(courseStore.courseId),
-      getLearningPath(courseStore.courseId),
-      getProfile(courseStore.courseId)
+      getLearningProgress(courseId),
+      getLearningPath(courseId),
+      getProfile(courseId)
     ])
+    if (requestVersion !== dashboardRequestVersion) return
 
     // 处理学习进度
     if (progressRes.status === 'fulfilled' && progressRes.value) {
@@ -401,13 +416,15 @@ const loadDashboardData = async () => {
     // 加载待完成考试
     try {
       const { getExamList } = await import('@/api/student/exam')
-      const examRes = await getExamList(courseStore.courseId)
-      pendingExams.value = normalizePendingExamList(examRes)
+      const examRes = await getExamList(courseId)
+      if (requestVersion === dashboardRequestVersion) {
+        pendingExams.value = normalizePendingExamList(examRes)
+      }
     } catch { /* ignore */ }
   } catch (error) {
     console.error('加载仪表盘数据失败:', error)
   } finally {
-    loading.value = false
+    if (requestVersion === dashboardRequestVersion) loading.value = false
   }
 }
 
@@ -450,10 +467,10 @@ onMounted(() => {
   loadDashboardData()
 })
 
-// 监听课程切换，自动刷新仪表盘数据
-watch(() => courseStore.courseId, (newVal, oldVal) => {
-  if (newVal && oldVal && newVal !== oldVal) {
-    loadDashboardData()
+// 同一课程可能属于多个班级，班级变化也需要刷新作业与学习概览。
+watch(() => [courseStore.courseId, courseStore.classId], (current, previous) => {
+  if (current[0] !== previous[0] || current[1] !== previous[1]) {
+    void loadDashboardData()
   }
 })
 </script>

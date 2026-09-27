@@ -1,6 +1,11 @@
 #!/user/bin/env python
 # -*- coding: UTF-8 -*-
-"""MEFKT 推理模块。"""
+"""MEFKT 推理模块。
+@Project : adaptive-edu
+@File : inference.py
+@Author : Qintsg
+@Date : 2026-09-25
+"""
 
 from __future__ import annotations
 
@@ -22,6 +27,7 @@ logger = logging.getLogger(__name__)
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 if TYPE_CHECKING:
+    from ai_services.services.mefkt.ng_runtime import NGPredictor
     from models.MEFKT.model import MEFKTSequenceModel
     from torch import Tensor
 
@@ -31,6 +37,7 @@ class MEFKTPredictor:
 
     def __init__(self) -> None:
         self._model: MEFKTSequenceModel | None = None
+        self._ng_predictor: NGPredictor | None = None
         self._metadata: dict[str, object] = {}
         self._model_path: str | None = None
         self._metadata_path: str | None = None
@@ -48,10 +55,31 @@ class MEFKTPredictor:
     @property
     def is_loaded(self) -> bool:
         """当前模型是否已加载。"""
-        return self._model is not None or bool(self._sequence_state_dict)
+        return self._ng_predictor is not None or self._model is not None or bool(self._sequence_state_dict)
 
     def load_model(self, model_path: str, metadata_path: str | None = None) -> bool:
         """加载保存好的 MEFKT 模型。"""
+        candidate = Path(model_path)
+        if candidate.is_dir():
+            from ai_services.services.mefkt.ng_runtime import NGPredictor
+
+            ng = NGPredictor(candidate)
+            self._ng_predictor = ng
+            self._model = None
+            self._metadata = {**ng.metadata, "model_name": "MEFKT-NG",
+                              "training_mode": "four_source_pretrain",
+                              "item_count": ng.metadata["items"]}
+            self._model_path = str(candidate.resolve())
+            self._metadata_path = str((candidate / "model_metadata.json").resolve())
+            self._device = str(ng.device)
+            self._torch_device = ng.device
+            self._runtime_mode = "ng"
+            self._sequence_state_dict = {}
+            self._graph_state_dict = {}
+            self._attribute_state_dict = {}
+            self._fusion_state_dict = {}
+            self._course_bundle_cache.clear()
+            return True
         loaded_state = load_mefkt_state(
             model_path=model_path,
             metadata_path=metadata_path,
@@ -64,6 +92,7 @@ class MEFKTPredictor:
 
     def _apply_loaded_state(self, loaded_state: LoadedMEFKTState) -> None:
         """将 checkpoint 状态写入 predictor。"""
+        self._ng_predictor = None
         self._metadata = loaded_state.metadata
         self._model_path = loaded_state.model_path
         self._metadata_path = loaded_state.metadata_path
@@ -187,6 +216,11 @@ class MEFKTPredictor:
         """根据答题历史预测知识点掌握度。"""
         if not self.is_loaded:
             raise RuntimeError("MEFKT 模型未加载，请先调用 load_model()")
+        if self._runtime_mode == "ng":
+            if course_id is None:
+                raise ValueError("MEFKT-NG 在线推理需要 course_id")
+            assert self._ng_predictor is not None
+            return self._ng_predictor.predict(answer_history, knowledge_point_ids, int(course_id))
         if self._runtime_mode == "question_online":
             if course_id is None:
                 raise ValueError("题目级在线部署模式需要传入 course_id")
@@ -213,6 +247,8 @@ class MEFKTPredictor:
             "best_metrics": self._metadata.get("best_metrics"),
             "paper_title": self._metadata.get("paper_title"),
             "paper_doi": self._metadata.get("paper_doi"),
+            "selected_epoch": self._metadata.get("selected_epoch"),
+            "source_data_sha256": self._metadata.get("source_data_sha256"),
         }
 
 
