@@ -1,3 +1,5 @@
+"""结构化与流式 LLM 响应处理。"""
+
 from __future__ import annotations
 
 import json
@@ -6,6 +8,8 @@ import time
 from typing import Any, Dict, Optional
 
 from common.core.logging_utils import build_log_message
+from ai_services.services.demo_fallback import demo_mode_enabled, mark_demo_payload
+from ai_services.services.demo_presets import load_verified_answer, record_verified_answer
 from ai_services.services.llm.response_support import (
     build_retry_prompt,
     coerce_message_text,
@@ -18,6 +22,31 @@ from ai_services.services.llm.response_support import (
 from ai_services.services.llm.error_details import summarize_exception_chain
 
 logger = logging.getLogger(__name__)
+
+
+def _fallback_with_demo_source(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """仅在演示模式给本地规则结果附来源标记。
+
+    :param payload: 规则回退结果。
+    :returns: 原结果或标记后的副本。
+    """
+    return mark_demo_payload(payload) if demo_mode_enabled() else payload
+
+
+def _verified_or_rule_fallback(
+    payload: Dict[str, Any], call_type: str, prepared_prompt: str,
+) -> Dict[str, Any]:
+    """优先使用相同请求的真实彩排答案，再使用课程规则。
+
+    :param payload: 原有规则回退结果。
+    :param call_type: AI 调用类型。
+    :param prepared_prompt: 实际调用文本。
+    :returns: 匹配的彩排结果或规则结果。
+    """
+    verified = load_verified_answer("json", call_type, prepared_prompt)
+    if isinstance(verified, dict):
+        return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}
+    return _fallback_with_demo_source(payload)
 
 
 class LLMResponseMixin:
@@ -232,7 +261,7 @@ Write directly for the student, keep the response concise, and do not output JSO
                 raw=last_raw_content[:300],
             )
         )
-        return fallback_response
+        return _fallback_with_demo_source(fallback_response)
 
     _merge_missing_fields = staticmethod(merge_missing_fields)
 
@@ -264,6 +293,8 @@ Write directly for the student, keep the response concise, and do not output JSO
         start_time: float,
     ) -> Dict[str, Any] | None:
         """按调用类型尝试 Agent JSON 通道。"""
+        if demo_mode_enabled():
+            return None
         agent_service = (
             self._get_agent_service()
             if self._should_use_agent_service(call_type)
@@ -334,6 +365,7 @@ Write directly for the student, keep the response concise, and do not output JSO
             start_time=start_time,
         )
         if agent_result is not None:
+            record_verified_answer("json", call_type, prepared_prompt, agent_result)
             return agent_result
 
         llm = self._get_llm_for_policy(
@@ -347,10 +379,10 @@ Write directly for the student, keep the response concise, and do not output JSO
                     "llm.call.fallback", call_type=call_type, reason="model_unavailable"
                 )
             )
-            return fallback_response
+            return _verified_or_rule_fallback(fallback_response, call_type, prepared_prompt)
 
         try:
-            return self._run_model_structured_call(
+            result = self._run_model_structured_call(
                 llm=llm,
                 prepared_prompt=prepared_prompt,
                 call_type=call_type,
@@ -359,6 +391,10 @@ Write directly for the student, keep the response concise, and do not output JSO
                 start_time=start_time,
                 temperature=temperature,
             )
+            if result is fallback_response or result == fallback_response or result.get("demo_fallback"):
+                return _verified_or_rule_fallback(fallback_response, call_type, prepared_prompt)
+            record_verified_answer("json", call_type, prepared_prompt, result)
+            return result
         except Exception as e:
             logger.error(
                 build_log_message(
@@ -372,7 +408,7 @@ Write directly for the student, keep the response concise, and do not output JSO
                     error_detail=summarize_exception_chain(e),
                 )
             )
-            return fallback_response
+            return _verified_or_rule_fallback(fallback_response, call_type, prepared_prompt)
 
     def call_with_fallback(
         self,
@@ -413,11 +449,13 @@ Write directly for the student, keep the response concise, and do not output JSO
             extra_body_overrides=extra_body_overrides,
         )
         if llm is None:
-            if fallback_text:
-                yield fallback_text
+            verified = load_verified_answer("text", call_type, prepared_prompt)
+            if verified or fallback_text:
+                yield verified or fallback_text
             return
 
         emitted = False
+        buffered_chunks: list[str] = []
         original_temp = self._apply_temperature_override(llm, temperature)
         try:
             for chunk in llm.stream(
@@ -430,7 +468,14 @@ Write directly for the student, keep the response concise, and do not output JSO
                 if not chunk_text:
                     continue
                 emitted = True
-                yield chunk_text
+                buffered_chunks.append(chunk_text)
+                if not demo_mode_enabled():
+                    yield chunk_text
+
+            if emitted:
+                record_verified_answer("text", call_type, prepared_prompt, "".join(buffered_chunks))
+                if demo_mode_enabled():
+                    yield from buffered_chunks
 
             duration_ms = int((time.time() - start_time) * 1000)
             logger.debug(
@@ -454,7 +499,11 @@ Write directly for the student, keep the response concise, and do not output JSO
                     error_detail=summarize_exception_chain(error),
                 )
             )
-            if not emitted and fallback_text:
+            if demo_mode_enabled():
+                verified = load_verified_answer("text", call_type, prepared_prompt)
+                if verified or fallback_text:
+                    yield verified or fallback_text
+            elif not emitted and fallback_text:
                 yield fallback_text
         finally:
             self._restore_temperature(llm, original_temp)

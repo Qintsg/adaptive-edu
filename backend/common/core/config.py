@@ -199,7 +199,7 @@ class AppConfig:
     @staticmethod
     def llm_model() -> str:
         """返回固定的大模型名称。"""
-        return 'deepseek-v4-flash'
+        return 'deepseek-flash'
 
     @staticmethod
     def llm_api_format() -> str:

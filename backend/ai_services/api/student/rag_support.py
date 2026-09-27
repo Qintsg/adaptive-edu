@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 from django.core.cache import cache
 
 from assessments.models import AbilityScore
+from ai_services.services.demo_fallback import (
+    build_demo_path_plan,
+    demo_mode_enabled,
+    mark_demo_payload,
+)
+from ai_services.services.demo_presets import load_verified_answer, record_verified_answer
 from common.core.logging_utils import build_log_message
 from courses.models import Course
 from knowledge.models import KnowledgeMastery, KnowledgePoint
 from knowledge.services import get_or_generate_point_intro
+from platform_ai.llm import llm_facade
 from platform_ai.rag import student_learning_rag
 
 from ai_services.models import LLMCallLog
@@ -63,6 +71,20 @@ def plan_student_path(
 ) -> tuple[dict[str, object] | None, str | None]:
     """调用学生 GraphRAG 路径规划，失败时返回错误信息。"""
     mastery_data = build_mastery_data(user, course_id)
+    preset_prompt = json.dumps(
+        {
+            "course": getattr(course, "name", ""),
+            "target": str(target or ""),
+            "constraints": constraints,
+            "mastery": sorted(mastery_data, key=lambda item: int(item["point_id"])),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    if demo_mode_enabled() and not llm_facade.is_available:
+        verified = load_verified_answer("api_json", "student_path_plan", preset_prompt)
+        if isinstance(verified, dict):
+            return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}, None
     try:
         result = student_learning_rag.plan_learning_path(
             course=course,
@@ -80,7 +102,18 @@ def plan_student_path(
                 error=exc,
             )
         )
+        if demo_mode_enabled():
+            verified = load_verified_answer("api_json", "student_path_plan", preset_prompt)
+            if isinstance(verified, dict):
+                return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}, None
+            return build_demo_path_plan(user, int(course_id)), None
         return None, "路径规划服务暂时不可用"
+
+    if not result.get("demo_fallback"):
+        record_verified_answer("api_json", "student_path_plan", preset_prompt, {
+            "reason": result.get("reason", ""),
+            "suggested_nodes": result.get("nodes", []),
+        })
 
     log_path_planning_call(
         user=user,
@@ -109,7 +142,7 @@ def log_path_planning_call(
         call_type="path_planning",
         input_summary=f"course={course_id}, target={target or 'default'}, mastery_points={mastery_count}",
         output_summary=str(result)[:500],
-        is_success=True,
+        is_success=not bool(result.get("demo_fallback")),
     )
 
 
@@ -160,7 +193,8 @@ def build_node_intro_payload(
                 error=exc,
             )
         )
-        return get_or_generate_point_intro(point), False
+        fallback = get_or_generate_point_intro(point)
+        return (mark_demo_payload(fallback) if demo_mode_enabled() else fallback), False
 
 
 def merge_intro_payload(

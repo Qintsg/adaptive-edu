@@ -10,6 +10,12 @@ from rest_framework.permissions import IsAuthenticated
 from common.core.logging_utils import build_log_message
 from common.http.permissions import IsTeacherOrAdmin
 from common.http.responses import error_response, success_response
+from ai_services.services.demo_fallback import (
+    build_demo_kt_prediction,
+    build_demo_kt_recommendations,
+    demo_mode_enabled,
+    mark_demo_payload,
+)
 from platform_ai.kt import knowledge_tracing_facade
 
 logger = logging.getLogger(__name__)
@@ -39,6 +45,14 @@ def kt_predict(request):
                 course_id=course_id, error=exc,
             )
         )
+        if demo_mode_enabled():
+            result = build_demo_kt_prediction(
+                request.user.id,
+                int(course_id),
+                answer_history if isinstance(answer_history, list) else [],
+                knowledge_points if isinstance(knowledge_points, list) else None,
+            )
+            return success_response(data=result)
         return error_response(msg="知识追踪预测服务暂时不可用", code=500)
     return success_response(data=result)
 
@@ -47,7 +61,13 @@ def kt_predict(request):
 @permission_classes([IsAuthenticated])
 def kt_model_info(request):
     """Expose active KT model metadata for frontend capability checks."""
-    return success_response(data=knowledge_tracing_facade.get_model_info())
+    try:
+        return success_response(data=knowledge_tracing_facade.get_model_info())
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式 KT 模型信息读取失败，使用规则模式说明")
+        return success_response(data=mark_demo_payload({"model_type": "demo_course_rules", "is_available": True}))
 
 
 @api_view(["POST"])
@@ -65,6 +85,20 @@ def kt_batch_predict(request):
                 "kt.batch_predict.fail", count=len(user_histories), error=exc,
             )
         )
+        if demo_mode_enabled():
+            results = [
+                {
+                    **build_demo_kt_prediction(
+                        int(item.get("user_id") or 0),
+                        int(item.get("course_id") or 0),
+                        item.get("answer_history") or [],
+                        item.get("knowledge_points"),
+                    ),
+                    "user_id": item.get("user_id"),
+                }
+                for item in user_histories
+            ]
+            return success_response(data=mark_demo_payload({"results": results}))
         return error_response(msg="批量知识追踪预测服务暂时不可用", code=500)
     return success_response(data={"results": results})
 
@@ -92,5 +126,8 @@ def kt_recommendations(request):
                 course_id=course_id, error=exc,
             )
         )
+        if demo_mode_enabled():
+            recommendations = build_demo_kt_recommendations(predictions, float(threshold))
+            return success_response(data=mark_demo_payload({"recommendations": recommendations}))
         return error_response(msg="学习建议生成服务暂时不可用", code=500)
     return success_response(data={"recommendations": recommendations})

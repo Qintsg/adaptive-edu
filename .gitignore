@@ -45,6 +45,10 @@ requirements*.txt
 
 # --- Backend runtime ---
 backend/.env
+demo/.env.local
+demo/artifacts/screenshots/
+demo/artifacts/recordings/
+demo/artifacts/evidence/
 backend/media/
 backend/staticfiles/
 backend/runtime_logs/

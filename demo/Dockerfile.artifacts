@@ -1,0 +1,5 @@
+# 答辩工件镜像：录屏完成后构建，与应用镜像分开固定版本。
+FROM busybox:1.37
+WORKDIR /artifacts
+COPY demo/artifacts/ /artifacts/
+CMD ["sh", "-c", "find /artifacts -type f -print"]

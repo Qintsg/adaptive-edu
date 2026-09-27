@@ -9,6 +9,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from assessments.models import AbilityScore, AssessmentStatus
+from ai_services.services.demo_fallback import (
+    build_demo_learning_path,
+    build_demo_profile,
+    demo_mode_enabled,
+    mark_demo_payload,
+)
 from common.core.logging_utils import build_log_message
 from common.http.responses import error_response, success_response
 from courses.models import Course
@@ -65,8 +71,12 @@ def ai_profile_analysis(request):
         result = service.generate_profile_for_course(int(course_id), force_refresh=refresh)
     except Exception as exc:
         logger.error(build_log_message("ai.profile_analysis.fail", user_id=request.user.id, course_id=course_id, error=exc))
+        if demo_mode_enabled():
+            return success_response(data=build_demo_profile(request.user, int(course_id)))
         return error_response(msg="AI 分析服务暂时不可用", code=500)
     if not result.get("success", False):
+        if demo_mode_enabled():
+            return success_response(data=build_demo_profile(request.user, int(course_id)))
         return error_response(msg=str(result.get("error") or "AI 分析服务暂时不可用"), code=500)
     return success_response(data=result)
 
@@ -103,17 +113,23 @@ def ai_resource_reason(request):
 
     resource_info = {"title": resource.title, "type": resource.resource_type, "description": resource.description or ""}
     fallback = {"reason": f"{resource.title} 与当前知识点相关，可用于补强薄弱环节。", "learning_tips": "建议先快速浏览核心内容，再结合练习进行巩固。"}
-    result = (
-        llm_facade.generate_resource_reason(resource_info, mastery, point_name, resource.course.name if resource.course_id else None)
-        if llm_facade.is_available
-        else fallback
-    )
+    try:
+        result = (
+            llm_facade.generate_resource_reason(resource_info, mastery, point_name, resource.course.name if resource.course_id else None)
+            if llm_facade.is_available
+            else mark_demo_payload(fallback) if demo_mode_enabled() else fallback
+        )
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式资源推荐理由生成失败，使用课程规则")
+        result = mark_demo_payload(fallback)
     LLMCallLog.objects.create(
         user=request.user,
         call_type="resource_reason",
         input_summary=f"resource={resource_id}, point={point_id or 'na'}",
         output_summary=str(result)[:500],
-        is_success=True,
+        is_success=not bool(result.get("demo_fallback")),
     )
     return success_response(data=result)
 
@@ -161,16 +177,26 @@ def ai_feedback_report(request):
         "conclusion": "已生成基础反馈，请结合知识图谱和学习路径继续巩固。",
     }
     if llm_facade.is_available:
-        result = llm_facade.generate_feedback_report(
-            exam_info={"title": exam.title, "type": exam.exam_type},
-            score=float(submission.score),
-            total_score=float(exam.total_score),
-            mistakes=mistakes,
-            kt_predictions=None,
-        )
+        try:
+            result = llm_facade.generate_feedback_report(
+                exam_info={"title": exam.title, "type": exam.exam_type},
+                score=float(submission.score),
+                total_score=float(exam.total_score),
+                mistakes=mistakes,
+                kt_predictions=None,
+            )
+        except Exception:
+            if not demo_mode_enabled():
+                raise
+            logger.exception("演示模式反馈生成失败，使用实际作业得分")
+            result = mark_demo_payload({})
         fallback["recommendations"] = result.get("recommendations") or fallback["recommendations"]
         fallback["next_tasks"] = result.get("next_tasks") or fallback["next_tasks"]
         fallback["conclusion"] = result.get("conclusion") or fallback["conclusion"]
+        if result.get("demo_fallback"):
+            fallback = mark_demo_payload(fallback)
+    elif demo_mode_enabled():
+        fallback = mark_demo_payload(fallback)
     return success_response(data=fallback)
 
 
@@ -184,17 +210,24 @@ def ai_learning_advice(request):
     mastery_data = _build_mastery_data(request.user, int(course_id))
     ability = AbilityScore.objects.filter(user=request.user, course_id=course_id).first()
     habit_data = _build_habit_data(request.user)
-    profile_result = (
-        llm_facade.analyze_profile(mastery_data=mastery_data, ability_data=ability.scores if ability else None, habit_data=habit_data)
-        if llm_facade.is_available
-        else {}
-    )
-    return success_response(data={
+    try:
+        profile_result = (
+            llm_facade.analyze_profile(mastery_data=mastery_data, ability_data=ability.scores if ability else None, habit_data=habit_data)
+            if llm_facade.is_available
+            else build_demo_profile(request.user, int(course_id)) if demo_mode_enabled() else {}
+        )
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式学习建议生成失败，使用课程掌握度")
+        profile_result = build_demo_profile(request.user, int(course_id))
+    payload = {
         "summary": profile_result.get("summary", ""),
         "weakness": profile_result.get("weakness", []),
         "strength": profile_result.get("strength", []),
         "suggestion": profile_result.get("suggestion", ""),
-    })
+    }
+    return success_response(data=mark_demo_payload(payload) if profile_result.get("demo_fallback") else payload)
 
 
 @api_view(["POST"])
@@ -209,8 +242,12 @@ def ai_refresh_profile(request):
         result = service.generate_profile_for_course(int(course_id), force_refresh=True)
     except Exception as exc:
         logger.error(build_log_message("ai.refresh_profile.fail", user_id=request.user.id, course_id=course_id, error=exc))
+        if demo_mode_enabled():
+            return success_response(data=build_demo_profile(request.user, int(course_id)))
         return error_response(msg="AI 分析服务暂时不可用", code=500)
     if not result.get("success", False):
+        if demo_mode_enabled():
+            return success_response(data=build_demo_profile(request.user, int(course_id)))
         return error_response(msg=str(result.get("error") or "AI 分析服务暂时不可用"), code=500)
     return success_response(data=result)
 
@@ -235,7 +272,15 @@ def ai_refresh_learning_path(request):
         preserved_count = existing_path.nodes.filter(status__in=("completed", "active", "skipped", "failed")).count()
         removed_count = existing_path.nodes.filter(status="locked").count()
 
-    path = PathService().generate_path(request.user, course)
+    fallback_used = False
+    try:
+        path = PathService().generate_path(request.user, course)
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式学习路径刷新失败，使用课程掌握度")
+        path = build_demo_learning_path(request.user, course)
+        fallback_used = True
     ordered_nodes = list(path.nodes.order_by("order_index"))
     nodes = [
         {
@@ -249,7 +294,7 @@ def ai_refresh_learning_path(request):
         }
         for node in ordered_nodes
     ]
-    return success_response(data={
+    payload = {
         "path_id": path.id,
         "nodes": nodes,
         "ai_reason": path.ai_reason,
@@ -257,7 +302,8 @@ def ai_refresh_learning_path(request):
         "preserved_count": preserved_count,
         "new_count": max(0, len(ordered_nodes) - preserved_count),
         "change_summary": {"preserved_context": preserved_count, "removed_count": removed_count},
-    })
+    }
+    return success_response(data=mark_demo_payload(payload) if fallback_used else payload)
 
 
 @api_view(["POST"])

@@ -64,7 +64,6 @@ const handleMenuSelect = (key) => {
 }
 
 .sidebar-menu :deep(.n-menu-item-content),
-.sidebar-menu :deep(.n-menu-item-content-header),
 .sidebar-menu :deep(.n-submenu-children .n-menu-item-content) {
   min-height: 46px;
   margin-bottom: 6px;
@@ -72,6 +71,10 @@ const handleMenuSelect = (key) => {
   color: var(--sidebar-text) !important;
   font-weight: 600;
   transition: all 0.28s ease;
+}
+
+.sidebar-menu :deep(.n-menu-item-content-header) {
+  color: inherit !important;
 }
 
 .sidebar-menu :deep(.n-menu-item-content__icon) {
@@ -89,7 +92,6 @@ const handleMenuSelect = (key) => {
 .sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content__icon),
 .sidebar-menu :deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content-header) {
   color: var(--sidebar-active-text) !important;
-  transform: scale(1.04);
 }
 
 .sidebar-menu :deep(.n-menu-item-content:hover) {
@@ -118,22 +120,6 @@ const handleMenuSelect = (key) => {
   border-radius: 18px;
   margin: 4px 0 10px;
   padding: 6px;
-}
-
-.sidebar-menu :deep(.n-menu-item-content--collapsed) {
-  /* 折叠状态在菜单根节点居中图标。 */
-  justify-content: center;
-  width: 100%;
-  min-width: 0;
-  padding-inline: 0 !important;
-}
-
-.sidebar-menu :deep(.n-menu-item-content--collapsed .n-menu-item-content__icon) {
-  margin: 0 !important;
-}
-
-.sidebar-menu :deep(.n-menu-item-content--collapsed:hover) {
-  transform: none;
 }
 
 .sidebar-menu :deep(.n-menu-item-content__arrow) {

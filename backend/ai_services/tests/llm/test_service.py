@@ -21,7 +21,7 @@ class LLMProviderConfigTests(SimpleTestCase):
         service = LLMService()
 
         self.assertEqual(service.provider_name, "deepseek")
-        self.assertEqual(service.planned_model_family, "deepseek-v4-pro/flash")
+        self.assertEqual(service.planned_model_family, "deepseek-flash")
         self.assertEqual(service.resolved_api_key, "gateway-demo-key")
         self.assertEqual(service.resolved_base_url, "https://llm-gateway.example.edu/v1")
         self.assertEqual(service.api_format, "openai-compatible")
@@ -88,7 +88,7 @@ class LLMProviderConfigTests(SimpleTestCase):
         service._create_llm_client(request_timeout=12, max_retries=0)
 
         self.assertEqual(service.provider_name, "deepseek")
-        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-flash")
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
         self.assertEqual(
             chat_openai_class.call_args.kwargs["extra_body"],
             {"thinking": {"type": "disabled"}},
@@ -123,7 +123,7 @@ class LLMProviderConfigTests(SimpleTestCase):
             chat_openai_class.call_args.kwargs["extra_body"],
             {"thinking": {"type": "enabled"}},
         )
-        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-pro")
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
         self.assertEqual(chat_openai_class.call_args.kwargs["reasoning_effort"], "high")
         self.assertNotIn("temperature", chat_openai_class.call_args.kwargs)
 
@@ -154,7 +154,27 @@ class LLMProviderConfigTests(SimpleTestCase):
             chat_openai_class.call_args.kwargs["extra_body"],
             {"thinking": {"type": "disabled"}},
         )
-        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-v4-flash")
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
+
+    @override_settings(
+        DEMO_MODE=True,
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+    )
+    @patch("ai_services.services.llm.service.import_module")
+    def test_demo_mode_forces_v41_flash_for_explicit_model(self, mock_import_module):
+        """演示模式覆盖显式模型，所有调用都发送官方 deepseek-flash 标识。"""
+        from ai_services.services.llm.service import LLMService
+
+        chat_openai_class = Mock(return_value=Mock())
+        mock_import_module.return_value = SimpleNamespace(ChatOpenAI=chat_openai_class)
+
+        service = LLMService(model_name="qwen-plus")
+        service._create_llm_client(request_timeout=12, max_retries=0, call_type="profile_analysis")
+
+        self.assertEqual(service.provider_name, "deepseek")
+        self.assertEqual(service.planned_model_family, "DeepSeek V4.1 Flash (deepseek-flash)")
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
         self.assertNotIn("reasoning_effort", chat_openai_class.call_args.kwargs)
 
     @override_settings(

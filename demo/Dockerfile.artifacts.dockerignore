@@ -1,0 +1,8 @@
+# 工件镜像只接收手册、截图和录屏，避免把源码与本机配置送入构建上下文。
+*
+!demo/
+!demo/artifacts/
+!demo/artifacts/**
+demo/artifacts/*.tar
+demo/artifacts/*.dump
+demo/artifacts/*.zip

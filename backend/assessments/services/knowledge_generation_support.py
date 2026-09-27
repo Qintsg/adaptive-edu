@@ -79,7 +79,9 @@ def refresh_learner_profile_for_assessment(*, user, course_id: int | str) -> Non
     """刷新课程学习者画像。"""
     from users.profiles.services import get_learner_profile_service
 
-    get_learner_profile_service(user).generate_profile_for_course(course_id)
+    result = get_learner_profile_service(user).generate_profile_for_course(course_id)
+    if isinstance(result, dict) and result.get("success") is False:
+        raise RuntimeError(str(result.get("error") or "学习画像生成失败"))
 
 
 def upsert_assessment_feedback_report(
@@ -122,6 +124,7 @@ def upsert_assessment_feedback_report(
                 ),
                 "summary": llm_feedback.get("summary", "") if isinstance(llm_feedback, dict) else "",
                 "knowledge_gaps": llm_feedback.get("knowledge_gaps", []) if isinstance(llm_feedback, dict) else [],
+                "generation_source": llm_feedback.get("generation_source") if isinstance(llm_feedback, dict) else None,
             },
             "analysis": llm_feedback.get("analysis", "") if isinstance(llm_feedback, dict) else str(llm_feedback),
             "recommendations": llm_feedback.get("recommendations", []) if isinstance(llm_feedback, dict) else [],

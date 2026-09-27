@@ -1,3 +1,5 @@
+"""LLM 提供方、模型标识与调用策略配置。"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,8 +38,8 @@ class LLMCallParameterPlan:
     extra_body: dict[str, Any]
 
 
-DEEPSEEK_FLASH_MODEL = "deepseek-v4-flash"
-DEEPSEEK_PRO_MODEL = "deepseek-v4-pro"
+DEEPSEEK_FLASH_MODEL = "deepseek-flash"
+DEEPSEEK_PRO_MODEL = DEEPSEEK_FLASH_MODEL
 DEFAULT_OPENAI_COMPATIBLE_BASE_URL = "https://api.deepseek.com"
 
 # 支持的模型配置。当前统一走 OpenAI 兼容接口，因此只要提供方具备兼容
@@ -66,8 +68,7 @@ MODEL_CONFIGS: dict[str, ModelProviderConfig] = {
         "display_name": "DeepSeek",
         "base_url": "https://api.deepseek.com",
         "models": [
-            "deepseek-v4-flash",
-            "deepseek-v4-pro",
+            DEEPSEEK_FLASH_MODEL,
             "deepseek-chat",
             "deepseek-reasoner",
             "deepseek-coder",

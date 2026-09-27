@@ -1,3 +1,4 @@
+/** Fluent 图标映射：兼容后端菜单名称与前端页面名称。 */
 import { h, type Component } from 'vue'
 import { NIcon } from 'naive-ui'
 import {
@@ -12,6 +13,7 @@ import {
   Chat24Regular,
   CheckmarkCircle24Regular,
   ChevronDown24Regular,
+  ClipboardTask24Regular,
   Copy24Regular,
   DataBarVertical24Regular,
   Delete24Regular,
@@ -55,18 +57,24 @@ export const appIcons = {
   AppsList: AppsList24Regular,
   ArrowSync: ArrowSync24Regular,
   Upload: ArrowUpload24Regular,
+  Avatar: Person24Regular,
   Board: Board24Regular,
+  Odometer: Board24Regular,
   Reading: BookOpen24Regular,
   ChatDotRound: Chat24Regular,
   CheckCircle: CheckmarkCircle24Regular,
   ChevronDown: ChevronDown24Regular,
   Copy: Copy24Regular,
+  DocumentCopy: ClipboardTask24Regular,
+  Collection: FolderOpen24Regular,
+  Connection: Share24Regular,
   DataAnalysis: DataBarVertical24Regular,
   DataBoard: DataBarVertical24Regular,
   Delete: Delete24Regular,
   DismissCircle: DismissCircle24Regular,
   Document: Document24Regular,
   Edit: Edit24Regular,
+  EditPen: Edit24Regular,
   ErrorCircle: ErrorCircle24Regular,
   Eye: Eye24Regular,
   EyeOff: EyeOff24Regular,
@@ -80,9 +88,11 @@ export const appIcons = {
   Key: Key24Regular,
   Link: Link24Regular,
   List: List24Regular,
+  Tickets: List24Regular,
   Lock: LockClosed24Regular,
   Mail: Mail24Regular,
   MagicStick: Wand24Regular,
+  Navigation: Navigation24Regular,
   Notebook: Notebook24Regular,
   People: People24Regular,
   Plus: Add24Regular,
@@ -99,6 +109,7 @@ export const appIcons = {
   Task: TaskListAdd24Regular,
   Trophy: Trophy24Regular,
   User: Person24Regular,
+  UserFilled: People24Regular,
   Video: Video24Regular,
   Warning: Warning24Regular,
   Bot: Bot24Regular
@@ -106,6 +117,12 @@ export const appIcons = {
 
 export type AppIconName = keyof typeof appIcons
 
+/**
+ * 根据菜单名称取得 Fluent 图标组件。
+ *
+ * :param name: 菜单图标名称或组件。
+ * :returns: Fluent 图标组件。
+ */
 export function getIconComponent(name?: string | Component): Component {
   if (typeof name !== 'string') {
     return name ?? Document24Regular
@@ -113,6 +130,13 @@ export function getIconComponent(name?: string | Component): Component {
   return appIcons[name as AppIconName] ?? Document24Regular
 }
 
+/**
+ * 创建供 Naive UI 菜单使用的图标渲染函数。
+ *
+ * :param icon: 菜单图标名称或组件。
+ * :param size: 图标大小。
+ * :returns: 图标渲染函数。
+ */
 export function renderIcon(icon: string | Component | undefined, size = 18) {
   const iconComponent = getIconComponent(icon)
   return () => h(NIcon, { size }, { default: () => h(iconComponent) })

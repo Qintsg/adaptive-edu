@@ -186,7 +186,7 @@ def build_graph_answer_payload(
         "prerequisites": search_item.prerequisites if search_item is not None else [],
         "postrequisites": search_item.postrequisites if search_item is not None else [],
     }
-    return {
+    payload = {
         "reply": str(rag_result.get("answer", rag_result.get("reply", ""))).strip(),
         "sources": rag_result.get("sources", []),
         "mode": str(rag_result.get("mode", "")).strip() or "graph_rag",
@@ -195,6 +195,10 @@ def build_graph_answer_payload(
         "matched_point": search_item.to_dict() if search_item is not None else None,
         "related_points": related_points,
     }
+    if rag_result.get("demo_fallback"):
+        payload["demo_fallback"] = True
+        payload["generation_source"] = rag_result.get("generation_source")
+    return payload
 
 
 def build_search_item(user, point: KnowledgePoint) -> PointSearchItem:
@@ -453,4 +457,8 @@ def build_llm_fallback(*, course_id: int, question: str) -> dict[str, object]:
         call_type="graph_rag_chat_fallback",
         fallback_response=fallback,
     )
-    return {**fallback, "reply": result.get("reply", result.get("answer", fallback["reply"]))}
+    payload = {**fallback, "reply": result.get("reply", result.get("answer", fallback["reply"]))}
+    if result.get("demo_fallback"):
+        payload["demo_fallback"] = True
+        payload["generation_source"] = result.get("generation_source")
+    return payload

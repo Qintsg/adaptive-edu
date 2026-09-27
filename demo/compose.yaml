@@ -1,0 +1,114 @@
+# 答辩演示专用 Compose：项目名和持久卷与开发环境隔离。
+name: adaptive-edu-defense-demo
+
+services:
+  postgres:
+    image: postgres:17.10-alpine3.23
+    environment:
+      POSTGRES_DB: adaptive_edu_demo
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: DemoDb2026ChangeMe
+    volumes:
+      - demo_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d adaptive_edu_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  neo4j:
+    image: neo4j:2026.06.0
+    environment:
+      NEO4J_AUTH: neo4j/DemoNeo4j2026
+    volumes:
+      - demo_neo4j:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -a bolt://localhost:7687 -u neo4j -p DemoNeo4j2026 'RETURN 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    image: adaptive-edu-defense-backend:2026-09-27
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile.backend
+    environment:
+      SECRET_KEY: demo-only-local-key-change-before-network-exposure
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend,web
+      CSRF_TRUSTED_ORIGINS: http://localhost:18080,http://127.0.0.1:18080
+      DB_NAME: adaptive_edu_demo
+      DB_USER: demo
+      DB_PASSWORD: DemoDb2026ChangeMe
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      NEO4J_BOLT_URL: bolt://neo4j:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: DemoNeo4j2026
+      GRAPHRAG_EMBEDDER_PROVIDER: hash
+      GRAPHRAG_QDRANT_PATH: runtime_logs/rag/qdrant
+      RESOURCE_MCP_ENABLED: "False"
+      LLM_API_KEY: ${DEMO_LLM_API_KEY:-}
+      LLM_MAX_RETRIES: "0"
+      LLM_REQUEST_TIMEOUT: ${DEMO_LLM_REQUEST_TIMEOUT:-5}
+      LLM_LOW_REASONING_MODE: "True"
+      KT_USE_GPU: "False"
+      KT_MEFKT_NG_DEVICE: cpu
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      DEMO_MODE: "True"
+      DEMO_AI_PRESET_FILE: /app/backend/demo_presets/deepseek-v41-flash.jsonl
+      DEMO_AI_CAPTURE_FILE: ${DEMO_AI_CAPTURE_FILE:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - demo_media:/app/backend/media
+      - demo_static:/app/backend/staticfiles
+      - demo_rag:/app/backend/runtime_logs/rag
+      - demo_state:/app/backend/demo_state
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=4).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 240s
+
+  web:
+    image: adaptive-edu-defense-web:2026-09-27
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile.web
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${DEMO_WEB_PORT:-18080}:80"
+    volumes:
+      - demo_media:/usr/share/nginx/html/media:ro
+      - demo_static:/usr/share/nginx/html/static:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  artifacts:
+    profiles: ["artifacts"]
+    image: adaptive-edu-defense-artifacts:2026-09-27
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile.artifacts
+
+volumes:
+  demo_postgres:
+  demo_neo4j:
+  demo_media:
+  demo_static:
+  demo_rag:
+  demo_state:

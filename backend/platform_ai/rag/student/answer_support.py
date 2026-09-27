@@ -422,13 +422,17 @@ def graph_answer_with_llm(
     evidence: AnswerEvidenceBundle,
 ) -> dict[str, object]:
     """构造知识点级 LLM 响应并保留证据来源。"""
-    return {
+    payload = {
         "answer": sanitize_answer_text(str(llm_result.get("answer", evidence.fallback_answer))),
         "sources": evidence.sources,
         "mode": evidence.resolved_mode or "graph_rag",
         "query_modes": evidence.query_modes,
         "key_points": llm_result.get("key_points", evidence.fallback_response.get("key_points", [])),
     }
+    if llm_result.get("demo_fallback"):
+        payload["demo_fallback"] = True
+        payload["generation_source"] = llm_result.get("generation_source")
+    return payload
 
 
 def course_answer_with_llm(
@@ -438,7 +442,7 @@ def course_answer_with_llm(
     candidates: CourseAnswerCandidates,
 ) -> dict[str, object]:
     """构造课程级 LLM 响应并保留命中知识点。"""
-    return {
+    payload = {
         "answer": sanitize_answer_text(str(llm_result.get("answer", evidence.fallback_answer))),
         "sources": evidence.sources,
         "mode": evidence.resolved_mode,
@@ -446,6 +450,10 @@ def course_answer_with_llm(
         "key_points": llm_result.get("key_points", evidence.fallback_response["key_points"]),
         "matched_point_ids": candidates.matched_point_ids,
     }
+    if llm_result.get("demo_fallback"):
+        payload["demo_fallback"] = True
+        payload["generation_source"] = llm_result.get("generation_source")
+    return payload
 
 
 def normalize_answer_sources(

@@ -1,0 +1,34 @@
+# 答辩后端镜像：内含课程原始素材，首次启动建立独立演示数据。
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/demo-venv \
+    PATH=/opt/demo-venv/bin:$PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install --no-cache-dir uv
+
+WORKDIR /app/backend
+COPY backend/pyproject.toml backend/uv.lock ./
+COPY demo/prepare_cpu_project.py /tmp/prepare_cpu_project.py
+RUN python /tmp/prepare_cpu_project.py /app/backend/pyproject.toml \
+    && uv lock \
+    && uv sync --locked --no-dev --no-install-project \
+    && cp pyproject.toml /tmp/demo-pyproject.toml \
+    && cp uv.lock /tmp/demo-uv.lock
+
+COPY backend/ ./
+RUN cp /tmp/demo-pyproject.toml pyproject.toml \
+    && cp /tmp/demo-uv.lock uv.lock
+COPY demo/seed_demo.py ./demo_seed.py
+COPY demo/presets/ ./demo_presets/
+COPY demo/backend-entrypoint.sh /usr/local/bin/demo-backend-entrypoint
+RUN chmod 755 /usr/local/bin/demo-backend-entrypoint
+
+EXPOSE 8000
+ENTRYPOINT ["demo-backend-entrypoint"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "adaptive_edu_api.asgi:application"]

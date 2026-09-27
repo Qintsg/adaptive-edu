@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -12,10 +13,31 @@ from rest_framework.response import Response
 
 from common.core.logging_utils import build_log_message
 from common.http.responses import error_response, success_response
+from ai_services.services.demo_fallback import (
+    build_demo_chat,
+    build_demo_search,
+    demo_mode_enabled,
+)
+from ai_services.services.demo_presets import load_verified_answer, record_verified_answer
 from platform_ai.llm import llm_facade
 from ai_services.services.student.graph_rag_service import student_graph_rag_service
 
 logger = logging.getLogger(__name__)
+
+
+def _chat_request_fingerprint(course_id: object, question: str, point_id: object) -> str:
+    """构造课程问答彩排结果的稳定请求文本。
+
+    :param course_id: 课程 ID。
+    :param question: 学生问题。
+    :param point_id: 可选知识点 ID。
+    :returns: 用于计算指纹的 JSON 文本。
+    """
+    return json.dumps(
+        {"course_id": str(course_id), "question": question, "point_id": str(point_id or "")},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
 
 def build_chat_response(
@@ -33,15 +55,32 @@ def build_chat_response(
         return {"reply": "请输入问题", "sources": [], "mode": "error"}
 
     if course_id:
+        preset_prompt = _chat_request_fingerprint(course_id, normalized_question, point_id)
+        if demo_mode_enabled() and not llm_facade.is_available:
+            verified = load_verified_answer("api_json", "student_chat", preset_prompt)
+            if isinstance(verified, dict):
+                return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}
         try:
-            return student_graph_rag_service.ask(
+            result = student_graph_rag_service.ask(
                 user=user,
                 course_id=int(course_id),
                 question=normalized_question,
                 point_id=int(point_id) if point_id else None,
             )
+            if not result.get("demo_fallback"):
+                record_verified_answer("api_json", "student_chat", preset_prompt, result)
+            return result
         except Exception as exc:
             logger.error(build_log_message("chat.graph_rag.fail", course_id=course_id, error=exc))
+            if demo_mode_enabled():
+                verified = load_verified_answer("api_json", "student_chat", preset_prompt)
+                if isinstance(verified, dict):
+                    return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}
+                return build_demo_chat(
+                    int(course_id),
+                    normalized_question,
+                    int(point_id) if point_id else None,
+                )
             return {"reply": "服务暂时不可用，请稍后重试。", "sources": [], "mode": "error"}
 
     fallback = {
@@ -65,7 +104,11 @@ def build_chat_response(
             call_type="chat",
             fallback_response=fallback,
         )
-        return {"reply": result.get("reply", result.get("answer", "")), "sources": [], "mode": "llm_fallback"}
+        payload = {"reply": result.get("reply", result.get("answer", "")), "sources": [], "mode": "llm_fallback"}
+        if result.get("demo_fallback"):
+            payload["demo_fallback"] = True
+            payload["generation_source"] = result.get("generation_source")
+        return payload
     return fallback
 
 
@@ -122,12 +165,19 @@ def ai_graph_rag_search(request):
         return error_response(msg="缺少课程ID", code=400)
     if not query:
         return error_response(msg="请输入检索内容", code=400)
-    result = student_graph_rag_service.search_points(
-        user=request.user,
-        course_id=int(course_id),
-        query=query,
-        limit=max(1, min(limit, 20)),
-    )
+    bounded_limit = max(1, min(limit, 20))
+    try:
+        result = student_graph_rag_service.search_points(
+            user=request.user,
+            course_id=int(course_id),
+            query=query,
+            limit=bounded_limit,
+        )
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式 GraphRAG 检索失败，使用课程知识点检索")
+        result = build_demo_search(request.user, int(course_id), query, bounded_limit)
     return success_response(data=result)
 
 
@@ -142,10 +192,28 @@ def ai_graph_rag_ask(request):
         return error_response(msg="缺少课程ID", code=400)
     if not question:
         return error_response(msg="请输入问题", code=400)
-    result = student_graph_rag_service.ask(
-        user=request.user,
-        course_id=int(course_id),
-        question=question,
-        point_id=int(point_id) if point_id else None,
-    )
+    preset_prompt = _chat_request_fingerprint(course_id, question, point_id)
+    if demo_mode_enabled() and not llm_facade.is_available:
+        verified = load_verified_answer("api_json", "graph_rag_ask", preset_prompt)
+        if isinstance(verified, dict):
+            return success_response(data={**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"})
+    try:
+        result = student_graph_rag_service.ask(
+            user=request.user,
+            course_id=int(course_id),
+            question=question,
+            point_id=int(point_id) if point_id else None,
+        )
+        if not result.get("demo_fallback"):
+            record_verified_answer("api_json", "graph_rag_ask", preset_prompt, result)
+    except Exception:
+        if not demo_mode_enabled():
+            raise
+        logger.exception("演示模式 GraphRAG 问答失败，使用课程内容回答")
+        verified = load_verified_answer("api_json", "graph_rag_ask", preset_prompt)
+        result = (
+            {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}
+            if isinstance(verified, dict)
+            else build_demo_chat(int(course_id), question, int(point_id) if point_id else None)
+        )
     return success_response(data=result)

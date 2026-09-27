@@ -2,7 +2,7 @@
 LLM服务模块 - 使用LangChain框架封装大模型调用
 
 支持的模型：
-- DeepSeek V4 (按调用场景选择 deepseek-v4-pro / deepseek-v4-flash)
+- DeepSeek V4.1 Flash（API model 标识为 deepseek-flash）
 - 其他 OpenAI 兼容模型可在代码层显式传入 model_name，并复用统一网关。
 
 使用示例:
@@ -46,6 +46,7 @@ from ai_services.services.llm.provider_config import (
 )
 from ai_services.services.llm.resource_mixin import LLMResourceMixin
 from ai_services.services.llm.response_mixin import LLMResponseMixin
+from ai_services.services.demo_fallback import demo_mode_enabled
 from common.core.logging_utils import build_log_message
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class LLMService(LLMProfilePathMixin, LLMResourceMixin, LLMFeedbackKTMixin, LLMR
     """
     大语言模型服务类。
 
-    使用 LangChain 框架进行 LLM 调用，默认按业务场景选择 DeepSeek V4 Pro 或 Flash。
+    使用 LangChain 框架进行 LLM 调用，默认使用 DeepSeek V4.1 Flash。
     当未配置统一 API 密钥时，自动使用 Mock 响应。
     """
 
@@ -92,14 +93,17 @@ class LLMService(LLMProfilePathMixin, LLMResourceMixin, LLMFeedbackKTMixin, LLMR
         初始化LLM服务
 
         Args:
-            model_name: 显式模型名称；为空时由调用策略在 DeepSeek V4 Pro / Flash 中选择
+            model_name: 显式模型名称；演示模式始终使用 DeepSeek V4.1 Flash
             temperature: 生成温度，0-1之间，越高越随机
         """
-        if model_name:
+        if demo_mode_enabled():
+            self.model_name = DEEPSEEK_FLASH_MODEL
+            self._explicit_model_name = True
+        elif model_name:
             self.model_name = model_name
             self._explicit_model_name = True
         else:
-            self.model_name = "deepseek-v4"
+            self.model_name = DEEPSEEK_FLASH_MODEL
             self._explicit_model_name = False
         self.temperature = temperature
         self._llm = None
@@ -156,7 +160,7 @@ class LLMService(LLMProfilePathMixin, LLMResourceMixin, LLMFeedbackKTMixin, LLMR
     @property
     def planned_model_family(self) -> str:
         """返回默认模型族描述，实际模型由调用类型决定。"""
-        return self.model_name if self._explicit_model_name else "deepseek-v4-pro/flash"
+        return "DeepSeek V4.1 Flash (deepseek-flash)" if demo_mode_enabled() else self.model_name
 
     @property
     def low_reasoning_mode(self) -> bool:
@@ -252,14 +256,11 @@ class LLMService(LLMProfilePathMixin, LLMResourceMixin, LLMFeedbackKTMixin, LLMR
         return ""
 
     def _model_for_call_type(self, call_type: str) -> str:
-        """根据业务调用类型选择 DeepSeek V4 Pro 或 Flash。"""
+        """所有默认调用使用 DeepSeek V4.1 Flash，演示模式覆盖显式模型。"""
+        if demo_mode_enabled():
+            return DEEPSEEK_FLASH_MODEL
         if self._explicit_model_name:
             return self.model_name
-        if self.low_reasoning_mode:
-            return DEEPSEEK_FLASH_MODEL
-        normalized_call_type = (call_type or "").strip().lower()
-        if normalized_call_type in PRO_MODEL_CALL_TYPES or normalized_call_type.startswith("agent_"):
-            return DEEPSEEK_PRO_MODEL
         return DEEPSEEK_FLASH_MODEL
 
     def _apply_thinking_flag(

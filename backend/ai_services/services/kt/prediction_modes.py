@@ -271,12 +271,20 @@ class KTPredictionModeMixin(KTPredictionStatsMixin):
 
     def get_learning_recommendations(
         self,
-        _user_id: int,
-        _course_id: int,
+        user_id: int,
+        course_id: int,
         mastery_predictions: Dict[int, float],
         threshold: float = 0.6,
     ) -> List[Dict[str, Any]]:
-        """基于掌握度预测生成学习建议列表。"""
+        """基于掌握度预测生成学习建议列表。
+
+        :param user_id: 当前学生 ID。
+        :param course_id: 当前课程 ID。
+        :param mastery_predictions: 知识点掌握度。
+        :param threshold: 复习阈值。
+        :returns: 低于阈值的知识点建议。
+        """
+        _ = user_id, course_id
         recommendations = []
         weak_points = [
             (point_id, mastery)

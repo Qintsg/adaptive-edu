@@ -1,0 +1,27 @@
+# 答辩镜像构建忽略规则：排除密钥、本机数据和可再生依赖。
+.git/
+.claude/
+.agents/
+.playwright-cli/
+.playwright-mcp/
+output/
+tmp/
+temp/
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/node_modules/
+frontend/dist/
+backend/.env
+demo/.env.local
+backend/config.ini
+backend/media/
+backend/staticfiles/
+backend/runtime_logs/
+backend/logs/operations/
+backend/models/MEFKT/public_datasets/
+backend/models/MEFKT/*.bak
+demo/artifacts/images.tar
+demo/artifacts/*.dump
+demo/artifacts/*.tar
+demo/artifacts/*.zip

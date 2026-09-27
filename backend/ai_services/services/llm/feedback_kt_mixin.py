@@ -1,9 +1,12 @@
+"""LLM 作业反馈与知识追踪解读。"""
+
 from __future__ import annotations
 
 import logging
 from collections.abc import Mapping, Sequence
 
 from common.core.logging_utils import build_log_message
+from ai_services.services.demo_fallback import demo_mode_enabled, mark_demo_payload
 from ai_services.services.llm.feedback_kt_support import (
     FeedbackReportInput,
     KTAnalysisInput,
@@ -60,7 +63,7 @@ class LLMFeedbackKTMixin:
                     model=self.model_name,
                 )
             )
-            return fallback
+            return mark_demo_payload(fallback) if demo_mode_enabled() else fallback
 
         return self._call_with_fallback(
             build_feedback_report_prompt(report_input),

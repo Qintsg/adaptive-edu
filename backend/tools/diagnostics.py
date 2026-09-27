@@ -125,7 +125,7 @@ def _print_llm_section() -> None:
 
     print("\n[API密钥]")
     print(f"  LLM API Key: {'✓ 已配置' if llm_key else '✗ 未配置'}")
-    print("  LLM_MODEL_POLICY: deepseek-v4-pro/flash")
+    print("  LLM_MODEL_POLICY: DeepSeek V4.1 Flash (deepseek-flash)")
     print(f'  LLM_BASE_URL: {os.environ.get("LLM_BASE_URL", "https://api.deepseek.com") or "https://api.deepseek.com"}')
     print(f'  LLM_LOW_REASONING_MODE: {os.environ.get("LLM_LOW_REASONING_MODE", "False") or "False"}')
 

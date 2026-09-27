@@ -9,13 +9,16 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from common.core.logging_utils import build_log_message
+from ai_services.services.demo_fallback import demo_mode_enabled, mark_demo_payload
+from ai_services.services.demo_presets import load_verified_answer
+from platform_ai.llm import llm_facade
 from ai_services.services.student.ai_streaming import (
     StudentAIStreamPlan,
     build_stream_done_payload,
     build_student_ai_stream_plan,
     iter_student_ai_stream_chunks,
 )
-from ai_services.api.student.chat import build_chat_response
+from ai_services.api.student.chat import _chat_request_fingerprint, build_chat_response
 
 logger = logging.getLogger(__name__)
 _STREAM_END = object()
@@ -34,6 +37,21 @@ def _split_reply_chunks(reply_text: str, chunk_size: int = 90) -> list[str]:
 def _next_stream_chunk(chunk_iterator):
     """读取下一个同步流式块，供异步 consumer 放入线程执行。"""
     return next(chunk_iterator, _STREAM_END)
+
+
+def _has_verified_chat_for_empty_key(course_id: object, point_id: object, question: str) -> bool:
+    """检查固定课程问题是否有真实模型彩排答案。
+
+    :param course_id: 当前课程 ID。
+    :param point_id: 当前知识点 ID。
+    :param question: 学生问题。
+    :returns: 是否可按完全相同的请求读取已验证答案。
+    """
+    if not demo_mode_enabled() or llm_facade.is_available or not course_id:
+        return False
+    fingerprint = _chat_request_fingerprint(course_id, question, point_id)
+    preset = load_verified_answer("api_json", "student_chat", fingerprint)
+    return isinstance(preset, dict) and bool(str(preset.get("reply") or "").strip())
 
 
 class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
@@ -64,6 +82,15 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json({"type": "start"})
         await self.send_json({"type": "stage", "stage": "retrieval", "message": "正在检索课程图谱证据"})
+        if _has_verified_chat_for_empty_key(course_id, point_id, question):
+            await self._send_compatible_fallback(
+                question=question,
+                course_id=course_id,
+                point_id=point_id,
+                knowledge_point=knowledge_point,
+                course_name=course_name,
+            )
+            return
         try:
             plan = await database_sync_to_async(build_student_ai_stream_plan)(
                 user=self.scope["user"],
@@ -123,6 +150,9 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
             reply=reply_text,
             streamed=False,
         )
+        if demo_mode_enabled():
+            done_payload = mark_demo_payload(done_payload)
+            done_payload["mode"] = "demo_fallback"
         await self.send_json({"type": "done", **done_payload})
 
     async def _send_compatible_fallback(
@@ -158,6 +188,8 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
                     "matched_point": result.get("matched_point"),
                     "query_modes": result.get("query_modes", []),
                     "key_points": result.get("key_points", []),
+                    "demo_fallback": bool(result.get("demo_fallback")),
+                    "generation_source": result.get("generation_source"),
                 }
             )
         except Exception as error:  # noqa: BLE001

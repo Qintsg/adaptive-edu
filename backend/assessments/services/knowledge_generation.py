@@ -17,6 +17,12 @@ from assessments.services.knowledge_generation_support import (
     upsert_assessment_feedback_report,
 )
 from assessments.models import Assessment, AssessmentResult, AssessmentStatus
+from ai_services.services.demo_fallback import (
+    build_demo_feedback,
+    build_demo_learning_path,
+    build_demo_profile,
+    demo_mode_enabled,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -57,14 +63,28 @@ def async_generate_after_assessment(
         logger.info(f"异步生成：学习路径生成成功 user={user_id} course={course_id}")
     except Exception as exc:
         logger.error(f"异步生成：学习路径生成失败 user={user_id}: {exc}")
-        errors.append(f"学习路径: {exc}")
+        if demo_mode_enabled():
+            try:
+                from courses.models import Course
+
+                build_demo_learning_path(user, Course.objects.get(id=course_id))
+            except Exception as fallback_error:
+                errors.append(f"学习路径: {fallback_error}")
+        else:
+            errors.append(f"学习路径: {exc}")
 
     try:
         refresh_learner_profile_for_assessment(user=user, course_id=course_id)
         logger.info(f"异步生成：学习者画像刷新成功 user={user_id} course={course_id}")
     except Exception as exc:
         logger.error(f"异步生成：学习画像刷新失败 user={user_id}: {exc}")
-        errors.append(f"学习画像: {exc}")
+        if demo_mode_enabled():
+            try:
+                build_demo_profile(user, int(course_id))
+            except Exception as fallback_error:
+                errors.append(f"学习画像: {fallback_error}")
+        else:
+            errors.append(f"学习画像: {exc}")
 
     try:
         from ai_services.services import llm_service as llm
@@ -90,7 +110,30 @@ def async_generate_after_assessment(
         logger.info(f"异步生成：反馈报告生成成功 user={user_id} report={report_id}")
     except Exception as exc:
         logger.error(f"异步生成：反馈报告生成失败 user={user_id}: {exc}")
-        errors.append(f"反馈报告: {exc}")
+        if demo_mode_enabled():
+            try:
+                assessment_result, score, total_score = load_assessment_result_snapshot(
+                    user_id=user_id,
+                    assessment=assessment,
+                )
+                if assessment_result is None:
+                    raise AssessmentResult.DoesNotExist("未找到知识测评结果")
+                report_content = build_demo_feedback(
+                    assessment.title,
+                    score,
+                    total_score,
+                    build_assessment_mistake_payload(question_details),
+                )
+                upsert_assessment_feedback_report(
+                    user_id=user_id,
+                    assessment=assessment,
+                    question_details=question_details,
+                    llm_feedback=report_content,
+                )
+            except Exception as fallback_error:
+                errors.append(f"反馈报告: {fallback_error}")
+        else:
+            errors.append(f"反馈报告: {exc}")
 
     update_generation_status(
         user_id=user_id,

@@ -19,6 +19,7 @@ from typing import Any
 from django.db import close_old_connections, transaction
 
 from common.core.logging_utils import build_log_message
+from ai_services.services.demo_fallback import build_demo_feedback, demo_mode_enabled
 from exams.reports.generation_support import (
     REPORT_SAVE_FIELDS,
     build_answer_history_records,
@@ -100,9 +101,9 @@ def generate_feedback_report_sync(
     """
     from ai_services.services import llm_service
     from exams.api.student.helpers import (
-        _build_exam_question_details,
-        _build_exam_score_map,
-        _resolve_pass_threshold,
+        build_exam_question_details as _build_exam_question_details,
+        build_exam_score_map as _build_exam_score_map,
+        resolve_pass_threshold as _resolve_pass_threshold,
     )
 
     report = load_report_with_dependencies(report_id)
@@ -170,6 +171,8 @@ def generate_feedback_report_sync(
             summary=normalized_feedback.summary,
             knowledge_gaps=normalized_feedback.knowledge_gaps,
         )
+        if llm_result.get("demo_fallback"):
+            overview["generation_source"] = llm_result.get("generation_source")
         apply_completed_report(
             report=report,
             overview=overview,
@@ -178,13 +181,14 @@ def generate_feedback_report_sync(
             save_fields=REPORT_SAVE_FIELDS,
         )
 
-        save_llm_call_log(
-            user,
-            exam,
-            context.grading,
-            context.mistakes,
-            normalized_feedback.summary,
-        )
+        if not llm_result.get("demo_fallback"):
+            save_llm_call_log(
+                user,
+                exam,
+                context.grading,
+                context.mistakes,
+                normalized_feedback.summary,
+            )
 
         logger.info(
             build_log_message(
@@ -206,4 +210,29 @@ def generate_feedback_report_sync(
                 error=exc,
             )
         )
+        if demo_mode_enabled():
+            try:
+                fallback = build_demo_feedback(
+                    exam.title,
+                    float(submission.score or 0),
+                    float(exam.total_score or 0),
+                    [],
+                )
+                overview = dict(report.overview) if isinstance(report.overview, dict) else {}
+                overview.update({
+                    "score": float(submission.score or 0),
+                    "total_score": float(exam.total_score or 0),
+                    "summary": fallback["summary"],
+                    "generation_source": fallback["generation_source"],
+                })
+                report.overview = overview
+                report.status = "completed"
+                report.analysis = fallback["analysis"]
+                report.recommendations = fallback["recommendations"]
+                report.next_tasks = fallback["next_tasks"]
+                report.conclusion = fallback["encouragement"]
+                report.save(update_fields=REPORT_SAVE_FIELDS)
+                return overview
+            except Exception:
+                logger.exception("演示模式作业报告本地回退失败")
         return persist_failed_report(report, str(exc))
