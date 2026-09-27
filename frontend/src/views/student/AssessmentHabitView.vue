@@ -1,3 +1,4 @@
+<!-- 学习习惯问卷页面：逐题作答与进度展示。 -->
 <template>
   <div class="assessment-habit-view">
     <n-card v-loading="loading" class="question-card" shadow="hover">
@@ -232,5 +233,13 @@ onMounted(() => {
 
 .progress-bar {
   margin-top: 20px;
+}
+
+.progress-bar :deep(.n-progress-content > div:last-child) {
+  min-width: 48px;
+}
+
+.progress-bar :deep(.n-progress-icon--as-text) {
+  white-space: nowrap;
 }
 </style>

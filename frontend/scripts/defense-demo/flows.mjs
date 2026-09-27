@@ -143,6 +143,10 @@ export async function runStudent1(capture) {
     await completed.click()
     await capture.page.getByRole('button', { name: '复习巩固' }).click()
     await capture.page.waitForURL(/\/student\/task\//, { timeout: 30000 })
+    await capture.page.locator('.task-learning-view .intro-card').waitFor({ state: 'visible', timeout: 90000 })
+    await capture.page.waitForFunction(() =>
+      (document.querySelector('.task-learning-view .intro-card .intro-text')?.textContent?.trim().length || 0) >= 20,
+    null, { timeout: 90000 })
   })
 
   await attempt(capture, 'student1-resources', '课程资源可以按章节和类型查看。',

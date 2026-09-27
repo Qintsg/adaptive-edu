@@ -1,3 +1,4 @@
+<!-- 管理端班级管理页面：列表、筛选与班级操作。 -->
 <template>
   <div class="class-manage-view">
     <n-card class="page-header" shadow="never">
@@ -35,11 +36,13 @@
         <n-table-column prop="createdAt" label="创建时间" width="180">
           <template #default="{ row }">{{ row.createdAt }}</template>
         </n-table-column>
-        <n-table-column label="操作" width="200">
+        <n-table-column label="操作" width="240">
           <template #default="{ row }">
-            <n-button type="primary" link @click="viewClassDetail(row)">查看</n-button>
-            <n-button type="warning" link @click="handleEditClass(row)">编辑</n-button>
-            <n-button type="danger" link @click="deleteClass(row)">删除</n-button>
+            <div class="class-row-actions">
+              <n-button type="primary" link @click="viewClassDetail(row)">查看</n-button>
+              <n-button type="warning" link @click="handleEditClass(row)">编辑</n-button>
+              <n-button type="danger" link @click="deleteClass(row)">删除</n-button>
+            </div>
           </template>
         </n-table-column>
         <template #empty>
@@ -299,5 +302,13 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   justify-content: flex-end;
+}
+
+.class-row-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  white-space: nowrap;
 }
 </style>

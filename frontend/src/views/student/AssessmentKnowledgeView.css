@@ -1,3 +1,4 @@
+/* 知识测评页面：题目、答题卡与进度条布局。 */
 .assessment-knowledge-view {
   max-width: 1100px;
   margin: 0 auto;
@@ -162,6 +163,14 @@
 
 .progress-bar {
   margin-top: 20px;
+}
+
+.progress-bar :deep(.n-progress-content > div:last-child) {
+  min-width: 48px;
+}
+
+.progress-bar :deep(.n-progress-icon--as-text) {
+  white-space: nowrap;
 }
 
 .option-letter {
