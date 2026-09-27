@@ -147,7 +147,7 @@
         <n-collapse>
           <!-- Question review stays expanded per item so the student can inspect mistakes selectively. -->
           <n-collapse-item v-for="(question, index) in questionDetails" :key="question.questionId" :name="index">
-            <template #title>
+            <template #header>
               <span>第 {{ index + 1 }} 题</span>
               <n-tag :type="question.isCorrect ? 'success' : 'danger'" size="small" class="title-tag">
                 {{ question.isCorrect ? '正确' : '错误' }}

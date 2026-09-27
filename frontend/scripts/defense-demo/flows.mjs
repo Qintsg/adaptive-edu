@@ -110,6 +110,33 @@ async function attempt(capture, label, narration, action) {
 }
 
 /**
+ * 等待学习画像中的 AI 建议正文出现，避免把进度条当作最终结果。
+ *
+ * :param {import('playwright').Page} page: 当前页面。
+ * :returns {Promise<void>}: 无。
+ */
+async function waitForProfileSuggestions(page) {
+  await page.waitForFunction(() => {
+    const card = document.querySelector('.profile-view .ai-card')
+    return Boolean(card?.querySelector('.suggestion-card'))
+      && !card?.querySelector('.ai-loading')
+  }, null, { timeout: AI_WAIT_TIMEOUT_MS })
+}
+
+/**
+ * 等待测评报告的题号与对错标记真正写入折叠行。
+ *
+ * :param {import('playwright').Page} page: 当前页面。
+ * :returns {Promise<void>}: 无。
+ */
+async function waitForAssessmentAnswerDetails(page) {
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.assessment-report-view .n-collapse-item__header-main')]
+      .some(element => element.textContent?.includes('第 1 题')),
+  null, { timeout: AI_WAIT_TIMEOUT_MS })
+}
+
+/**
  * 演示 student1 已有学习记录的完整浏览路径。
  *
  * :param {Object} capture: 学生取证会话。
@@ -127,7 +154,10 @@ export async function runStudent1(capture) {
     ['learning-path', '学习路径', '/student/learning-path', '学习路径依据测评结果安排当前任务。']
   ]
   for (const [label, title, route, narration] of pages) {
-    await attempt(capture, `student1-${label}`, narration, () => openRoute(capture, title, route))
+    await attempt(capture, `student1-${label}`, narration, async () => {
+      await openRoute(capture, title, route)
+      if (label === 'profile') await waitForProfileSuggestions(capture.page)
+    })
     if (label === 'knowledge-map') {
       const detailOpened = await attempt(capture, 'student1-knowledge-detail', '点开知识点可以查看关系与掌握情况。', async () => {
         await capture.page.locator('.graph-node').first().click()
@@ -239,6 +269,13 @@ export async function runStudent1(capture) {
   await attempt(capture, 'student1-feedback', '反馈报告展示得分、知识点和下一步建议。', async () => {
     await capture.page.getByRole('button', { name: '查看报告' }).first().click()
     await capture.page.waitForURL(/\/student\/feedback\//, { timeout: 30000 })
+    await capture.page.waitForFunction(() => {
+      const analysisCard = document.querySelector('.analysis-card')
+      const status = analysisCard?.querySelector('.n-tag')?.textContent?.trim()
+      const sectionText = analysisCard?.querySelector('.feedback-section')?.textContent?.trim() || ''
+      const detailText = document.querySelector('.detail-card .n-collapse-item__header-main')?.textContent || ''
+      return status === '已完成' && sectionText.length >= 20 && detailText.includes('第 1 题')
+    }, null, { timeout: AI_WAIT_TIMEOUT_MS })
   })
 }
 
@@ -273,6 +310,7 @@ export async function runStudent2(capture) {
   await capture.step('student2-knowledge-report', '报告展示知识点掌握度和学习建议。', async () => {
     await capture.page.locator('.feedback-card .generating-hint').waitFor({ state: 'hidden', timeout: AI_WAIT_TIMEOUT_MS })
     await capture.page.locator('.feedback-card .feedback-section').first().waitFor({ timeout: AI_WAIT_TIMEOUT_MS })
+    await waitForAssessmentAnswerDetails(capture.page)
   })
 
   await capture.step('student2-ability', '能力评测记录阅读、推理等学习能力。', async () => {
@@ -304,9 +342,12 @@ export async function runStudent2(capture) {
     await capture.page.getByRole('button', { name: '查看评测报告' }).click()
     await capture.page.waitForURL(/\/student\/assessment\/report/, { timeout: 30000 })
     await capture.page.locator('.score-card').waitFor({ timeout: 30000 })
+    await waitForAssessmentAnswerDetails(capture.page)
   })
-  await capture.step('student2-profile', '学习画像呈现学生特点和薄弱点。',
-    () => openRoute(capture, '学习画像', '/student/profile'))
+  await capture.step('student2-profile', '学习画像呈现学生特点和薄弱点。', async () => {
+    await openRoute(capture, '学习画像', '/student/profile')
+    await waitForProfileSuggestions(capture.page)
+  })
   await capture.step('student2-learning-path', '学习路径把接下来的任务排成可执行顺序。',
     async () => {
       await openRoute(capture, '学习路径', '/student/learning-path')

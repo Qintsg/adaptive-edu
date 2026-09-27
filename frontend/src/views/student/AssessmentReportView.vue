@@ -119,7 +119,7 @@
         <template #header><span>答题详情</span></template>
         <n-collapse>
           <n-collapse-item v-for="(q, idx) in questionDetails" :key="q.id" :title="`第 ${idx + 1} 题`" :name="idx">
-            <template #title>
+            <template #header>
               <span>第 {{ idx + 1 }} 题</span>
               <n-tag :type="q.isCorrect ? 'success' : 'danger'" size="small" style="margin-left: 8px;">
                 {{ q.isCorrect ? '正确' : '错误' }}
