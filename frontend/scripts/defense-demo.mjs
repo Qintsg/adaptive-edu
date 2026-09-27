@@ -43,6 +43,7 @@ function parseArgs(argv) {
     roles: ['student1', 'teacher', 'admin', 'student2'],
     student2Full: false,
     withAi: false,
+    requireLiveStream: false,
     allowStateChanges: false,
     disposableStack: false,
     final: false,
@@ -82,6 +83,7 @@ function parseArgs(argv) {
     }
     if (current === '--student2-full') options.student2Full = true
     else if (current === '--with-ai') options.withAi = true
+    else if (current === '--live-ai' || current === '--require-live-stream') options.requireLiveStream = true
     else if (current === '--allow-state-changes') options.allowStateChanges = true
     else if (current === '--disposable-stack') options.disposableStack = true
     else if (current === '--final') options.final = true
@@ -103,6 +105,9 @@ function parseArgs(argv) {
     && !(options.allowStateChanges && options.disposableStack)) {
     throw new Error('完整测评或 AI 提问必须同时带 --allow-state-changes 和 --disposable-stack')
   }
+  if (options.requireLiveStream && !options.withAi) {
+    throw new Error('--live-ai 必须与 --with-ai 同时使用')
+  }
   if (options.final && !options.imageRef) {
     throw new Error('正式取证必须带 --image-ref，以绑定最终镜像摘要')
   }
@@ -112,7 +117,7 @@ function parseArgs(argv) {
   if (options.final && (!options.backendImageRef || !options.backendContainer)) {
     throw new Error('正式取证必须带后端镜像名及 --backend-container，以核对 API 代码版本')
   }
-  if (options.final && options.withAi && !options.expectedAiAnswerFile) {
+  if (options.final && options.withAi && !options.requireLiveStream && !options.expectedAiAnswerFile) {
     throw new Error('正式 AI 录制需要 --expected-ai-answer-file 核对预置回答')
   }
   options.outputDir = path.resolve(options.outputDir)
@@ -136,6 +141,7 @@ function printHelp() {
   process.stdout.write(`--roles LIST           逗号分隔，默认 student1,teacher,admin,student2\n`)
   process.stdout.write(`--student2-full        录完整初始测评并提交；必须在临时栈运行\n`)
   process.stdout.write(`--with-ai              提交一次 AI 问题；必须在临时栈运行\n`)
+  process.stdout.write(`--live-ai              核对实时模型多段输出，并在正文生成中截图\n`)
   process.stdout.write(`--allow-state-changes --disposable-stack  确认临时栈可丢弃\n`)
   process.stdout.write(`--final                正式取证，强制镜像摘要检查\n`)
 }

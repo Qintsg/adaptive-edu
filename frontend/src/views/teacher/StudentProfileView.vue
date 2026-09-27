@@ -1,3 +1,4 @@
+<!-- 教师查看学生画像：刷新期间展示请求状态。 -->
 <template>
   <div class="student-profile-view" v-loading="loading" element-loading-text="加载学生画像中...">
     <n-page-header @back="goBack">
@@ -10,6 +11,8 @@
         </n-button>
       </template>
     </n-page-header>
+
+    <n-alert v-if="refreshing" title="正在更新学生画像，请稍候…" type="info" :closable="false" />
 
     <template v-if="!loading">
       <!-- 学生基本信息 -->
@@ -100,6 +103,7 @@ import { Refresh } from '@/theme/element-icons'
 import { getStudentProfileDetail } from '@/api/teacher/class'
 import RadarChart from '@/components/charts/RadarChart.vue'
 import request from '@/api/index'
+import { awaitAIResult } from '@/utils/aiLoading'
 
 const router = useRouter()
 const route = useRoute()
@@ -272,13 +276,13 @@ const handleRefreshProfile = async () => {
   try {
     await appDialog.confirm('将为该学生重新生成学习画像，可能需要一些时间', '确认刷新', { type: 'info' })
     refreshing.value = true
-    await request.post(`/api/teacher/students/${currentStudentId.value}/refresh-profile`, { course_id: currentCourseId.value })
+    await awaitAIResult(request.post(`/api/teacher/students/${currentStudentId.value}/refresh-profile`, { course_id: currentCourseId.value }))
     appMessage.success('画像刷新成功')
     await loadStudentProfile()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('刷新画像失败:', error)
-      appMessage.error('刷新画像失败: ' + (error?.message || '服务暂不可用'))
+      appMessage.error('暂时无法更新画像，请稍后重试')
     }
   } finally {
     refreshing.value = false

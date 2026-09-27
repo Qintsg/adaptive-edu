@@ -1,4 +1,12 @@
+/** 前端 API 响应与请求配置类型。 */
 import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /** 页面已经提供完整替代结果时，避免请求层重复提示。 */
+    silentError?: boolean
+  }
+}
 
 export type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retryCount?: number

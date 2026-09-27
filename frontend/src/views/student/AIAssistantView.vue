@@ -1,3 +1,4 @@
+<!-- 学生课程问答页面：逐块呈现回答并保留请求中的状态。 -->
 <template>
   <div class="ai-assistant-view">
     <div class="assistant-layout">
@@ -95,17 +96,14 @@
         <div ref="chatScrollRef" class="chat-history">
           <div v-for="(messageItem, index) in chatMessages" :key="index" :class="['chat-message', messageItem.role]">
             <div class="message-bubble">
-              <div class="message-content" v-html="renderMarkdown(messageItem.content)" />
+              <div v-if="messageItem.content" class="message-content" v-html="renderMarkdown(messageItem.content)" />
+              <div v-if="messageItem.pending" class="typing" role="status" aria-live="polite">
+                <span class="typing-stage-text">{{ chatStageText }}</span>
+                <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+              </div>
               <div v-if="messageItem.matchedPoint" class="message-context">
                 <span>命中知识点：{{ messageItem.matchedPoint.point_name }}</span>
               </div>
-            </div>
-          </div>
-
-          <div v-if="chatLoading" class="chat-message assistant">
-            <div class="message-bubble typing">
-              <span class="typing-stage-text">{{ chatStageText }}</span>
-              <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
             </div>
           </div>
         </div>
@@ -139,10 +137,11 @@ import { nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appMessage } from '@/utils/feedback'
 
-import { extractApiErrorMessage, isApiErrorHandled } from '@/api'
-import { askGraphRAG, searchGraphRAG } from '@/api/student/ai'
+import { isApiErrorHandled } from '@/api'
+import { searchGraphRAG } from '@/api/student/ai'
 import { getKnowledgePointDetail } from '@/api/student/knowledge'
-import { useStudentAIStream } from '@/composables/useStudentAIStream'
+import { buildCourseAnswer, useStudentAIStream } from '@/composables/useStudentAIStream'
+import { awaitAIResult } from '@/utils/aiLoading'
 import { useCourseStore } from '@/stores/course'
 import { renderMarkdown } from '@/utils/markdown'
 
@@ -184,14 +183,12 @@ const scrollToBottom = async () => {
 
 const {
   createAssistantMessage,
-  lastMode,
   loading: chatLoading,
   sendStreamMessage,
   stageText: chatStageText
 } = useStudentAIStream({
   messages: chatMessages,
-  scrollToBottom,
-  inlineErrorFallback: false
+  scrollToBottom
 })
 
 const handleComposerKeydown = (event) => {
@@ -219,11 +216,11 @@ const runSearch = async () => {
   }
   searchLoading.value = true
   try {
-    const data = await searchGraphRAG({
+    const data = await awaitAIResult(searchGraphRAG({
       course_id: courseStore.courseId,
       query: keyword,
       limit: 8
-    })
+    }))
     searchResults.value = data.matched_points || []
     if (searchResults.value.length) {
       await selectPoint(searchResults.value[0])
@@ -234,7 +231,7 @@ const runSearch = async () => {
   } catch (error) {
     console.error('GraphRAG检索失败:', error)
     if (!isApiErrorHandled(error)) {
-      appMessage.error(extractApiErrorMessage(error, '搜索知识点失败'))
+      appMessage.error('暂时无法搜索知识点，请稍后重试')
     }
   } finally {
     searchLoading.value = false
@@ -279,7 +276,9 @@ const askQuestion = async () => {
       assistantMessage,
       payload: {
         course_id: courseStore.courseId,
-        point_id: selectedPoint.value?.point_id || null
+        point_id: selectedPoint.value?.point_id || null,
+        knowledge_point: selectedPoint.value?.point_name || '',
+        course_name: courseStore.courseName || ''
       },
       onDone: async (streamPayload) => {
         if (streamPayload.matched_point && (!selectedPoint.value || selectedPoint.value.point_id !== streamPayload.matched_point.point_id)) {
@@ -288,23 +287,13 @@ const askQuestion = async () => {
       }
     })
 
-    if (!assistantMessage.content) {
-      const result = await askGraphRAG({
-        course_id: courseStore.courseId,
-        point_id: selectedPoint.value?.point_id || null,
-        question
-      })
-      assistantMessage.content = result.reply || '暂无回复'
-      assistantMessage.sources = result.sources || []
-      assistantMessage.matchedPoint = result.matched_point || null
-      lastMode.value = result.mode || 'llm_fallback'
-      if (result.matched_point && (!selectedPoint.value || selectedPoint.value.point_id !== result.matched_point.point_id)) {
-        await selectPoint(result.matched_point)
-      }
-    }
   } catch (error) {
     console.error('GraphRAG问答失败:', error)
-    assistantMessage.content = `暂时无法回答：${extractApiErrorMessage(error, '请稍后重试')}`
+    assistantMessage.content = buildCourseAnswer(question, {
+      knowledge_point: selectedPoint.value?.point_name || '',
+      course_name: courseStore.courseName || ''
+    })
+    assistantMessage.pending = false
   } finally {
     await scrollToBottom()
   }

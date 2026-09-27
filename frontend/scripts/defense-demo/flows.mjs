@@ -4,8 +4,10 @@
 import assert from 'node:assert/strict'
 
 import { assertStudent2Baseline, completeQuestionnaire } from './assessment.mjs'
+import { observeAIChatStream } from './stream-audit.mjs'
 
 const AI_QUESTION = 'Spark SQL 和 DataFrame 有什么关系？'
+const AI_WAIT_TIMEOUT_MS = 170000
 const PROFILE_INPUT = '我是软件专业学生，想两周内掌握 Spark SQL，但 HDFS 和 MapReduce 基础不太好，喜欢视频、案例和练习。'
 const LEARNING_TARGET = '补齐 Spark SQL 查询、DataFrame 操作和项目实操能力'
 
@@ -165,18 +167,20 @@ export async function runStudent1(capture) {
   })
   if (capture.options.withAi) {
     await attempt(capture, 'student1-ai-answer', 'AI 助手结合课程知识解释 Spark SQL 和 DataFrame 的关系。', async () => {
+      const streamAudit = observeAIChatStream(capture)
       await capture.page.getByPlaceholder('输入课程问题').fill(AI_QUESTION)
       await capture.page.getByRole('button', { name: '发送问题' }).click()
       await capture.page.waitForFunction(() =>
         document.querySelectorAll('.chat-message.assistant .message-content').length >= 2
         && !document.querySelector('.chat-message.assistant .typing'),
-      null, { timeout: 90000 })
+      null, { timeout: AI_WAIT_TIMEOUT_MS })
       const answer = (await capture.page.locator('.chat-message.assistant .message-content').last().innerText()).trim()
       assert.ok(answer.length >= 20, 'AI 回答为空或过短')
       if (capture.options.expectedAiAnswer) {
         assert.equal(answer, capture.options.expectedAiAnswer.trim(), 'AI 页面回答与预置结果不一致')
       }
-      capture.aiEvidence = { chat: { question: AI_QUESTION, answer } }
+      const stream = await streamAudit.finish(answer.length)
+      capture.aiEvidence = { chat: { question: AI_QUESTION, answer, stream } }
     })
   }
   await attempt(capture, 'student1-agent-learning', '学生还可以按自己的目标生成课程学习资源。', async () => {
@@ -188,11 +192,11 @@ export async function runStudent1(capture) {
   if (capture.options.withAi) {
     await attempt(capture, 'student1-agent-profile', '先从学生的描述中提取学习目标和薄弱点。', async () => {
       const responsePromise = capture.page.waitForResponse(response =>
-        new URL(response.url()).pathname === '/api/student/agent/profile-dialog', { timeout: 90000 })
+        new URL(response.url()).pathname === '/api/student/agent/profile-dialog', { timeout: AI_WAIT_TIMEOUT_MS })
       await capture.page.getByRole('button', { name: '提取学习信息' }).click()
       const response = await responsePromise
       assert.equal(response.status(), 200, '学习信息提取接口未成功')
-      await capture.page.locator('.profile-chips').waitFor({ timeout: 90000 })
+      await capture.page.locator('.profile-chips').waitFor({ timeout: AI_WAIT_TIMEOUT_MS })
       capture.aiEvidence ||= {}
       capture.aiEvidence.profile = {
         input: PROFILE_INPUT,
@@ -203,7 +207,7 @@ export async function runStudent1(capture) {
     })
     await attempt(capture, 'student1-agent-package', '随后生成讲解、导图、练习、阅读和实操资源。', async () => {
       const responsePromise = capture.page.waitForResponse(response =>
-        new URL(response.url()).pathname === '/api/student/agent/learning-package', { timeout: 150000 })
+        new URL(response.url()).pathname === '/api/student/agent/learning-package', { timeout: AI_WAIT_TIMEOUT_MS })
       await capture.page.getByRole('button', { name: '生成资源包' }).first().click()
       const response = await responsePromise
       assert.equal(response.status(), 200, '资源包接口未成功')
@@ -267,8 +271,8 @@ export async function runStudent2(capture) {
     await capture.step('student2-knowledge-report-pending', '系统正在整理答题结果并生成学习建议。')
   }
   await capture.step('student2-knowledge-report', '报告展示知识点掌握度和学习建议。', async () => {
-    await capture.page.locator('.feedback-card .generating-hint').waitFor({ state: 'hidden', timeout: 120000 })
-    await capture.page.locator('.feedback-card .feedback-section').first().waitFor({ timeout: 120000 })
+    await capture.page.locator('.feedback-card .generating-hint').waitFor({ state: 'hidden', timeout: AI_WAIT_TIMEOUT_MS })
+    await capture.page.locator('.feedback-card .feedback-section').first().waitFor({ timeout: AI_WAIT_TIMEOUT_MS })
   })
 
   await capture.step('student2-ability', '能力评测记录阅读、推理等学习能力。', async () => {
@@ -292,7 +296,7 @@ export async function runStudent2(capture) {
   if (await generateButton.isVisible().catch(() => false)) {
     await capture.step('student2-profile-generation', '系统将三项测评结果合并成学习画像。', async () => {
       await generateButton.click()
-      await capture.page.waitForURL(/\/student\/profile/, { timeout: 90000 })
+      await capture.page.waitForURL(/\/student\/profile/, { timeout: AI_WAIT_TIMEOUT_MS })
     })
     await openRoute(capture, '初始评测', '/student/assessment')
   }
@@ -306,7 +310,7 @@ export async function runStudent2(capture) {
   await capture.step('student2-learning-path', '学习路径把接下来的任务排成可执行顺序。',
     async () => {
       await openRoute(capture, '学习路径', '/student/learning-path')
-      await capture.page.locator('.subway-station').first().waitFor({ timeout: 90000 })
+      await capture.page.locator('.subway-station').first().waitFor({ timeout: AI_WAIT_TIMEOUT_MS })
     })
 }
 

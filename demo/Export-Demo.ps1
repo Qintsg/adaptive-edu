@@ -51,6 +51,32 @@ if ($LASTEXITCODE -ne 0) { throw '演示工件镜像构建失败。' }
 if ($LASTEXITCODE -ne 0) { throw 'Docker 镜像导出失败。' }
 
 $artifactTarget = Join-Path $outputPath 'artifacts'
+$outputFull = [System.IO.Path]::GetFullPath($outputPath).TrimEnd([char]92)
+$targetFull = [System.IO.Path]::GetFullPath($artifactTarget).TrimEnd([char]92)
+$sourceFull = [System.IO.Path]::GetFullPath($artifactSource).TrimEnd([char]92)
+$expectedTarget = Join-Path $outputFull 'artifacts'
+$currentDirectory = $outputFull
+while ($currentDirectory -and
+    $currentDirectory -ne [System.IO.Path]::GetPathRoot($currentDirectory)) {
+    $currentItem = Get-Item -LiteralPath $currentDirectory -Force
+    if ($currentItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        throw '工件输出目录经过链接，停止覆盖。'
+    }
+    $currentDirectory = Split-Path -Parent $currentDirectory
+}
+if ($outputFull -eq [System.IO.Path]::GetPathRoot($outputFull).TrimEnd([char]92) -or
+    $targetFull -ne $expectedTarget -or
+    -not $targetFull.StartsWith($outputFull + [char]92, [System.StringComparison]::OrdinalIgnoreCase) -or
+    $targetFull -eq $sourceFull) {
+    throw '工件输出目录不安全，停止覆盖。'
+}
+if (Test-Path -LiteralPath $targetFull) {
+    $targetItem = Get-Item -LiteralPath $targetFull -Force
+    if ($targetItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        throw '工件输出目录是链接，停止覆盖。'
+    }
+    Remove-Item -LiteralPath $targetFull -Recurse -Force
+}
 New-Item -ItemType Directory -Path $artifactTarget -Force | Out-Null
 Copy-Item -Path (Join-Path $artifactSource '*') -Destination $artifactTarget -Recurse -Force
 
@@ -60,6 +86,7 @@ foreach ($fileName in @(
     'compose.yaml',
     'Start-Demo.ps1',
     'Restore-Demo.ps1',
+    'Resolve-DemoEnvFile.ps1',
     'Verify-Demo.ps1',
     'Save-Baseline.ps1',
     'Copy-AI-Capture.ps1',

@@ -1,3 +1,4 @@
+<!-- 学生任务学习页面：展示资源、测验和流式问答。 -->
 <template>
   <div class="task-learning-view fade-in-up" v-loading="loading">
     <n-page-header @back="goBack" class="page-header">
@@ -351,7 +352,13 @@
             <p>我是你的AI学习助手，有关于 <strong>{{ currentTask.titleText || '本节' }}</strong> 的问题都可以问我。</p>
           </div>
           <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['chat-msg', msg.role]">
-            <div class="msg-bubble" v-html="formatMessage(msg.content)"></div>
+            <div class="msg-bubble">
+              <div v-if="msg.content" v-html="formatMessage(msg.content)"></div>
+              <div v-if="msg.pending" class="typing" role="status" aria-live="polite">
+                <span class="typing-text">{{ chatStageText }}</span>
+                <span class="typing-dots"><span></span><span></span><span></span></span>
+              </div>
+            </div>
             <div v-if="msg.sources?.length || msg.matchedPoint" class="msg-meta">
               <n-tag v-if="msg.matchedPoint" size="small" type="success" effect="plain">
                 {{ msg.matchedPoint.point_name }}
@@ -359,12 +366,6 @@
               <n-tag v-for="sourceItem in msg.sources" :key="sourceItem.title || sourceItem.kind" size="small" type="info" effect="plain">
                 {{ sourceItem.title || sourceItem.kind || '来源' }}
               </n-tag>
-            </div>
-          </div>
-          <div v-if="chatLoading" class="chat-msg assistant">
-            <div class="msg-bubble typing">
-              <span class="typing-text">{{ chatStageText }}</span>
-              <span class="typing-dots"><span></span><span></span><span></span></span>
             </div>
           </div>
         </div>

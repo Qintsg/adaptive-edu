@@ -1,3 +1,4 @@
+/* 学生任务学习页面样式。 */
 .task-learning-view {
   padding: 0;
 }
@@ -340,12 +341,12 @@
 }
 
 /* 打字动画 */
-.msg-bubble.typing {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 18px;
-}
+  .msg-bubble .typing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
 
 .typing-text {
   width: auto !important;

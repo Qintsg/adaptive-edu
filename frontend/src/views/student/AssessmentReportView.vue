@@ -1,3 +1,4 @@
+<!-- 学生初始测评报告：异步生成期间展示连续进度。 -->
 <template>
   <div class="assessment-report-view">
     <n-page-header @back="goBack" class="page-header">
@@ -59,7 +60,7 @@
 
         <!-- 生成出错 -->
         <div v-else-if="generationError" class="generation-error">
-          <n-alert :title="'部分内容生成失败'" type="warning" :description="generationError" show-icon :closable="false" />
+          <n-alert title="部分内容暂未更新" type="warning" description="请稍后重试，已生成的评分和答题记录仍可查看。" show-icon :closable="false" />
           <n-button type="primary" size="small" style="margin-top: 12px;" @click="retryPoll">重试</n-button>
         </div>
 
@@ -172,6 +173,7 @@ import { appMessage } from '@/utils/feedback'
 import { MagicStick, Loading } from '@/theme/element-icons'
 import { getKnowledgeResult } from '@/api/student/assessment'
 import { useAIProgress } from '@/composables/useAIProgress'
+import { awaitAIResult } from '@/utils/aiLoading'
 
 const router = useRouter()
 const route = useRoute()
@@ -333,7 +335,7 @@ const startPolling = (courseId) => {
     }
 
     try {
-      const result = await getKnowledgeResult(courseId)
+      const result = await awaitAIResult(getKnowledgeResult(courseId))
       if (result) {
         // 更新评测数据（掌握度可能被 KT 模型更新）
         reportData.value = { ...reportData.value, ...result }

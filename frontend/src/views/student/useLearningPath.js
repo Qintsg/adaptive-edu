@@ -11,6 +11,7 @@ import {
 } from '@/api/student/learning'
 import { useCourseStore } from '@/stores/course'
 import { useAIProgress } from '@/composables/useAIProgress'
+import { awaitAIResult } from '@/utils/aiLoading'
 import {
   getNodeStatusText,
   getNodeTagType,
@@ -121,7 +122,7 @@ export function useLearningPath() {
       }
     } catch (error) {
       console.error('获取学习路径失败:', error)
-      loadError.value = '加载学习路径失败，请点击重试'
+      loadError.value = '暂时无法加载学习路径，请点击重试'
     } finally {
       loading.value = false
       if (isRefreshingRoute.value) {
@@ -243,7 +244,7 @@ export function useLearningPath() {
     aiProgress.start()
     try {
       const refreshSummary = normalizeLearningPathRefreshSummary(
-        await refreshLearningPathWithAI(courseStore.courseId)
+        await awaitAIResult(refreshLearningPathWithAI(courseStore.courseId))
       )
 
       const summaryParts = [`保留 ${refreshSummary.preservedCount} 个任务，新增 ${refreshSummary.newCount} 个。`]
@@ -255,7 +256,7 @@ export function useLearningPath() {
       appMessage.success(`学习路径已更新。${summaryParts.join(' ')}`)
     } catch (error) {
       console.error('刷新学习路径失败:', error)
-      appMessage.error('刷新失败，请稍后重试')
+      appMessage.error('暂时无法更新路径，请稍后重试')
     } finally {
       aiProgress.complete()
       await loadLearningPath()

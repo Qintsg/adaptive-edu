@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """结构化与流式 LLM 响应处理。"""
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from ai_services.services.llm.response_support import (
     strip_reasoning_blocks,
 )
 from ai_services.services.llm.error_details import summarize_exception_chain
+from ai_services.services.llm.text_stream_mixin import LLMTextStreamMixin
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ def _verified_or_rule_fallback(
     return _fallback_with_demo_source(payload)
 
 
-class LLMResponseMixin:
+class LLMResponseMixin(LLMTextStreamMixin):
     """结构化 LLM 调用、JSON 修复与结果清洗能力。"""
 
     _SYSTEM_CONTENT = """You are the AI analysis engine for an adaptive learning system.
@@ -426,87 +429,6 @@ Write directly for the student, keep the response concise, and do not output JSO
             temperature=temperature,
             extra_body_overrides=extra_body_overrides,
         )
-
-    def stream_text_with_fallback(
-        self,
-        *,
-        prompt: str,
-        call_type: str,
-        fallback_text: str,
-        temperature: float = None,
-        extra_body_overrides: Optional[Dict[str, Any]] = None,
-    ):
-        """以文本流方式调用 LLM，并在模型不可用或失败时输出降级文本。"""
-        from langchain_core.messages import HumanMessage, SystemMessage
-
-        start_time, execution_policy, prepared_prompt = self._prepare_structured_call(
-            prompt,
-            call_type,
-        )
-        llm = self._get_llm_for_policy(
-            execution_policy,
-            call_type=call_type,
-            extra_body_overrides=extra_body_overrides,
-        )
-        if llm is None:
-            verified = load_verified_answer("text", call_type, prepared_prompt)
-            if verified or fallback_text:
-                yield verified or fallback_text
-            return
-
-        emitted = False
-        buffered_chunks: list[str] = []
-        original_temp = self._apply_temperature_override(llm, temperature)
-        try:
-            for chunk in llm.stream(
-                [
-                    SystemMessage(content=self._TEXT_STREAM_SYSTEM_CONTENT),
-                    HumanMessage(content=prepared_prompt),
-                ]
-            ):
-                chunk_text = self._coerce_stream_chunk_text(chunk)
-                if not chunk_text:
-                    continue
-                emitted = True
-                buffered_chunks.append(chunk_text)
-                if not demo_mode_enabled():
-                    yield chunk_text
-
-            if emitted:
-                record_verified_answer("text", call_type, prepared_prompt, "".join(buffered_chunks))
-                if demo_mode_enabled():
-                    yield from buffered_chunks
-
-            duration_ms = int((time.time() - start_time) * 1000)
-            logger.debug(
-                build_log_message(
-                    "llm.stream.success",
-                    call_type=call_type,
-                    duration_ms=duration_ms,
-                    model=self.model_name,
-                )
-            )
-        except Exception as error:  # noqa: BLE001
-            logger.error(
-                build_log_message(
-                    "llm.stream.fail",
-                    call_type=call_type,
-                    model=self.model_name,
-                    provider=self.provider_name,
-                    base_url=self.resolved_base_url,
-                    proxy_enabled=bool(self.resolved_proxy_url),
-                    error=error,
-                    error_detail=summarize_exception_chain(error),
-                )
-            )
-            if demo_mode_enabled():
-                verified = load_verified_answer("text", call_type, prepared_prompt)
-                if verified or fallback_text:
-                    yield verified or fallback_text
-            elif not emitted and fallback_text:
-                yield fallback_text
-        finally:
-            self._restore_temperature(llm, original_temp)
 
     _FIELD_MAX_LEN = {}
 

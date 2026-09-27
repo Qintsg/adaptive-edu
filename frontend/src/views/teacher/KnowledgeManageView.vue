@@ -1,3 +1,4 @@
+<!-- 教师知识图谱管理页面：索引构建期间展示处理状态。 -->
 <template>
   <div class="knowledge-manage-view">
     <n-card class="page-header" shadow="never">
@@ -26,6 +27,8 @@
         </div>
       </div>
     </n-card>
+
+    <n-alert v-if="indexBuilding" title="正在构建 GraphRAG 索引，请稍候…" type="info" :closable="false" />
 
     <n-row :gutter="16" class="stats-row">
       <n-col :xs="12" :md="6">

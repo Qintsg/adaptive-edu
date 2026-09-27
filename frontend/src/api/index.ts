@@ -39,7 +39,8 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function notifyError(message: string): void {
+function notifyError(message: string, config?: RetryableRequestConfig): void {
+  if (config?.silentError) return
   showError(message || '请求失败')
 }
 
@@ -105,7 +106,7 @@ request.interceptors.response.use(
     }
 
     const message = extractPayloadMessage(payload, msg || '请求失败')
-    notifyError(message)
+    notifyError(message, response.config as RetryableRequestConfig)
     return Promise.reject(createApiError(message, {
       status: response.status,
       code,
@@ -119,7 +120,7 @@ request.interceptors.response.use(
 
     if ((config?._retryCount ?? 0) >= MAX_RETRY_COUNT) {
       const message = '请求失败次数过多，请稍后重试'
-      notifyError(message)
+      notifyError(message, config)
       return Promise.reject(createApiError(message, {
         status: response?.status,
         payload: response?.data,
@@ -145,20 +146,20 @@ request.interceptors.response.use(
         case 404:
         case 500:
         default:
-          notifyError(backendMessage)
+          notifyError(backendMessage, config)
       }
     } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       if ((config?._retryCount ?? 0) < MAX_RETRY_COUNT && config) {
         config._retryCount = (config._retryCount ?? 0) + 1
         return request.request(config)
       }
-      notifyError('请求超时，请检查网络连接')
+      notifyError('请求超时，请检查网络连接', config)
     } else {
       if ((config?._retryCount ?? 0) < MAX_RETRY_COUNT && config) {
         config._retryCount = (config._retryCount ?? 0) + 1
         return request.request(config)
       }
-      notifyError('网络连接失败')
+      notifyError('网络连接失败', config)
     }
 
     return Promise.reject(createApiError(

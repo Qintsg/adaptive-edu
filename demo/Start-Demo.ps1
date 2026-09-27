@@ -1,15 +1,17 @@
 ﻿# 答辩演示环境启动脚本。仅操作 adaptive-edu-defense-demo 项目。
 param(
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [string]$EnvFile = ''
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Resolve-DemoEnvFile.ps1')
 $composeFile = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot 'compose.yaml')).Path
 $projectName = 'adaptive-edu-defense-demo'
 $composeArgs = @('compose', '-f', $composeFile, '-p', $projectName)
-$localEnvFile = Join-Path $PSScriptRoot '.env.local'
-if (Test-Path -LiteralPath $localEnvFile -PathType Leaf) {
-    $composeArgs += @('--env-file', $localEnvFile)
+$selectedEnvFile = Resolve-DemoEnvFile -EnvFile $EnvFile -ScriptDirectory $PSScriptRoot
+if ($selectedEnvFile) {
+    $composeArgs += @('--env-file', $selectedEnvFile)
 }
 
 $sourceRoot = Split-Path -Parent $PSScriptRoot

@@ -1,13 +1,19 @@
 ﻿# 答辩演示包恢复脚本。只重置演示专用 Compose 项目及其卷。
 param(
     [string]$BundleDirectory = 'C:\Users\qintsg\Desktop\adaptive-edu-defense-20260927',
-    [switch]$KeepCurrentImages
+    [switch]$KeepCurrentImages,
+    [string]$EnvFile = ''
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Resolve-DemoEnvFile.ps1')
 $composeFile = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot 'compose.yaml')).Path
 $projectName = 'adaptive-edu-defense-demo'
 $composeArgs = @('compose', '-f', $composeFile, '-p', $projectName)
+$selectedEnvFile = Resolve-DemoEnvFile -EnvFile $EnvFile -ScriptDirectory $PSScriptRoot
+if ($selectedEnvFile) {
+    $composeArgs += @('--env-file', $selectedEnvFile)
+}
 $adjacentBundle = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path -LiteralPath $BundleDirectory -PathType Container) -and
     (Test-Path -LiteralPath (Join-Path $adjacentBundle 'images.tar') -PathType Leaf)) {

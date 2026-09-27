@@ -1,3 +1,4 @@
+/** 教师知识图谱管理页的数据与索引构建状态。 */
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { appMessage, appDialog } from '@/utils/feedback'
 import {
@@ -10,6 +11,7 @@ import {
   updateKnowledgePoint
 } from '@/api/teacher/knowledge'
 import { useCourseStore } from '@/stores/course'
+import { awaitAIResult } from '@/utils/aiLoading'
 import {
   buildKnowledgeTree,
   normalizeKnowledgePointListPayload,
@@ -247,13 +249,13 @@ export function useTeacherKnowledgeManage() {
 
     try {
       const ragIndexBuildResult = normalizeRagIndexBuildResult(
-        await buildKnowledgeRagIndex(currentCourseId.value)
+        await awaitAIResult(buildKnowledgeRagIndex(currentCourseId.value))
       )
       const builtFileCount = ragIndexBuildResult.indexPaths.length
       appMessage.success(`GraphRAG 索引构建完成${builtFileCount ? `（输出 ${builtFileCount} 个索引文件）` : ''}`)
     } catch (error) {
       console.error('构建 GraphRAG 索引失败:', error)
-      appMessage.error('构建 GraphRAG 索引失败，请稍后重试')
+      appMessage.error('暂时无法构建 GraphRAG 索引，请稍后重试')
     } finally {
       indexBuilding.value = false
     }

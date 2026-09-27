@@ -1,8 +1,9 @@
+/** 学生任务页的数据、资源与课程问答状态。 */
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appMessage, appDialog } from '@/utils/feedback'
 import { getAINodeIntro } from '@/api/student/ai'
-import { useStudentAIStream } from '@/composables/useStudentAIStream'
+import { buildCourseAnswer, useStudentAIStream } from '@/composables/useStudentAIStream'
 import {
   completePathNode,
   completeResource,
@@ -14,6 +15,7 @@ import {
 } from '@/api/student/learning'
 import { useCourseStore } from '@/stores/course'
 import { renderMarkdown } from '@/utils/markdown'
+import { awaitAIResult } from '@/utils/aiLoading'
 import {
   buildDefaultNodeExamModel,
   buildDefaultNodeIntroModel,
@@ -145,7 +147,7 @@ export function useTaskLearning() {
   const loadAIResources = async () => {
     aiResourcesLoading.value = true
     try {
-      const recommendationPayload = normalizeObjectFromPayload(await getAIResources(currentNodeId.value))
+      const recommendationPayload = normalizeObjectFromPayload(await awaitAIResult(getAIResources(currentNodeId.value)))
       const internalResourceList = normalizeListFromPayload(recommendationPayload.internal_resources).map(normalizeResourcePayload)
       const externalResourceList = normalizeListFromPayload(recommendationPayload.external_resources).map(normalizeResourcePayload)
       resourceRecords.value = [...internalResourceList, ...externalResourceList]
@@ -161,12 +163,12 @@ export function useTaskLearning() {
 
     introLoading.value = true
     try {
-      const introPayload = await getAINodeIntro({
+      const introPayload = await awaitAIResult(getAINodeIntro({
         point_name: currentTask.value.pointNameText,
         point_id: currentTask.value.knowledgePointId,
         course_id: courseStore.courseId || null,
         course_name: courseStore.courseName || ''
-      })
+      }))
       nodeIntro.value = normalizeNodeIntroPayload(introPayload)
     } catch (error) {
       console.error('加载知识点介绍失败:', error)
@@ -331,7 +333,11 @@ export function useTaskLearning() {
         }
       })
     } catch {
-      assistantMessage.content = '抱歉，AI助手暂时无法回复，请稍后重试。'
+      assistantMessage.content = buildCourseAnswer(questionText, {
+        knowledge_point: currentTask.value.pointNameText,
+        course_name: courseStore.courseName
+      })
+      assistantMessage.pending = false
     } finally {
       await scrollChat()
     }

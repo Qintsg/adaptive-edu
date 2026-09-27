@@ -1,3 +1,4 @@
+<!-- 学生学习画像页面：独立展示 AI 建议的处理状态。 -->
 <template>
   <div class="profile-view">
     <div v-if="loading" class="loading-container">
@@ -210,7 +211,7 @@
           </div>
           <div v-else class="ai-content">
             <template v-if="aiLoadFailed">
-              <n-alert type="warning" :closable="false" title="获取 AI 学习建议失败" show-icon />
+              <n-alert type="warning" :closable="false" title="暂时无法获取 AI 学习建议" show-icon />
               <div class="retry-row">
                 <n-button type="primary" size="small" @click="loadAISuggestions">
                   重新获取

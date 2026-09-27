@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """学生端 AI 助手 WebSocket consumer。"""
 
 from __future__ import annotations
@@ -11,9 +13,11 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from common.core.logging_utils import build_log_message
 from ai_services.services.demo_fallback import demo_mode_enabled, mark_demo_payload
 from ai_services.services.demo_presets import load_verified_answer
+from ai_services.services.llm.text_stream_mixin import LLMStreamInterrupted
 from platform_ai.llm import llm_facade
 from ai_services.services.student.ai_streaming import (
     StudentAIStreamPlan,
+    build_generic_stream_plan,
     build_stream_done_payload,
     build_student_ai_stream_plan,
     iter_student_ai_stream_chunks,
@@ -137,14 +141,27 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
                 reply="".join(reply_parts),
                 streamed=streamed,
             )
+            done_payload["generation_source"] = "live_model"
+            done_payload["model"] = llm_facade.service.model_name
             await self.send_json({"type": "done", **done_payload})
         except Exception as error:  # noqa: BLE001
             logger.error(build_log_message("student_ai.stream.emit_fail", error=error))
-            await self._send_plan_fallback(plan)
+            replacement = error.fallback_text if isinstance(error, LLMStreamInterrupted) else ""
+            source = error.generation_source if isinstance(error, LLMStreamInterrupted) else "course_rules"
+            await self._send_plan_fallback(
+                plan, replacement_reply=replacement, generation_source=source,
+            )
 
-    async def _send_plan_fallback(self, plan: StudentAIStreamPlan) -> None:
+    async def _send_plan_fallback(
+        self,
+        plan: StudentAIStreamPlan,
+        *,
+        replacement_reply: str = "",
+        generation_source: str = "course_rules",
+    ) -> None:
         """模型流式输出失败时发送计划内降级回复和 GraphRAG 元数据。"""
-        reply_text = str(plan.fallback_reply or "").strip() or "当前证据不足，请补充更具体的问题后重试。"
+        reply_text = str(replacement_reply or plan.fallback_reply or "").strip()
+        reply_text = reply_text or "当前证据不足，请补充更具体的问题后重试。"
         done_payload = build_stream_done_payload(
             plan=plan,
             reply=reply_text,
@@ -153,6 +170,8 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
         if demo_mode_enabled():
             done_payload = mark_demo_payload(done_payload)
             done_payload["mode"] = "demo_fallback"
+        done_payload["generation_source"] = generation_source
+        done_payload["model"] = "deepseek-flash" if generation_source == "verified_ai_preset" else None
         await self.send_json({"type": "done", **done_payload})
 
     async def _send_compatible_fallback(
@@ -178,6 +197,11 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
             for chunk in _split_reply_chunks(reply_text):
                 await self.send_json({"type": "chunk", "content": chunk})
                 await asyncio.sleep(0.01)
+            source = str(result.get("generation_source") or "").strip()
+            if source == "demo_course_rules":
+                source = "course_rules"
+            if not source:
+                source = "course_rules" if result.get("demo_fallback") else "live_model"
             await self.send_json(
                 {
                     "type": "done",
@@ -189,9 +213,25 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
                     "query_modes": result.get("query_modes", []),
                     "key_points": result.get("key_points", []),
                     "demo_fallback": bool(result.get("demo_fallback")),
-                    "generation_source": result.get("generation_source"),
+                    "generation_source": source,
+                    "model": llm_facade.service.model_name if source == "live_model" else None,
                 }
             )
         except Exception as error:  # noqa: BLE001
             logger.error(build_log_message("student_ai.stream.fallback_fail", error=error))
+            if demo_mode_enabled():
+                plan = build_generic_stream_plan(
+                    question=question,
+                    knowledge_point=knowledge_point,
+                    course_name=course_name,
+                )
+                reply_text = plan.fallback_reply
+                done_payload = build_stream_done_payload(
+                    plan=plan, reply=reply_text, streamed=False,
+                )
+                done_payload["generation_source"] = "course_rules"
+                done_payload["model"] = None
+                await self.send_json({"type": "chunk", "content": reply_text})
+                await self.send_json({"type": "done", **done_payload})
+                return
             await self.send_json({"type": "error", "message": "AI 助手暂时无法回复，请稍后重试。"})

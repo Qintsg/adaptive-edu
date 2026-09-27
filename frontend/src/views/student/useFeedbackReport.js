@@ -1,7 +1,9 @@
+/** 作业反馈页面的评分、AI 分析与轮询状态。 */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appMessage } from '@/utils/feedback'
 import { generateFeedback, getExamResult, getFeedback } from '@/api/student/exam'
+import { awaitAIResult } from '@/utils/aiLoading'
 import {
   aiProgressStages,
   buildDefaultAiAnalysis,
@@ -33,7 +35,7 @@ export function useFeedbackReport() {
 
   const statusLabel = computed(() => {
     if (feedbackStatus.value === 'pending') return '生成中'
-    if (feedbackStatus.value === 'failed') return '生成失败'
+    if (feedbackStatus.value === 'failed') return '可重试'
     return '已完成'
   })
 
@@ -123,6 +125,7 @@ export function useFeedbackReport() {
 
     if (!reportId) return
     pollAttempts.value = 0
+    startAIProgress()
     await loadAIFeedback(reportId)
   }
 
@@ -131,7 +134,7 @@ export function useFeedbackReport() {
       const normalizedExamId = normalizeIdentifier(examId, reportId)
       if (!normalizedExamId) throw new Error('missing-report-id')
 
-      const normalizedFeedback = normalizeAiFeedbackPayload(await getFeedback(normalizedExamId))
+      const normalizedFeedback = normalizeAiFeedbackPayload(await awaitAIResult(getFeedback(normalizedExamId)))
       feedbackStatus.value = normalizedFeedback.status
       aiAnalysis.value = normalizedFeedback.analysis
       masteryChanges.value = normalizedFeedback.masteryChanges
@@ -149,7 +152,7 @@ export function useFeedbackReport() {
       feedbackStatus.value = 'failed'
       aiAnalysis.value = {
         ...buildDefaultAiAnalysis(),
-        summary: '反馈报告获取失败'
+        summary: '暂时无法获取反馈报告'
       }
       masteryChanges.value = []
       console.error('获取 AI 分析失败:', error)
@@ -161,7 +164,7 @@ export function useFeedbackReport() {
     try {
       if (!reportId) throw new Error('missing-report-id')
 
-      await generateFeedback(reportId, true)
+      await awaitAIResult(generateFeedback(reportId, true))
       feedbackStatus.value = 'pending'
       pollAttempts.value = 0
       startAIProgress()
@@ -169,7 +172,7 @@ export function useFeedbackReport() {
       appMessage.success('反馈报告已重新开始生成')
     } catch (error) {
       console.error('重新获取 AI 分析失败:', error)
-      appMessage.error('重新获取 AI 分析失败')
+      appMessage.error('暂时无法重新获取 AI 分析，请重试')
     } finally {
       aiRetrying.value = false
     }

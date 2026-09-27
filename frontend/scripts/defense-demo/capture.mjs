@@ -237,6 +237,26 @@ export class CaptureSession {
   }
 
   /**
+   * 在普通步骤之间保存一张仍在变化的页面，不改变步骤编号。
+   *
+   * :param {string} fileName: 当前角色截图目录下的文件名。
+   * :returns {Promise<string>}: 相对输出目录的文件路径。
+   */
+  async saveAuxiliaryScreenshot(fileName) {
+    const relativePath = path.join('screenshots', this.role, path.basename(fileName))
+    const screenshotPath = path.join(this.options.outputDir, relativePath)
+    if (this.options.final) {
+      const visibleText = (await this.page.locator('body').innerText()).toLowerCase()
+      const blocked = FORBIDDEN_VISIBLE_TEXT.find(value => visibleText.includes(value.toLowerCase()))
+      if (blocked) throw new Error(`正式画面出现禁用文字“${blocked}”，本轮需要修复后重录`)
+    }
+    await this.page.screenshot({ path: screenshotPath, fullPage: false, animations: 'disabled' })
+    await assertScreenshotSize(screenshotPath)
+    this.artifacts.push(screenshotPath)
+    return relativePath.replaceAll('\\', '/')
+  }
+
+  /**
    * 保存失败时页面，便于定位真实流程障碍。
    *
    * :param {string} label: 失败步骤。

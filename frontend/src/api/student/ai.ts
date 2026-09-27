@@ -166,7 +166,7 @@ export function compareAIAnalysis(userId, courseId, analysisId1, analysisId2) {
  * @returns {Promise} { reply: string, mock: boolean }
  */
 export function aiChat(data) {
-  return request.post('/api/student/ai/chat', data)
+  return request.post('/api/student/ai/chat', data, { silentError: true })
 }
 
 /**

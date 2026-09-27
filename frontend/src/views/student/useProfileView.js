@@ -1,9 +1,13 @@
+/**
+ * 学生画像页面的数据、图表与 AI 建议状态。
+ */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import * as echarts from 'echarts'
 import { appMessage } from '@/utils/feedback'
 import { getAIProfileAnalysis } from '@/api/student/ai'
 import { getProfile, refreshProfileWithAI } from '@/api/student/profile'
 import { useAIProgress } from '@/composables/useAIProgress'
+import { awaitAIResult } from '@/utils/aiLoading'
 import { useAssessmentStore } from '@/stores/assessment'
 import { useCourseStore } from '@/stores/course'
 import { useUserStore } from '@/stores/user'
@@ -173,7 +177,7 @@ export function useProfileView() {
     } catch (error) {
       console.error('获取画像数据失败:', error)
       const status = error?.response?.status || error?.status
-      if (status && status !== 404) appMessage.error('获取画像数据失败，请稍后重试')
+      if (status && status !== 404) appMessage.error('暂时无法获取画像数据，请稍后重试')
     } finally {
       loading.value = false
       if (masteryData.value.length) {
@@ -206,7 +210,7 @@ export function useProfileView() {
       aiLoading.value = true
       aiLoadFailed.value = false
       aiProgress.start()
-      aiSuggestions.value = normalizeProfileSuggestionList(await getAIProfileAnalysis(courseStore.courseId))
+      aiSuggestions.value = normalizeProfileSuggestionList(await awaitAIResult(getAIProfileAnalysis(courseStore.courseId)))
     } catch (error) {
       aiLoadFailed.value = true
       aiSuggestions.value = []
@@ -226,12 +230,12 @@ export function useProfileView() {
     aiLoading.value = true
     aiProgress.start()
     try {
-      aiSuggestions.value = normalizeProfileSuggestionList(await getAIProfileAnalysis(courseStore.courseId, true))
+      aiSuggestions.value = normalizeProfileSuggestionList(await awaitAIResult(getAIProfileAnalysis(courseStore.courseId, true)))
       aiLoadFailed.value = false
       appMessage.success('AI 建议已刷新')
     } catch (error) {
       console.error('刷新 AI 建议失败:', error)
-      appMessage.error('刷新 AI 建议失败，请稍后重试')
+      appMessage.error('暂时无法刷新 AI 建议，请稍后重试')
     } finally {
       aiProgress.complete()
       aiLoading.value = false
@@ -245,15 +249,19 @@ export function useProfileView() {
     }
 
     refreshing.value = true
+    aiLoading.value = true
+    aiProgress.start()
     try {
-      await refreshProfileWithAI(courseStore.courseId)
+      await awaitAIResult(refreshProfileWithAI(courseStore.courseId))
       await loadProfileData()
       await refreshAISuggestions()
       appMessage.success('学习画像已刷新')
     } catch (error) {
       console.error('刷新画像失败:', error)
-      appMessage.error('刷新画像失败，请稍后重试')
+      appMessage.error('暂时无法刷新画像，请稍后重试')
     } finally {
+      aiProgress.complete()
+      aiLoading.value = false
       refreshing.value = false
     }
   }

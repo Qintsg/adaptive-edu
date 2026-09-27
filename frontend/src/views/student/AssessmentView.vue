@@ -1,3 +1,4 @@
+<!-- 学生初始测评中心：生成画像时保留可见的处理状态。 -->
 <template>
   <div class="assessment-view" v-loading="loading">
     <n-card class="page-header" shadow="never">
@@ -108,6 +109,7 @@ import { useRouter } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
 import { getAssessmentStatus, generateProfile as apiGenerateProfile } from '@/api/student/assessment'
 import { appMessage, appLoading } from '@/utils/feedback'
+import { awaitAIResult } from '@/utils/aiLoading'
 import { TrendCharts, Document, Reading, Checked } from '@/theme/element-icons'
 
 const router = useRouter()
@@ -186,14 +188,14 @@ const generateProfile = async () => {
   })
   try {
     const courseId = courseStore.courseId
-    await apiGenerateProfile(courseId)
+    await awaitAIResult(apiGenerateProfile(courseId))
     loadingInstance.close()
     appMessage.success('学习画像生成成功！')
     await router.push('/student/profile')
   } catch (error) {
     console.error('生成画像失败:', error)
     loadingInstance.close()
-    appMessage.error('生成失败，请稍后重试')
+    appMessage.error('暂时无法生成学习画像，请稍后重试')
   } finally {
     generating.value = false
   }

@@ -95,8 +95,8 @@ def configure_document(document: DocumentType) -> None:
     section.page_height = Inches(11)
     section.left_margin = Mm(21)
     section.right_margin = Mm(21)
-    section.top_margin = Mm(19)
-    section.bottom_margin = Mm(18)
+    section.top_margin = Mm(17)
+    section.bottom_margin = Mm(16)
 
     normal = document.styles["Normal"]
     set_style_font(normal, FONT_NAME, 10.5, INK)

@@ -1,12 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """学生端 AI 助手流式问答编排服务。"""
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-
-from common.core.logging_utils import build_log_message
 
 from platform_ai.llm import llm_facade
 from platform_ai.rag import student_learning_rag
@@ -20,9 +19,6 @@ from ai_services.services.student.graph_rag_support import (
     point_from_search,
     resolve_point_from_ids,
 )
-
-logger = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True)
 class StudentAIStreamPlan:
@@ -197,16 +193,12 @@ def build_student_ai_stream_plan(
 def iter_student_ai_stream_chunks(plan: StudentAIStreamPlan) -> Iterator[str]:
     """执行 LLM 文本流式生成。"""
     if not llm_facade.is_available:
-        yield from ()
         return
-    try:
-        yield from llm_facade.stream_text_with_fallback(
-            prompt=plan.prompt,
-            call_type=plan.call_type,
-            fallback_text="",
-        )
-    except Exception as error:  # noqa: BLE001
-        logger.error(build_log_message("student_ai.stream.init_fail", error=error))
+    yield from llm_facade.stream_text_with_fallback(
+        prompt=plan.prompt,
+        call_type=plan.call_type,
+        fallback_text="",
+    )
 
 
 def build_stream_done_payload(

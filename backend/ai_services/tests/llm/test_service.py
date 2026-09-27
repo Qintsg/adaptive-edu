@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """Regression tests for AI-facing student and search services."""
 
 import json
@@ -176,6 +178,41 @@ class LLMProviderConfigTests(SimpleTestCase):
         self.assertEqual(service.planned_model_family, "DeepSeek V4.1 Flash (deepseek-flash)")
         self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
         self.assertNotIn("reasoning_effort", chat_openai_class.call_args.kwargs)
+
+    @override_settings(
+        DEMO_MODE=True,
+        LLM_API_KEY="deepseek-demo-key",
+        LLM_BASE_URL="https://api.deepseek.com",
+        LLM_LOW_REASONING_MODE=True,
+    )
+    @patch("ai_services.services.llm.service.import_module")
+    def test_student_stream_should_disable_thinking_and_forward_visible_chunks(
+        self, mock_import_module,
+    ):
+        """实际学生流式入口应关闭思考并保留多个可见文本块。"""
+        from ai_services.services.llm.service import LLMService
+
+        mock_llm = Mock()
+        mock_llm.stream.return_value = [
+            SimpleNamespace(text="第一段"),
+            SimpleNamespace(text="第二段"),
+        ]
+        chat_openai_class = Mock(return_value=mock_llm)
+        mock_import_module.return_value = SimpleNamespace(ChatOpenAI=chat_openai_class)
+
+        chunks = list(LLMService().stream_text_with_fallback(
+            prompt="请解释 DataFrame",
+            call_type="graph_rag_answer_stream",
+            fallback_text="",
+        ))
+
+        self.assertEqual(chunks, ["第一段", "第二段"])
+        self.assertEqual(chat_openai_class.call_args.kwargs["model"], "deepseek-flash")
+        self.assertEqual(
+            chat_openai_class.call_args.kwargs["extra_body"],
+            {"thinking": {"type": "disabled"}},
+        )
+        mock_llm.stream.assert_called_once()
 
     @override_settings(
         LLM_API_KEY="deepseek-demo-key",
@@ -369,6 +406,56 @@ class LLMServiceLatencyPolicyTests(SimpleTestCase):
 
         self.assertEqual(chunks, ["第一段", "第二段"])
         mock_llm.stream.assert_called_once()
+
+    @override_settings(DEMO_MODE=True)
+    def test_demo_stream_should_yield_first_model_chunk_before_stream_finishes(self):
+        """演示模式拿到第一个模型文本块后就应交给 WebSocket。"""
+        service = self._build_service()
+        mock_llm = Mock()
+        received = []
+
+        def model_chunks():
+            """记录模型块真正被消费的时刻。"""
+            received.append("第一段")
+            yield SimpleNamespace(text="第一段")
+            received.append("第二段")
+            yield SimpleNamespace(text="第二段")
+
+        mock_llm.stream.side_effect = lambda *_args: model_chunks()
+        service._get_llm_for_policy = Mock(return_value=mock_llm)
+        stream = service.stream_text_with_fallback(
+            prompt="请回答", call_type="chat", fallback_text="规则回答",
+        )
+
+        self.assertEqual(next(stream), "第一段")
+        self.assertEqual(received, ["第一段"])
+        self.assertEqual(list(stream), ["第二段"])
+
+    @override_settings(DEMO_MODE=True)
+    @patch("ai_services.services.llm.text_stream_mixin.load_verified_answer")
+    def test_demo_stream_interruption_should_replace_partial_reply(self, preset):
+        """流式中断时把完整预置答案交给调用方替换已展示片段。"""
+        from ai_services.services.llm.text_stream_mixin import LLMStreamInterrupted
+
+        service = self._build_service()
+        mock_llm = Mock()
+
+        def interrupted_chunks():
+            """模拟首块已抵达、随后网关断开的流。"""
+            yield SimpleNamespace(text="未完成片段")
+            raise RuntimeError("gateway disconnected")
+
+        mock_llm.stream.side_effect = lambda *_args: interrupted_chunks()
+        service._get_llm_for_policy = Mock(return_value=mock_llm)
+        preset.return_value = "真实彩排的完整回答"
+        stream = service.stream_text_with_fallback(
+            prompt="请回答", call_type="chat", fallback_text="规则回答",
+        )
+
+        self.assertEqual(next(stream), "未完成片段")
+        with self.assertRaises(LLMStreamInterrupted) as raised:
+            next(stream)
+        self.assertEqual(raised.exception.fallback_text, "真实彩排的完整回答")
 
     def test_stream_text_with_fallback_should_yield_fallback_when_model_missing(self):
         """模型不可用时流式入口应输出降级文本，避免前端空白。"""

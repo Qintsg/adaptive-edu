@@ -1,3 +1,4 @@
+<!-- 学生学习资源生成页面：保留 AI 请求的可见处理状态。 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import AgentRunTimeline from '@/components/agent/AgentRunTimeline.vue'
@@ -23,10 +24,12 @@ import {
   type ResourceFeedbackRequest
 } from '@/api/student/agent'
 import { useCourseStore } from '@/stores/course'
+import { awaitAIResult } from '@/utils/aiLoading'
 import { showError, showSuccess, showWarning } from '@/utils/feedback'
 
 const courseStore = useCourseStore()
 const loadingPackage = ref(false)
+const profileLoading = ref(false)
 const applyingPath = ref(false)
 const feedbackLoading = ref(false)
 const existingLoading = ref(false)
@@ -91,12 +94,15 @@ async function extractProfile(): Promise<void> {
     showWarning('请描述当前学习情况')
     return
   }
+  profileLoading.value = true
   try {
-    const result = await submitProfileDialog(currentCourseId.value, message)
+    const result = await awaitAIResult(submitProfileDialog(currentCourseId.value, message))
     form.profile = result.profile
     showSuccess(result.next_question ? `学习信息已更新。还可以补充：${result.next_question}` : '学习信息已更新')
   } catch {
-    showError('提取学习信息失败')
+    showError('暂时无法读取学习信息，请重试')
+  } finally {
+    profileLoading.value = false
   }
 }
 
@@ -108,20 +114,20 @@ async function generatePackage(): Promise<void> {
   loadingPackage.value = true
   try {
     if (!profileFields.value.length && form.profileMessage.trim()) {
-      const profileResult = await submitProfileDialog(currentCourseId.value, form.profileMessage.trim())
+      const profileResult = await awaitAIResult(submitProfileDialog(currentCourseId.value, form.profileMessage.trim()))
       form.profile = profileResult.profile
     }
-    packageResult.value = await generateLearningPackage({
+    packageResult.value = await awaitAIResult(generateLearningPackage({
       course_id: currentCourseId.value,
       target: form.target.trim(),
       profile: form.profile,
       resource_types: form.resourceTypes
-    })
+    }))
     existingResources.value = []
     await loadEffectSummary()
     showSuccess('学习资源包已生成')
   } catch {
-    showError('学习资源包生成失败')
+    showError('暂时无法生成资源包，请重试')
   } finally {
     loadingPackage.value = false
   }
@@ -138,7 +144,7 @@ async function applyToPath(): Promise<void> {
       showSuccess('已应用到学习路径')
     }
   } catch {
-    showError('应用到路径失败')
+    showError('暂时无法加入学习路径，请重试')
   } finally {
     applyingPath.value = false
   }
@@ -150,7 +156,7 @@ async function markRunComplete(): Promise<void> {
     await completeAgentRun(currentCourseId.value, packageResult.value.run_id)
     showSuccess('本次资源生成已完成')
   } catch {
-    showError('完成失败')
+    showError('暂时无法结束本次生成，请重试')
   }
 }
 
@@ -194,7 +200,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
     await loadEffectSummary()
     showSuccess('学习反馈已记录')
   } catch {
-    showError('反馈提交失败')
+    showError('暂时无法记录反馈，请重试')
   } finally {
     feedbackLoading.value = false
   }
@@ -259,7 +265,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
 
           <ToolbarRow>
             <template #start>
-              <n-button @click="extractProfile">
+              <n-button :loading="profileLoading" :disabled="loadingPackage" @click="extractProfile">
                 <template #icon><AppIcon name="User" /></template>
                 提取学习信息
               </n-button>
@@ -272,6 +278,8 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
             </template>
           </ToolbarRow>
 
+          <n-alert v-if="profileLoading" title="正在整理学习信息，请稍候…" type="info" :closable="false" />
+
           <div v-if="profileFields.length" class="profile-chips">
             <n-tag v-for="[key, value] in profileFields" :key="key" :bordered="false">
               {{ key }}：{{ Array.isArray(value) ? value.join('、') : value }}
@@ -280,6 +288,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
         </SectionCard>
 
         <SectionCard title="生成资源">
+          <n-alert v-if="loadingPackage" title="正在生成适合当前目标的学习资源…" type="info" :closable="false" />
           <n-empty v-if="!resources.length && !loadingPackage" description="尚无资源包。填写学习目标后点击“生成资源包”。" />
           <n-skeleton v-if="loadingPackage" :rows="8" animated />
           <div v-else class="resource-grid">
