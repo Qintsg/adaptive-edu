@@ -35,6 +35,8 @@ services:
     build:
       context: ..
       dockerfile: demo/Dockerfile.backend
+      args:
+        DEMO_LLM_API_KEY: ${DEMO_LLM_API_KEY:-}
     environment:
       SECRET_KEY: demo-only-local-key-change-before-network-exposure
       DEBUG: "False"
@@ -51,7 +53,6 @@ services:
       GRAPHRAG_EMBEDDER_PROVIDER: hash
       GRAPHRAG_QDRANT_PATH: runtime_logs/rag/qdrant
       RESOURCE_MCP_ENABLED: "False"
-      LLM_API_KEY: ${DEMO_LLM_API_KEY:-}
       LLM_MAX_RETRIES: "0"
       LLM_REQUEST_TIMEOUT: ${DEMO_LLM_REQUEST_TIMEOUT:-5}
       LLM_LOW_REASONING_MODE: "True"

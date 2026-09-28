@@ -17,6 +17,9 @@ if ($selectedEnvFile) {
 $sourceRoot = Split-Path -Parent $PSScriptRoot
 $hasSource = Test-Path -LiteralPath (Join-Path $sourceRoot 'backend\pyproject.toml') -PathType Leaf
 if (-not $SkipBuild -and $hasSource) {
+    if (-not $selectedEnvFile -or -not (Test-DemoEnvHasApiKey -Path $selectedEnvFile)) {
+        throw '从源码构建答辩镜像前，需要在私有 env 文件中配置 DEMO_LLM_API_KEY。'
+    }
     & docker @composeArgs build backend web
     if ($LASTEXITCODE -ne 0) { throw '演示镜像构建失败。' }
 }
