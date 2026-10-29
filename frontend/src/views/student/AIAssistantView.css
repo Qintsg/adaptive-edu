@@ -1,8 +1,12 @@
+/* 文件描述：课程问答面板、消息与输入区域样式。
+ * 项目名：adaptive-edu；文件名：AIAssistantView.css；作者：Qintsg；日期：2026-10-29。
+ */
 .ai-assistant-view {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: calc(100vh - 142px);
+  height: calc(100vh - 142px);
+  min-height: 620px;
 }
 
 .assistant-layout {
@@ -35,15 +39,15 @@
   height: 100%;
 }
 
-.search-panel :deep(.n-card__body),
-.chat-panel :deep(.n-card__body) {
-  height: 100%;
+.search-panel :deep(.n-card-content),
+.chat-panel :deep(.n-card-content) {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.search-panel :deep(.n-card__body) {
+.search-panel :deep(.n-card-content) {
   gap: 14px;
 }
 
@@ -138,6 +142,7 @@
   min-height: 0;
   overflow-y: auto;
   display: grid;
+  align-content: start;
   gap: 12px;
   padding-right: 6px;
 }
@@ -208,6 +213,7 @@
 }
 
 .chat-composer {
+  flex: 0 0 auto;
   margin-top: 14px;
   display: grid;
   gap: 10px;
@@ -228,6 +234,7 @@
 
 @media (max-width: 960px) {
   .ai-assistant-view {
+    height: auto;
     min-height: auto;
   }
 
