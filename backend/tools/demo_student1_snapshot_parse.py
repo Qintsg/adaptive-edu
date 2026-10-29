@@ -1,12 +1,8 @@
-#!/user/bin/env python
-# -*- coding: UTF-8 -*-
-'''
-student1 大数据学习状态内置预置数据。
-@Project : adaptive-edu
-@File : demo_student1_snapshot_parse.py
-@Author : Qintsg
-@Date : 2026-05-13 13:36
-'''
+# 文件描述：student1 大数据课程的学习记录与报告内容。
+# 项目名：adaptive-edu
+# 文件名：demo_student1_snapshot_parse.py
+# 作者：Qintsg
+# 日期：2026-10-29
 
 from __future__ import annotations
 
@@ -893,12 +889,12 @@ INLINE_REPORT_MASTERY = {'大数据概述': 0.5,
  '大数据系统实践': 0.24}
 
 
-INLINE_FEEDBACK_REPORT = {'summary': '当前画像基于课程资源示例中的 50 道初始评测题生成，系统已识别出薄弱知识点，但仍需要通过后续学习行为逐步校准掌握度。',
- 'knowledge_gaps': ['大数据技术基础', '大数据概述', '大数据基本概念'],
- 'recommendations': ['优先学习路径中的首个激活节点，巩固最基础的核心概念。', '先补足 25% 基线知识点对应的课程资源，再进入后续练习。'],
- 'next_tasks': ['完成当前激活的首个学习节点。', '学习后重新查看画像与掌握度变化。'],
- 'encouragement': '当前结果适合作为“刚完成初始评测”的真实起点数据，不代表稳定掌握水平。',
- 'conclusion': '当前结果适合作为“刚完成初始评测”的真实起点数据，不代表稳定掌握水平。'}
+INLINE_FEEDBACK_REPORT = {'summary': '错题集中在基础概念和原理理解：第三次信息化浪潮标志、HDFS全称、MapReduce函数特性、Hive计算框架及正则化目的。部分题目混淆了相似概念，需加强记忆与辨析。',
+ 'knowledge_gaps': ['大数据基本概念（信息化浪潮标志）', 'Hadoop项目结构（HDFS定义）', 'MapReduce工作原理与模型优化方法'],
+ 'recommendations': ['回顾教材中第三次信息化浪潮的标志性技术，对比前两次浪潮加深理解。', '整理Hadoop核心组件（HDFS、MapReduce、YARN）的功能与全称，制作记忆卡片。', '结合实例理解Map和Reduce函数的分工，并复习正则化在逻辑回归中的作用。'],
+ 'next_tasks': ['完成一次针对Hadoop组件和MapReduce原理的专项练习（10题）。', '观看Hive与MapReduce关系的教学视频，并总结要点。', '在逻辑回归模型中手动添加L2正则化，观察参数变化并记录过拟合改善情况。'],
+ 'encouragement': '',
+ 'conclusion': ''}
 
 
 INLINE_PROFILE = {'summary': '你在大数据存储与管理（98%）、基于潜在因子的推荐方法（97%）等优势领域表现突出，但整体掌握仅57.3%，43个知识点薄弱，尤其综合实践（24%）、Spark '

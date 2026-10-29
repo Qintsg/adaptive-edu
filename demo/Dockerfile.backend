@@ -29,6 +29,7 @@ RUN cp /tmp/demo-pyproject.toml pyproject.toml \
     && cp /tmp/demo-uv.lock uv.lock
 COPY demo/seed_demo.py ./demo_seed.py
 COPY demo/scripts/compact_course_text.py ./compact_course_text.py
+COPY demo/scripts/refresh_initial_report_text.py ./refresh_initial_report_text.py
 COPY demo/presets/ ./demo_presets/
 COPY demo/backend-entrypoint.sh /usr/local/bin/demo-backend-entrypoint
 RUN chmod 755 /usr/local/bin/demo-backend-entrypoint

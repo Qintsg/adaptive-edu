@@ -1,12 +1,8 @@
-#!/user/bin/env python
-# -*- coding: UTF-8 -*-
-'''
-student1 大数据学习状态预置数据回归测试。
-@Project : adaptive-edu
-@File : test_demo_presets.py
-@Author : Qintsg
-@Date : 2026-05-13 19:50
-'''
+# 文件描述：student1 大数据课程学习记录的回归测试。
+# 项目名：adaptive-edu
+# 文件名：test_demo_presets.py
+# 作者：Qintsg
+# 日期：2026-10-29
 
 from __future__ import annotations
 
@@ -137,7 +133,9 @@ class StudentDesktopSnapshotPresetTests(TestCase):
         self.assertEqual(snapshot.selected_minutes, 52)
         self.assertEqual(len(snapshot.path_titles), 9)
         self.assertEqual(len([node for node in snapshot.path_nodes if node.status == "completed"]), 8)
-        self.assertIn("当前画像基于课程资源示例", snapshot.feedback_report.summary)
+        self.assertIn("HDFS全称", snapshot.feedback_report.summary)
+        self.assertEqual(snapshot.feedback_report.conclusion, "")
+        self.assertEqual(snapshot.feedback_report.encouragement, "")
         self.assertIn("整体掌握仅57.3%", snapshot.profile_summary)
         self.assertIn("建议利用晚间", snapshot.profile_suggestion)
 
@@ -194,8 +192,9 @@ class StudentDesktopSnapshotPresetTests(TestCase):
             assessment_result=result,
         )
         self.assertEqual(report.status, "completed")
-        self.assertIn("当前画像基于课程资源示例", report.overview["summary"])
-        self.assertIn("优先学习路径中的首个激活节点", report.recommendations[0])
+        self.assertIn("HDFS全称", report.overview["summary"])
+        self.assertIn("第三次信息化浪潮", report.recommendations[0])
+        self.assertEqual(report.conclusion, "")
         spark_sql_mastery = KnowledgeMastery.objects.get(
             user=self.student,
             course=self.course,

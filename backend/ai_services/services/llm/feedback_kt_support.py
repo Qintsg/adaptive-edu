@@ -1,4 +1,8 @@
-"""LLM 作业反馈与 KT 洞察 prompt 组装工具。"""
+# 文件描述：作业反馈与知识追踪解读的模型提示词。
+# 项目名：adaptive-edu
+# 文件名：feedback_kt_support.py
+# 作者：Qintsg
+# 日期：2026-10-29
 from __future__ import annotations
 
 import json
@@ -121,11 +125,15 @@ def classify_feedback_performance(accuracy: float) -> FeedbackPerformance:
 
 
 def build_feedback_report_prompt(report_input: FeedbackReportInput) -> str:
-    """构造作业反馈报告 prompt。"""
+    """构造作业和初始评测的反馈提示词。
+
+    :param report_input: 本次得分、错题和知识掌握情况。
+    :returns: 面向学生的反馈生成要求。
+    """
     mistake_points = build_mistake_points(report_input.mistakes)
     performance = classify_feedback_performance(report_input.accuracy)
     return f"""# 任务
-基于学生的作业表现，生成鼓励性、有针对性的学习反馈报告。
+基于本次答题表现，向学生说明需要复习的知识和下一步学习行动。
 
 # 作业信息
 - 作业名称：{report_input.exam_info.get("title", "未知作业")}
@@ -142,18 +150,19 @@ def build_feedback_report_prompt(report_input: FeedbackReportInput) -> str:
 
 # JSON输出格式
 {{
-    "summary": "一句话摘要，先概括结果再点出最关键的改进方向（40-70字）",
-    "analysis": "表现分析，包含整体评价、亮点和不足（80-120字）",
+    "summary": "本次结果和主要复习方向（20-45字）",
+    "analysis": "结合错题说明具体知识问题（50-100字），避免重复摘要",
     "knowledge_gaps": ["需要加强的知识点或能力缺口，最多3项"],
     "recommendations": ["具体的改进建议，可操作性强，最多3项"],
     "next_tasks": ["下一步学习任务，包含具体行动，最多3项"],
-    "encouragement": "鼓励性话语，激发学习动力（30-50字）"
+    "encouragement": "有具体依据的简短鼓励；没有补充内容时返回空字符串"
 }}
 
 # 反馈原则
-1. 先肯定进步，再指出不足
-2. 建议要具体、可执行
-3. 根据表现等级调整建议的难度"""
+1. 评价和数字只引用输入数据，缺少依据时不推断能力或学习经历。
+2. 只写学习表现、薄弱知识和具体行动，省略数据准备、系统实现与报告适用范围的说明。
+3. 建议对应本次错题和课程知识，难度与本次表现相符。
+4. 各字段内容互补，避免重复评价和空泛鼓励。"""
 
 
 def build_feedback_report_fallback(report_input: FeedbackReportInput) -> dict[str, object]:
@@ -174,7 +183,7 @@ def build_feedback_report_fallback(report_input: FeedbackReportInput) -> dict[st
         else [],
         "recommendations": performance.recommendations,
         "next_tasks": performance.next_tasks,
-        "encouragement": "学习是一个渐进的过程，每一次努力都是进步。相信自己，持续学习一定会有收获！",
+        "encouragement": "",
     }
 
 
