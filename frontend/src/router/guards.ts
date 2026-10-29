@@ -1,6 +1,6 @@
 /**
- * 路由守卫配置
- * 处理权限验证、登录检查、角色权限等
+ * 文件描述：路由权限检查与页面模块更新处理。
+ * 项目名：adaptive-edu；文件名：guards.ts；作者：Qintsg；日期：2026-10-29。
  */
 import { useUserStore } from '@/stores/user'
 import { useCourseStore } from '@/stores/course'
@@ -64,8 +64,28 @@ const setPageTitle = (to) => {
 }
 
 /**
+ * 旧页面引用的模块失效时，重新载入目标路由。
+ * :param error: 路由加载错误。
+ * :param fullPath: 包含查询参数和片段的目标地址。
+ * :returns: 是否已开始重新载入。
+ */
+function reloadRouteAfterImportError(error: unknown, fullPath: string): boolean {
+  if (!(error instanceof Error) || !/Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(error.message)) {
+    return false
+  }
+
+  const reloadKey = `route-assets-reload:${import.meta.url}`
+  if (sessionStorage.getItem(reloadKey)) return false
+
+  sessionStorage.setItem(reloadKey, '1')
+  window.location.replace(fullPath)
+  return true
+}
+
+/**
  * 注册路由守卫
- * @param {Object} router - Vue Router实例
+ * :param router: Vue Router 实例。
+ * :returns: 无。
  */
 export function setupRouterGuards(router) {
   // 全局前置守卫
@@ -132,7 +152,8 @@ export function setupRouterGuards(router) {
   })
 
   // 全局错误处理
-  router.onError((error) => {
+  router.onError((error, to) => {
+    if (reloadRouteAfterImportError(error, to.fullPath)) return
     console.error('路由错误:', error)
     appMessage.error('页面加载失败，请刷新重试')
   })
