@@ -62,7 +62,7 @@ const formRef = ref(null)
 const loading = ref(false)
 
 // 登录状态的持久化策略由用户状态仓库决定。
-const rememberMe = ref(false)
+const rememberMe = ref(localStorage.getItem('auth_remember_me') !== 'false')
 
 const form = reactive({
   username: '',

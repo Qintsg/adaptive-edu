@@ -1,4 +1,5 @@
-"""学生端 GraphRAG 问答 mixin。"""
+# 文件描述：根据课程资料准备学生问答内容。
+# 项目名：adaptive-edu；文件名：answer_mixin.py；作者：Qintsg；日期：2026-10-29。
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -33,7 +34,7 @@ def build_stream_answer_prompt(
     """构造面向学生端 WebSocket 的纯文本流式回答 prompt。"""
     candidate_text = "、".join(candidate_names[:6]) if candidate_names else "未命中唯一知识点"
     return f"""# 任务
-请基于给定 GraphRAG 证据，用中文直接回答学生问题。
+用中文直接回答学生问题，使用给定课程资料核对课程事实。
 
 # 学生问题
 {question}
@@ -48,10 +49,11 @@ def build_stream_answer_prompt(
 {combined_context or '当前证据不足。'}
 
 # 回答约束
-1. 只能基于证据回答，不要编造课程外事实。
-2. 先直接回答学生问题，再给出下一步学习建议。
-3. 如果证据不足，要明确提示“当前证据不足”。
-4. 不要输出 JSON、代码块或表格。
+1. 围绕最新问题回答，可使用准确的学科知识解释原理、提供例子和练习。
+2. 课程资料和当前知识点作为背景，问题涉及整体学习时按实际范围组织答案。
+3. 不编造课程中已有的资源、实验或学生经历；仅在具体条件影响答案时说明该条件。
+4. 不添加泛泛的资料不足声明或空泛鼓励，不显示内部检索编号。
+5. 不输出 JSON，按内容需要使用简短段落、列表或代码。
 """
 
 

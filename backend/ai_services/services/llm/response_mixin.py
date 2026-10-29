@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-"""结构化与流式 LLM 响应处理。"""
+# 文件描述：大模型结构化响应与实时文本输出。
+# 项目名：adaptive-edu；文件名：response_mixin.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -64,10 +63,11 @@ class LLMResponseMixin(LLMTextStreamMixin):
 4. Keep recommendations concrete, complete, and actionable.
 5. If information is limited, still return the full JSON structure with the best available content."""
 
-    _TEXT_STREAM_SYSTEM_CONTENT = """You are the AI learning assistant for a graph-grounded adaptive learning system.
-
-Answer in Chinese. Use the supplied course evidence when it is available. Do not invent facts outside the evidence.
-Write directly for the student, keep the response concise, and do not output JSON."""
+    _TEXT_STREAM_SYSTEM_CONTENT = """你是课程学习助手。用中文直接回答学生的当前问题，结合最近对话理解追问。
+课程资料用于核对课程事实，也可以使用准确的学科知识解释原理、举例和提供练习。
+学习建议结合学生的掌握度和偏好；普通知识问题以知识本身为主。不要虚构资源或学生经历，不显示内部检索标记。
+表达简洁、具体，采用直接陈述，不写开场概括、结尾口号和通用限制性结语。
+一般回答控制在200至400字；学习计划选取2至3个重点，用户要求展开时再详细解释。不输出JSON。"""
 
     _format_input_data = staticmethod(format_input_data)
     _strip_reasoning_blocks = staticmethod(strip_reasoning_blocks)
@@ -176,7 +176,7 @@ Write directly for the student, keep the response concise, and do not output JSO
         """从 LangChain 流式消息块中提取可直接展示的文本片段。"""
         chunk_text = getattr(chunk, "text", "")
         if isinstance(chunk_text, str) and chunk_text:
-            return self._strip_reasoning_blocks(chunk_text)
+            return self._strip_reasoning_blocks(chunk_text, preserve_whitespace=True)
 
         content_blocks = getattr(chunk, "content_blocks", None)
         if isinstance(content_blocks, list):
@@ -185,12 +185,11 @@ Write directly for the student, keep the response concise, and do not output JSO
                 for block in content_blocks
                 if isinstance(block, dict)
                 and block.get("type") == "text"
-                and str(block.get("text", "")).strip()
             ]
             if text_parts:
-                return self._strip_reasoning_blocks("".join(text_parts))
+                return self._strip_reasoning_blocks("".join(text_parts), preserve_whitespace=True)
 
-        return self._coerce_message_text(getattr(chunk, "content", None))
+        return self._coerce_message_text(getattr(chunk, "content", None), preserve_whitespace=True)
 
     def _attempt_llm_json_response(
         self,

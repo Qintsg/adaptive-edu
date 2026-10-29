@@ -101,7 +101,7 @@
                 <span class="typing-stage-text">{{ chatStageText }}</span>
                 <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
               </div>
-              <div v-if="messageItem.matchedPoint" class="message-context">
+              <div v-if="messageItem.matchedPoint && messageItem.content.includes(messageItem.matchedPoint.point_name)" class="message-context">
                 <span>相关知识点：{{ messageItem.matchedPoint.point_name }}</span>
               </div>
             </div>
@@ -140,6 +140,7 @@ import { isApiErrorHandled } from '@/api'
 import { searchGraphRAG } from '@/api/student/ai'
 import { getKnowledgePointDetail } from '@/api/student/knowledge'
 import { buildCourseAnswer, useStudentAIStream } from '@/composables/useStudentAIStream'
+import { useCourseChatHistory } from '@/composables/useCourseChatHistory'
 import { awaitAIResult } from '@/utils/aiLoading'
 import { useCourseStore } from '@/stores/course'
 import { renderMarkdown } from '@/utils/markdown'
@@ -163,6 +164,7 @@ const chatMessages = ref([
     matchedPoint: null
   }
 ])
+const { persist: persistChat } = useCourseChatHistory(chatMessages, questionInput, selectedPoint, selectedPointDetail)
 
 const ensureCourseSelected = () => {
   if (!courseStore.courseId) {
@@ -263,6 +265,7 @@ const askQuestion = async () => {
     return
   }
 
+  const recentHistory = chatMessages.value.filter(message => message.content && !message.pending).slice(-8)
   chatMessages.value.push({ role: 'user', content: question, sources: [], matchedPoint: null })
   questionInput.value = ''
   const assistantMessage = createAssistantMessage()
@@ -272,6 +275,7 @@ const askQuestion = async () => {
   try {
     await sendStreamMessage({
       question,
+      history: recentHistory,
       assistantMessage,
       payload: {
         course_id: courseStore.courseId,
@@ -283,6 +287,7 @@ const askQuestion = async () => {
         if (streamPayload.matched_point && (!selectedPoint.value || selectedPoint.value.point_id !== streamPayload.matched_point.point_id)) {
           await selectPoint(streamPayload.matched_point)
         }
+        persistChat(true)
       }
     })
 
@@ -294,6 +299,7 @@ const askQuestion = async () => {
     })
     assistantMessage.pending = false
   } finally {
+    persistChat()
     await scrollToBottom()
   }
 }
@@ -320,6 +326,7 @@ onMounted(async () => {
     searchKeyword.value = keyword
     await runSearch()
   }
+  await scrollToBottom()
 })
 
 </script>

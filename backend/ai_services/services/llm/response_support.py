@@ -1,4 +1,5 @@
-"""LLM 结构化响应解析与清洗工具。"""
+# 文件描述：大模型结构化响应解析与文本清理。
+# 项目名：adaptive-edu；文件名：response_support.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -24,16 +25,22 @@ def format_input_data(data: dict[str, Any], data_type: str = "general") -> str:
     return str(data)
 
 
-def strip_reasoning_blocks(content: str) -> str:
-    """移除兼容网关可能返回的 <think> 推理片段，保留最终答案。"""
+def strip_reasoning_blocks(content: str, *, preserve_whitespace: bool = False) -> str:
+    """移除推理片段，按调用方式保留文本边界。
+
+    :param content: 模型文本。
+    :param preserve_whitespace: 流式片段是否保留空格和换行。
+    :returns: 可展示的答案文本。
+    """
     if not content:
         return ""
-    return re.sub(
+    cleaned = re.sub(
         r"<think>[\s\S]*?</think>",
         "",
         str(content),
         flags=re.IGNORECASE,
-    ).strip()
+    )
+    return cleaned if preserve_whitespace else cleaned.strip()
 
 
 def parse_json_response(content: str) -> dict[str, Any]:
@@ -81,17 +88,22 @@ def parse_embedded_json(content: str) -> dict[str, Any] | None:
     return parse_json_object(content[start:end])
 
 
-def coerce_message_text(content: str | list[Any] | None) -> str:
-    """Normalize LangChain message content into a single text string."""
+def coerce_message_text(content: str | list[Any] | None, *, preserve_whitespace: bool = False) -> str:
+    """将模型消息内容转换为文本。
+
+    :param content: 模型返回的字符串或内容列表。
+    :param preserve_whitespace: 是否保留文本边界的空格和换行。
+    :returns: 合并后的文本。
+    """
     if isinstance(content, str):
-        return strip_reasoning_blocks(content)
+        return strip_reasoning_blocks(content, preserve_whitespace=preserve_whitespace)
     if isinstance(content, list):
         message_text = "\n".join(
             item if isinstance(item, str) else json.dumps(item, ensure_ascii=False)
             for item in content
             if item is not None
         )
-        return strip_reasoning_blocks(message_text)
+        return strip_reasoning_blocks(message_text, preserve_whitespace=preserve_whitespace)
     return ""
 
 

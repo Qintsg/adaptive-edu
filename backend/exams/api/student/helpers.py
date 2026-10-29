@@ -1,4 +1,5 @@
-"""学生端考试接口共享 helper。"""
+# 文件描述：学生作业的评分与反馈详情。
+# 项目名：adaptive-edu；文件名：helpers.py；作者：Qintsg；日期：2026-10-29。
 from __future__ import annotations
 
 import logging
@@ -270,6 +271,8 @@ def build_submission_feedback_snapshot(submission):
         ExamQuestion.objects.filter(exam=exam).select_related("question").prefetch_related("question__knowledge_points").order_by("order")
     )
     questions = [exam_question.question for exam_question in exam_questions]
+    from assessments.services.question_explanations import ensure_question_explanations
+    ensure_question_explanations(questions)
     score_map = build_exam_score_map(exam, exam_questions)
     grading = score_questions(submission.answers or {}, questions, score_map=score_map)
     question_result_map = {str(item["question_id"]): item for item in grading["question_results"]}

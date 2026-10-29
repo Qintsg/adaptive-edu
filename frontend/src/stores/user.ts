@@ -1,28 +1,19 @@
 /**
- * 用户状态存储
- * 使用Composition API风格实现
- * 管理用户登录状态、认证信息和用户数据
+ * 文件描述：管理用户登录状态、认证信息和个人资料。
+ * 项目名：adaptive-edu；文件名：user.ts；作者：Qintsg；日期：2026-10-29。
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as loginApi, register as registerApi, getUserInfo, updateUserInfo, logout as logoutApi } from '@/api/auth'
 import { getMenu } from '@/api/common'
 import { resetTokenRefreshState, setLoggingOut } from '@/api'
+import { getAuthStorage } from '@/api/authTokens'
 import router from '@/router'
 
 export const useUserStore = defineStore('user', () => {
   // ==================== 帮助函数 ====================
 
-  /** 
-   * 获取当前激活的存储（Local或Session）
-   * 优先检查localStorage，如果不存在Token则检查sessionStorage
-   * 默认返回localStorage以便写入
-   */
-  const getStorage = () => {
-    if (localStorage.getItem('access_token')) return localStorage
-    if (sessionStorage.getItem('access_token')) return sessionStorage
-    return localStorage
-  }
+  const getStorage = getAuthStorage
 
   // ==================== 状态定义 ====================
 
@@ -79,6 +70,7 @@ export const useUserStore = defineStore('user', () => {
     refreshToken.value = sessionPayload.refreshTokenValue
 
     clearPersistedAuthState()
+    localStorage.setItem('auth_remember_me', String(storage === localStorage))
 
     storage.setItem('access_token', sessionPayload.accessToken)
     storage.setItem('token', sessionPayload.accessToken)
@@ -116,7 +108,7 @@ export const useUserStore = defineStore('user', () => {
    * @param {Object} credentials - 登录凭证对象
    * @param {string} credentials.username - 用户名
    * @param {string} credentials.password - 密码
-   * @param {boolean} [credentials.rememberMe] - 是否记住登录（默认为false，通过sessionStorage）
+   * @param {boolean} [credentials.rememberMe] - 是否记住登录，默认沿用上次选择
    * @returns {Promise<string>} 登录成功返回用户角色
    * @throws {Error} 登录失败时抛出错误
    */
@@ -129,7 +121,8 @@ export const useUserStore = defineStore('user', () => {
       resetTokenRefreshState()
 
       // 决定存储位置
-      const storage = credentials.rememberMe ? localStorage : sessionStorage
+      const rememberLogin = credentials.rememberMe ?? (localStorage.getItem('auth_remember_me') !== 'false')
+      const storage = rememberLogin ? localStorage : sessionStorage
 
       return applySessionPayload(data, storage)
     } catch (error) {

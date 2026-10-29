@@ -1,3 +1,4 @@
+# 文件描述：AI服务接口契约。项目名：adaptive-edu；文件名：ai.yaml；作者：Qintsg；日期：2026-10-29。
 aiProfileAnalysis:
   post:
     tags: [AI, Profile]
@@ -246,6 +247,7 @@ aiChat:
     tags: [AI]
     operationId: aiChat
     summary: 学生 AI 问答
+    description: 结合当前登录用户的课程掌握度和学习偏好回答。知识问答以问题本身为主，学习建议结合个人情况；最近对话用于理解追问。
     requestBody:
       required: true
       content:
@@ -267,6 +269,18 @@ aiChat:
                 type: string
               course_name:
                 type: string
+              history:
+                type: array
+                description: 最近对话；服务端使用最近8条，每条最多1200字符。
+                items:
+                  type: object
+                  required: [role, content]
+                  properties:
+                    role:
+                      type: string
+                      enum: [user, assistant]
+                    content:
+                      type: string
     responses:
       "200":
         description: data 包含 reply、sources、mode。

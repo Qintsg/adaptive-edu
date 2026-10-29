@@ -358,7 +358,7 @@
               </div>
             </div>
             <div v-if="msg.sources?.length || msg.matchedPoint" class="msg-meta">
-              <n-tag v-if="msg.matchedPoint" size="small" type="success" effect="plain">
+              <n-tag v-if="msg.matchedPoint && msg.content.includes(msg.matchedPoint.point_name)" size="small" type="success" effect="plain">
                 {{ msg.matchedPoint.point_name }}
               </n-tag>
               <n-tag v-for="sourceItem in msg.sources" :key="sourceItem.title || sourceItem.kind" size="small" type="info" effect="plain">

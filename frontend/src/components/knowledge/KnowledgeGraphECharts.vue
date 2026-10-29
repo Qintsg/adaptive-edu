@@ -1,4 +1,4 @@
-<!-- 知识图谱视图：大图概览减少标签噪声，节点可用键盘打开详情。 -->
+<!-- 文件描述：显示可筛选的知识点网络与节点详情。项目名：adaptive-edu；文件名：KnowledgeGraphECharts.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="knowledge-graph-container" ref="containerRef">
     <!-- 工具栏集中放置筛选、搜索、缩放与编辑操作。 -->
@@ -11,8 +11,10 @@
         <div class="toolbar-divider"></div>
       </template>
 
+      <n-select v-model:value="sectionFilter" placeholder="全部模块" clearable size="small" :options="sectionOptions"
+        aria-label="筛选课程模块" style="width: 220px" />
       <n-select v-model:value="chapterFilter" placeholder="全部章节" clearable size="small" :options="chapterOptions"
-        style="width: 150px" />
+        aria-label="筛选课程章节" style="width: 220px" />
       <n-input v-model:value="searchText" placeholder="搜索知识点..." size="small" style="width: 180px" clearable />
       <n-button-group>
         <n-button size="small" title="放大" @click="zoomIn">+</n-button>
@@ -20,7 +22,7 @@
         <n-button size="small" title="适配" @click="fitView">⊡</n-button>
       </n-button-group>
       <span v-if="mode === 'view'" class="graph-count" aria-live="polite">
-        {{ visibleNodeCount }} / {{ totalNodeCount }} 个知识点 · 悬停或聚焦查看名称
+        {{ visibleNodeCount }} / {{ totalNodeCount }} 个知识点
       </span>
     </div>
 
@@ -123,6 +125,8 @@ const {
   addNode,
   chapterFilter,
   chapterList,
+  sectionFilter,
+  sectionList,
   containerRef,
   deleteNode,
   drawerTitle,
@@ -146,6 +150,7 @@ const chapterOptions = computed(() => chapterList.value.map(chapter => ({
   label: chapter,
   value: chapter
 })))
+const sectionOptions = computed(() => sectionList.value.map(section => ({ label: section, value: section })))
 </script>
 
 <style scoped src="./KnowledgeGraphECharts.css"></style>

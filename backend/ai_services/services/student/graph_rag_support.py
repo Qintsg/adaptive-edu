@@ -1,4 +1,5 @@
-"""学生端 GraphRAG 检索和问答支撑逻辑。"""
+# 文件描述：课程知识检索与学生问答内容整理。
+# 项目名：adaptive-edu；文件名：graph_rag_support.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -188,7 +189,9 @@ def build_graph_answer_payload(
     }
     payload = {
         "reply": str(rag_result.get("answer", rag_result.get("reply", ""))).strip(),
-        "sources": rag_result.get("sources", []),
+        "sources": [source for source in rag_result.get("sources", [])
+                    if isinstance(source, dict) and source.get("kind") not in {"community_report", "question"}
+                    and not re.fullmatch(r"(?:社区报告|题目|练习题)\s*\d+", str(source.get("title", "")).strip())],
         "mode": str(rag_result.get("mode", "")).strip() or "graph_rag",
         "query_modes": extract_text_list(rag_result, "query_modes"),
         "key_points": extract_text_list(rag_result, "key_points"),

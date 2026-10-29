@@ -1,4 +1,5 @@
-"""学生端 AI 聊天与 GraphRAG 问答接口。"""
+# 文件描述：学生课程问答、对话上下文和课程检索接口。
+# 项目名：adaptive-edu；文件名：chat.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -21,11 +22,12 @@ from ai_services.services.demo_fallback import (
 from ai_services.services.demo_presets import load_verified_answer, record_verified_answer
 from platform_ai.llm import llm_facade
 from ai_services.services.student.graph_rag_service import student_graph_rag_service
+from ai_services.services.student.learner_chat_context import learner_chat_context
 
 logger = logging.getLogger(__name__)
 
 
-def _chat_request_fingerprint(course_id: object, question: str, point_id: object) -> str:
+def _chat_request_fingerprint(course_id: object, question: str, point_id: object, *, user=None, history=None) -> str:
     """构造课程问答彩排结果的稳定请求文本。
 
     :param course_id: 课程 ID。
@@ -34,7 +36,8 @@ def _chat_request_fingerprint(course_id: object, question: str, point_id: object
     :returns: 用于计算指纹的 JSON 文本。
     """
     return json.dumps(
-        {"course_id": str(course_id), "question": question, "point_id": str(point_id or "")},
+        {"course_id": str(course_id), "question": question, "point_id": str(point_id or ""),
+         **({"user_id": user.pk, "learner": learner_chat_context(user, int(course_id)), "history": history or []} if user is not None else {})},
         ensure_ascii=False,
         sort_keys=True,
     )
@@ -48,6 +51,7 @@ def build_chat_response(
     point_id: int | str | None = None,
     knowledge_point: str = "",
     course_name: str = "",
+    history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """统一生成 AI 助手回复，供 HTTP 与 WebSocket 共用。"""
     normalized_question = (question or "").strip()
@@ -55,18 +59,30 @@ def build_chat_response(
         return {"reply": "请输入问题", "sources": [], "mode": "error"}
 
     if course_id:
-        preset_prompt = _chat_request_fingerprint(course_id, normalized_question, point_id)
+        preset_prompt = _chat_request_fingerprint(course_id, normalized_question, point_id, user=user, history=history)
         if demo_mode_enabled() and not llm_facade.is_available:
             verified = load_verified_answer("api_json", "student_chat", preset_prompt)
             if isinstance(verified, dict):
                 return {**verified, "demo_fallback": True, "generation_source": "verified_ai_preset"}
         try:
-            result = student_graph_rag_service.ask(
-                user=user,
-                course_id=int(course_id),
-                question=normalized_question,
-                point_id=int(point_id) if point_id else None,
-            )
+            if llm_facade.is_available:
+                from ai_services.services.student.ai_streaming import build_student_ai_stream_plan, build_stream_done_payload, iter_student_ai_stream_chunks
+
+                plan = build_student_ai_stream_plan(user=user, course_id=course_id, question=normalized_question,
+                                                   point_id=point_id, knowledge_point=knowledge_point,
+                                                   course_name=course_name, history=history)
+                reply = "".join(iter_student_ai_stream_chunks(plan))
+                if not reply:
+                    raise RuntimeError("模型没有返回回答。")
+                result = build_stream_done_payload(plan=plan, reply=reply, streamed=False)
+                result["generation_source"] = "live_model"
+            else:
+                result = student_graph_rag_service.ask(
+                    user=user,
+                    course_id=int(course_id),
+                    question=normalized_question,
+                    point_id=int(point_id) if point_id else None,
+                )
             if not result.get("demo_fallback"):
                 record_verified_answer("api_json", "student_chat", preset_prompt, result)
             return result
@@ -143,6 +159,7 @@ def handle_chat_request(request: Request) -> Response:
         point_id=point_id,
         knowledge_point=knowledge_point,
         course_name=course_name,
+        history=request.data.get("history") if isinstance(request.data.get("history"), list) else [],
     )
     return success_response(data=result)
 

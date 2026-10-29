@@ -115,6 +115,11 @@ export function setupRouterGuards(router) {
 
     // 已登录用户访问游客页面（登录、注册等）
     if (isGuestRoute && userStore.isLoggedIn) {
+      const redirect = to.query.redirect
+      if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+        const target = router.resolve(redirect)
+        if (!target.matched.some(record => record.meta.guest)) return target.fullPath
+      }
       const defaultRoute = getDefaultRouteForUser(userStore)
       if (defaultRoute) {
         return { name: defaultRoute }

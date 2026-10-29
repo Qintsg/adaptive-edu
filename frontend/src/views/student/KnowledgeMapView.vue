@@ -1,3 +1,4 @@
+<!-- 文件描述：学生课程知识图谱与知识点详情。项目名：adaptive-edu；文件名：KnowledgeMapView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="knowledge-map-view fade-in-up">
     <n-card class="map-card" shadow="hover">
@@ -24,7 +25,7 @@
 
       <!-- 图谱视图 -->
       <div v-else-if="viewMode === 'graph'" class="graph-container">
-        <KnowledgeGraphECharts v-if="graphData.nodes.length" :data="graphData" :height="'calc(100vh - 220px)'"
+        <KnowledgeGraphECharts v-if="graphData.nodes.length" :data="graphData" :height="'max(500px, calc(100vh - 380px))'"
           mode="view" :courseId="courseStore.courseId" :showDrawer="false" @node-click="handleNodeClick" />
         <n-empty v-else description="暂无知识图谱数据" />
       </div>

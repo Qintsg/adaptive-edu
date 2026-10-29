@@ -1,4 +1,4 @@
-/* 图谱表面、工具栏和节点交互提示。 */
+/* 文件描述：图谱表面、筛选工具栏和节点名称样式。项目名：adaptive-edu；文件名：KnowledgeGraphECharts.css；作者：Qintsg；日期：2026-10-29。 */
 .knowledge-graph-container {
   display: flex;
   flex-direction: column;
@@ -112,14 +112,12 @@
   z-index: 1;
 }
 
-.graph-surface :deep(.graph-node-label--muted) {
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.graph-surface :deep(.graph-node:hover .graph-node-label--muted),
-.graph-surface :deep(.graph-node:focus .graph-node-label--muted) {
-  opacity: 1;
+.graph-surface :deep(.graph-node-label) {
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: auto;
 }
 
 .graph-surface :deep(.graph-node:focus-visible) { outline: none; }

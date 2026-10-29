@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-"""学生端 AI 助手 WebSocket consumer。"""
+# 文件描述：学生课程问答的WebSocket连接与实时回答。
+# 项目名：adaptive-edu；文件名：consumers.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -43,7 +42,7 @@ def _next_stream_chunk(chunk_iterator):
     return next(chunk_iterator, _STREAM_END)
 
 
-def _has_verified_chat_for_empty_key(course_id: object, point_id: object, question: str) -> bool:
+def _has_verified_chat_for_empty_key(course_id: object, point_id: object, question: str, *, user=None, history=None) -> bool:
     """检查固定课程问题是否有真实模型彩排答案。
 
     :param course_id: 当前课程 ID。
@@ -53,7 +52,7 @@ def _has_verified_chat_for_empty_key(course_id: object, point_id: object, questi
     """
     if not demo_mode_enabled() or llm_facade.is_available or not course_id:
         return False
-    fingerprint = _chat_request_fingerprint(course_id, question, point_id)
+    fingerprint = _chat_request_fingerprint(course_id, question, point_id, user=user, history=history)
     preset = load_verified_answer("api_json", "student_chat", fingerprint)
     return isinstance(preset, dict) and bool(str(preset.get("reply") or "").strip())
 
@@ -85,14 +84,15 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
         history_items = history if isinstance(history, list) else []
 
         await self.send_json({"type": "start"})
-        await self.send_json({"type": "stage", "stage": "retrieval", "message": "正在检索课程图谱证据"})
-        if _has_verified_chat_for_empty_key(course_id, point_id, question):
+        await self.send_json({"type": "stage", "stage": "retrieval", "message": "正在查找课程资料…"})
+        if await database_sync_to_async(_has_verified_chat_for_empty_key)(course_id, point_id, question, user=self.scope["user"], history=history_items):
             await self._send_compatible_fallback(
                 question=question,
                 course_id=course_id,
                 point_id=point_id,
                 knowledge_point=knowledge_point,
                 course_name=course_name,
+                history=history_items,
             )
             return
         try:
@@ -113,10 +113,11 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
                 point_id=point_id,
                 knowledge_point=knowledge_point,
                 course_name=course_name,
+                history=history_items,
             )
             return
 
-        await self.send_json({"type": "stage", "stage": "generation", "message": "正在生成流式回答"})
+        await self.send_json({"type": "stage", "stage": "generation", "message": "正在整理回答…"})
         reply_parts: list[str] = []
         streamed = False
         try:
@@ -182,6 +183,7 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
         point_id,
         knowledge_point: str,
         course_name: str,
+        history: list | None = None,
     ) -> None:
         """流式链路失败时复用原完整回答链路并继续按块推送。"""
         try:
@@ -192,6 +194,7 @@ class StudentAIChatConsumer(AsyncJsonWebsocketConsumer):
                 point_id=point_id,
                 knowledge_point=knowledge_point,
                 course_name=course_name,
+                history=history,
             )
             reply_text = str(result.get("reply") or "")
             for chunk in _split_reply_chunks(reply_text):

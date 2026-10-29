@@ -1,4 +1,5 @@
-"""GraphRAG 课程图社区检测与报告生成。"""
+# 文件描述：整理课程知识网络中的主题与关联摘要。
+# 项目名：adaptive-edu；文件名：communities.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -112,7 +113,7 @@ def build_community_report(
     """Build the human-readable community report payload."""
     return {
         "community_id": community_id,
-        "title": f"社区报告 {community_index}",
+        "title": "、".join(themes[:3]) or "课程知识关联",
         "summary": report_summary,
         "themes": themes,
         "top_entities": [
@@ -142,7 +143,7 @@ def append_community_document(
         CorpusDocument(
             id=community_id,
             kind="community_report",
-            title=f"社区报告 {community_index}",
+            title="、".join(themes[:3]) or "课程知识关联",
             content=report_summary,
             url="",
             metadata={

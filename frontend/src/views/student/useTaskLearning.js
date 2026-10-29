@@ -1,9 +1,13 @@
-/** 学生任务页的数据、资源与课程问答状态。 */
+/**
+ * 文件描述：学生任务、学习资源和课程问答状态。
+ * 项目名：adaptive-edu；文件名：useTaskLearning.js；作者：Qintsg；日期：2026-10-29。
+ */
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { appMessage, appDialog } from '@/utils/feedback'
 import { getAINodeIntro } from '@/api/student/ai'
 import { buildCourseAnswer, useStudentAIStream } from '@/composables/useStudentAIStream'
+import { useCourseChatHistory } from '@/composables/useCourseChatHistory'
 import {
   completePathNode,
   completeResource,
@@ -72,6 +76,7 @@ export function useTaskLearning() {
   const chatDrawerVisible = ref(false)
   const chatMessages = ref([])
   const chatInput = ref('')
+  const { persist: persistChat } = useCourseChatHistory(chatMessages, chatInput)
   const chatMessagesRef = ref(null)
   const currentNodeExam = ref(buildDefaultNodeExamModel())
   const nodeQuizResult = ref(buildDefaultNodeQuizResultModel())
@@ -325,6 +330,7 @@ export function useTaskLearning() {
         question: questionText,
         assistantMessage,
         history: recentHistory,
+        onDone: () => persistChat(true),
         payload: {
           course_id: courseStore.courseId || null,
           point_id: currentTask.value.knowledgePointId || null,
@@ -339,6 +345,7 @@ export function useTaskLearning() {
       })
       assistantMessage.pending = false
     } finally {
+      persistChat()
       await scrollChat()
     }
   }
@@ -351,6 +358,7 @@ export function useTaskLearning() {
   }
 
   const openFullAssistant = () => {
+    persistChat()
     closeChatSocket()
     chatDrawerVisible.value = false
     void router.push({

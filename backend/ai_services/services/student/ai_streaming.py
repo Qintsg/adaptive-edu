@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-"""学生端 AI 助手流式问答编排服务。"""
+# 文件描述：学生课程问答的上下文与实时输出编排。
+# 项目名：adaptive-edu；文件名：ai_streaming.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -9,6 +8,10 @@ from dataclasses import dataclass
 
 from platform_ai.llm import llm_facade
 from platform_ai.rag import student_learning_rag
+from ai_services.services.student.learner_chat_context import (
+    is_learning_advice_question,
+    personalized_prompt_suffix,
+)
 
 from ai_services.services.student.graph_rag_support import (
     build_graph_answer_payload,
@@ -96,10 +99,23 @@ def build_course_stream_plan(
     history: Sequence[Mapping[str, object]] | None = None,
 ) -> StudentAIStreamPlan:
     """构造带课程 GraphRAG 证据的流式回答计划。"""
-    matched_point = point_from_explicit_id(course_id=course_id, point_id=point_id)
+    explicit_points = match_points_by_query_text(course_id=course_id, query=question, limit=3)
+    if not explicit_points and (is_learning_advice_question(question) or history):
+        from knowledge.models import KnowledgeMastery
+
+        if is_learning_advice_question(question):
+            seed_ids = list(KnowledgeMastery.objects.filter(user=user, course_id=course_id, mastery_rate__lt=0.6)
+                            .order_by("mastery_rate").values_list("knowledge_point_id", flat=True)[:6])
+        else:
+            previous_answer = next((str(item.get("content", "")) for item in reversed(history or ())
+                                    if item.get("role") == "assistant"), "")
+            seed_ids = [int(point.id) for point in match_points_by_query_text(
+                course_id=course_id, query=previous_answer, limit=6)]
+        course_plan = student_learning_rag.prepare_course_answer_stream(course_id=course_id, question=question, seed_point_ids=seed_ids)
+        return _attach_history_context(_build_plan_from_rag_result(user=user, matched_point=None, raw_plan=course_plan), history)
+    matched_point = explicit_points[0] if len(explicit_points) == 1 else None
 
     if matched_point is None:
-        explicit_points = match_points_by_query_text(course_id=course_id, query=question, limit=3)
         if len(explicit_points) >= 2 or is_graph_structure_question(question):
             seed_point_ids = [int(point.id) for point in explicit_points]
             course_plan = student_learning_rag.prepare_course_answer_stream(
@@ -116,7 +132,7 @@ def build_course_stream_plan(
                 matched_point=matched_point,
                 raw_plan=course_plan,
             ), history)
-        matched_point = explicit_points[0] if explicit_points else None
+        matched_point = point_from_explicit_id(course_id=course_id, point_id=point_id)
 
     if matched_point is None:
         matched_point = point_from_search(user=user, course_id=course_id, question=question)
@@ -181,12 +197,18 @@ def build_student_ai_stream_plan(
             history=history,
         )
 
-    return build_course_stream_plan(
+    plan = build_course_stream_plan(
         user=user,
         course_id=normalized_course_id,
         question=normalized_question,
         point_id=_coerce_optional_int(point_id),
         history=history,
+    )
+    return StudentAIStreamPlan(
+        prompt=plan.prompt + personalized_prompt_suffix(user, normalized_course_id),
+        call_type=plan.call_type,
+        fallback_reply=plan.fallback_reply,
+        metadata=plan.metadata,
     )
 
 
@@ -276,7 +298,7 @@ def _format_history_context(history: Sequence[Mapping[str, object]] | None) -> s
         if not content_text:
             continue
         role_label = "学生" if role_text == "user" else "助手"
-        formatted_lines.append(f"{role_label}：{content_text[:240]}")
+        formatted_lines.append(f"{role_label}：{content_text[:1200]}")
     return "\n".join(formatted_lines)
 
 

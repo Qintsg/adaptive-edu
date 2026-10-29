@@ -1,10 +1,5 @@
-"""
-考试总分与及格线策略。
-
-统一所有考试/套题的总分计算口径：
-- 考试总分 = 所有关联 ExamQuestion.score 之和
-- 及格分 = 总分 * default_pass_ratio
-"""
+# 文件描述：统一作业百分制总分和及格线。
+# 项目名：adaptive-edu；文件名：score_policy.py；作者：Qintsg；日期：2026-10-29。
 from __future__ import annotations
 
 from decimal import Decimal
@@ -40,9 +35,7 @@ def sync_exam_totals(exam, save: bool = True, pass_ratio: float | None = None) -
     """同步单场考试的总分与及格分，并按需持久化。"""
 
     exam_questions = exam.examquestion_set.select_related('question').all()
-    total_score = sum_exam_question_scores(exam_questions).quantize(Decimal('0.01'))
-    if total_score <= 0:
-        total_score = Decimal('0.00')
+    total_score = Decimal('100.00') if sum_exam_question_scores(exam_questions) > 0 else Decimal('0.00')
     pass_score = compute_exam_pass_score(total_score, pass_ratio=pass_ratio) if total_score > 0 else Decimal('0.00')
 
     exam.total_score = total_score

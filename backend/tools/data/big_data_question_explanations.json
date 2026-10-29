@@ -1,0 +1,618 @@
+{
+  "model": "deepseek-flash",
+  "items": [
+    {
+      "id": 2,
+      "content": "第三次信息化浪潮的发生标志是以下哪种技术的普及：",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "第三次信息化浪潮以物联网、云计算和大数据技术的普及为标志，这些技术推动数据爆炸式增长和智能处理。个人计算机和互联网分别对应前两次浪潮，CPU是基础硬件。"
+    },
+    {
+      "id": 3,
+      "content": "下面哪个选项属于大数据技术的“数据存储和管理”技术层面的功能?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "数据存储和管理层负责海量数据的持久化，包括分布式文件系统、数据仓库和关系数据库等，支持多结构数据。B项是计算处理层，C项是安全层，D项是实时流处理。"
+    },
+    {
+      "id": 5,
+      "content": "以下哪一项不属于Hadoop可以运行的模式（ ）。",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Hadoop可运行在单机（本地）模式、伪分布式模式和完全分布式模式。互联模式不是Hadoop的标准运行模式，属于虚构选项。"
+    },
+    {
+      "id": 6,
+      "content": "Hadoop2.0引入了资源管理框架（ ），来是实现Hadoop1.0中MapReduce在扩展性和多框架支持等方面的不足。",
+      "answer": {
+        "answer": "D"
+      },
+      "analysis": "Hadoop 2.0引入YARN，将资源管理与计算分离，使多个计算框架共享集群。Federation用于扩展HDFS命名空间，HA提高NameNode可用性，HDFS负责分布式存储。"
+    },
+    {
+      "id": 7,
+      "content": "在Hadoop项目结构中，HDFS指的是什么?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "HDFS是Hadoop分布式文件系统，负责海量数据存储。MapReduce是并行编程模型，YARN是资源调度器，Hive是数据仓库工具。"
+    },
+    {
+      "id": 8,
+      "content": "​ Hadoop的两大核心是（ ）和（ ）",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Hadoop两大核心是HDFS（分布式存储）和MapReduce（分布式计算）。GFS是Google文件系统，HBase是NoSQL数据库，非核心组件。"
+    },
+    {
+      "id": 9,
+      "content": "下面与HDFS类似的框架是（ ）",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "GFS是Google的分布式文件系统，与HDFS设计目标类似，均针对大规模数据可靠存储。NTFS、FAT32、EXT3是单机文件系统。"
+    },
+    {
+      "id": 11,
+      "content": "mapreduce是（ ）工具",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "MapReduce是分布式计算框架，用于大规模数据集的并行处理。它不负责存储（HDFS）、网络技术或数据安全。"
+    },
+    {
+      "id": 12,
+      "content": "下列关于Map和Reduce函数的描述，哪个是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Reduce输入的<k2,List(v2)>中List(v2)是相同k2对应的value集合，而非不同k2。A、B、D描述正确。"
+    },
+    {
+      "id": 13,
+      "content": "对于文本行“hello hadoop hello world”，经过WordCount的Reduce函数处理后的结果是:",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "WordCount的Reduce对相同key的value列表求和，输出<key,总和>。输入行中hello出现两次，故输出<\"hello\",2>，其余为1。"
+    },
+    {
+      "id": 14,
+      "content": "下列关于BigTable的描述，哪个是错误的?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "options": [{"label":"A","content":"BigTable是一个单机关系型存储系统，主要依靠多表联接处理网页数据"},{"label":"B","content":"BigTable是一个分布式存储系统"},{"label":"C","content":"BigTable起初用于解决典型的互联网搜索问题"},{"label":"D","content":"网络搜索应用查询建立好的索引，从BigTable得到网页"}],
+      "analysis": "Bigtable是分布式、稀疏的多维有序映射，按行键和列族组织数据，可用于网页索引与内容存储。A项所述单机关系模型和多表联接不符合其设计，因此应选择A。"
+    },
+    {
+      "id": 16,
+      "content": "‌下列关于Hive的说法正确的是:",
+      "answer": {
+        "answer": "D"
+      },
+      "analysis": "本题按Hive 2.x讨论：Hive提供批量导入和有限的索引，适合大规模批处理；频繁行级更新不属于其主要使用场景。因此选择D。"
+    },
+    {
+      "id": 18,
+      "content": "下列关于Spark的描述，错误的是哪一项?( )",
+      "answer": {
+        "answer": "D"
+      },
+      "analysis": "Spark支持多种运行模式（本地、Standalone、YARN、Mesos等），故D错误。A、B、C描述符合事实。"
+    },
+    {
+      "id": 19,
+      "content": "‏RDD操作分为转换（Transformation）和动作（Action）两种类型，下列属于动作（Action）类型的操作的是:",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "count是Action操作，触发计算并返回结果。filter、map、groupBy是Transformation操作，返回新RDD。"
+    },
+    {
+      "id": 26,
+      "content": "在大数据的计算模式中，流计算解决的是什么问题?( )",
+      "answer": {
+        "answer": "D"
+      },
+      "analysis": "流计算面向持续到达、无界的流式数据，在数据产生时即进行处理，强调低延迟的实时计算；批量处理对应MapReduce等批处理框架，图结构数据由GraphX等图计算框架处理，存储管理与查询分析属于数据管理范畴。"
+    },
+    {
+      "id": 27,
+      "content": "下面关于云计算数据中心的描述正确的是:( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "数据中心由大量服务器、存储和网络设备构成，是云计算基础设施的物理载体，为平台和应用提供运行支撑；它并非单台服务器，也非每个企业必需自建，且高度依赖网络带宽。"
+    },
+    {
+      "id": 29,
+      "content": "下列哪个不属于Hadoop的特性?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "Hadoop设计目标之一是低成本，可运行在廉价商用服务器上，因此“成本高”不是其特性；它具备高可靠性、高容错性（副本机制），并主要运行于Linux平台。"
+    },
+    {
+      "id": 30,
+      "content": "下面哪一项不是Hadoop的特性?( )",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "Hadoop提供Java原生API及Streaming、Pipes等机制，支持多种编程语言开发，故“只支持少数几种编程语言”不是其特性；可扩展性高、成本低、可运行于Linux均为其特性。"
+    },
+    {
+      "id": 32,
+      "content": "Hadoop 支持数据的随机读写",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "HDFS面向大文件顺序访问，允许定位读取和追加写入，但不支持在文件任意位置修改已有内容。题干把Hadoop概括为支持随机读写，忽略了其存储限制，因此该说法错误。"
+    },
+    {
+      "id": 33,
+      "content": "Hbase中的数据是按行存储的。",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "HBase是面向列的NoSQL数据库，数据按列族存储，同一列族数据集中存放，因此“按行存储”的说法错误。"
+    },
+    {
+      "id": 38,
+      "content": "逻辑回归模型主要用于回归分析，不能用做分类模型。",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "逻辑回归虽名为回归，但通过Sigmoid函数将线性输出映射为概率，以阈值判定类别，是常用的二分类模型，故该说法错误。"
+    },
+    {
+      "id": 39,
+      "content": "AUC值可以衡量分类模型的效果，AUC值越接近1，分类效果越好。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "AUC是ROC曲线下面积，取值范围为0到1，表示正样本得分高于负样本得分的概率。随机排序对应0.5；越接近1，模型区分正负样本的能力越强。"
+    },
+    {
+      "id": 41,
+      "content": "决策树可作为分类算法，也可用于回归模型。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "决策树通过递归划分特征空间，叶节点取类别标签即为分类树，叶节点取连续均值即为回归树，CART等算法同时支持分类与回归任务。"
+    },
+    {
+      "id": 48,
+      "content": "协同过滤是最知名的推荐算法，可分为基于用户的协同过滤和基于物品的协同过滤。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "协同过滤利用用户历史行为计算相似度进行推荐，按相似对象分为基于用户（UserCF）和基于物品（ItemCF）两类，是推荐系统最经典的算法。"
+    },
+    {
+      "id": 55,
+      "content": "决策树可作为分类算法，也可用于回归模型。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "决策树依据划分准则构建树结构，叶节点输出类别时用于分类，输出连续值时用于回归，故既可作分类算法也可用于回归模型。"
+    },
+    {
+      "id": 64,
+      "content": "下面关于UserCF算法和ItemCF算法的对比，哪个是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "ItemCF计算物品之间的相似度，其相似度矩阵规模取决于物品数；UserCF构建用户之间的相似度矩阵。C项把ItemCF的计算对象说成用户，混淆了两类方法。"
+    },
+    {
+      "id": 68,
+      "content": "协同过滤是最知名的推荐算法，可分为基于用户的协同过滤和基于物品的协同过滤。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "协同过滤基于用户或物品的历史行为相似性产生推荐，分为基于用户和基于物品两类，是推荐系统中最知名的经典算法。"
+    },
+    {
+      "id": 73,
+      "content": "以下哪一项不属于Hadoop可以运行的模式（ ）。",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Hadoop可运行于单机（本地）模式、伪分布式模式和完全分布式模式；不存在“互联模式”这一运行模式，故该项不属于。"
+    },
+    {
+      "id": 74,
+      "content": "Hadoop框架中最核心的设计是什么?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "Hadoop两大核心组件是分布式文件系统HDFS负责海量数据存储，MapReduce负责分布式并行计算，二者共同构成框架基础。B描述的是NameNode职责，C、D是部署特点与行业地位，均非核心设计。"
+    },
+    {
+      "id": 75,
+      "content": "下面哪一项不是Hadoop的特性?( )",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "Hadoop通过Streaming等机制支持多种语言编写作业，并非只支持少数编程语言，故B不是其特性。可扩展性高、成本低、可运行于Linux均是Hadoop的典型特性。"
+    },
+    {
+      "id": 76,
+      "content": "在Hadoop项目结构中，MapReduce指的是什么?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "MapReduce是Hadoop的分布式并行编程模型，用于海量数据的离线批处理计算。流计算框架如Storm/Flink，工作流管理如Oozie，分布式协调服务为ZooKeeper，均与MapReduce不同。"
+    },
+    {
+      "id": 77,
+      "content": "下面哪个是Hadoop2.0的组件?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "D"
+        ]
+      },
+      "analysis": "Hadoop2.0引入YARN，核心组件为ResourceManager与NodeManager；JobTracker和TaskTracker是Hadoop1.0的MapReduce调度组件，在2.0中已被取代。"
+    },
+    {
+      "id": 78,
+      "content": "下列哪一项不属于Hadoop的特性?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B"
+        ]
+      },
+      "analysis": "Hadoop具有高可扩展性，且可通过Streaming支持多种语言，故A、B不属于其特性。成本低、运行于Linux平台则是Hadoop的典型特性。"
+    },
+    {
+      "id": 79,
+      "content": "Hadoop 支持数据的随机读写",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "HDFS针对大文件顺序访问设计，支持定位读取和追加写入，不支持任意位置覆盖修改已有内容。需要低延迟随机更新时，通常使用建立在HDFS之上的HBase等系统。"
+    },
+    {
+      "id": 80,
+      "content": "Hadoop 支持数据的随机读写。",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "HDFS针对大文件顺序访问设计，支持定位读取和追加写入，不支持任意位置覆盖修改已有内容。需要低延迟随机更新时，通常使用建立在HDFS之上的HBase等系统。"
+    },
+    {
+      "id": 81,
+      "content": "Hadoop1.*版本，在默认情况下，HDFS块的大小为（ ）",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "Hadoop1.x默认块大小为64MB，Hadoop2.x起默认提升为128MB。块较大可减少NameNode元数据开销并降低寻址时间占比。"
+    },
+    {
+      "id": 82,
+      "content": "下列（ ）不属于NameNode的功能。",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "保存并汇报Block信息是DataNode的职责，NameNode只维护块到数据节点的映射元数据。提供名称查询、保存metadata及启动时加载到内存均为NameNode功能。"
+    },
+    {
+      "id": 83,
+      "content": "​ Hadoop的两大核心是（ ）和（ ）",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Hadoop两大核心是HDFS与MapReduce，前者负责分布式存储，后者负责分布式计算。GFS是谷歌文件系统，HBase是建立在HDFS之上的NoSQL数据库，均非核心。"
+    },
+    {
+      "id": 84,
+      "content": "下面与HDFS类似的框架是（ ）",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "HDFS借鉴了GFS的主从架构、分块和多副本设计，二者都面向大规模数据的可靠存储。NTFS、FAT32和EXT3属于本地文件系统，因此GFS与HDFS更相近。"
+    },
+    {
+      "id": 85,
+      "content": "下列哪一项不属于HDFS采用抽象的块概念带来的好处?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "抽象块概念的好处包括简化系统设计、支持大规模文件存储、适合数据备份。跨平台兼容性由Java语言实现带来，与块抽象无关，故C不属于其好处。"
+    },
+    {
+      "id": 88,
+      "content": "数据节点( )的主要功能包括哪些?",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "DataNode负责数据块的存储与读取，按客户端或NameNode调度存取数据，并定期向NameNode发送块列表汇报。D描述的是SecondaryNameNode的功能，不属于DataNode。"
+    },
+    {
+      "id": 89,
+      "content": "‏HDFS可以高效存储大量的小文件。",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "NameNode需要为文件、目录和数据块维护元数据，内存开销随对象数量增加。大量小文件还会增加定位和调度开销，因此HDFS更适合较大的文件。"
+    },
+    {
+      "id": 90,
+      "content": "HDFS采用了主从（Master/Slave）架构模型，一个HDFS集群包括一个名称节点和若干个数据节点。",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "HDFS采用主从架构，NameNode作为主节点管理命名空间和元数据，多个DataNode作为从节点存储实际数据块，二者分工明确，故该说法正确。"
+    },
+    {
+      "id": 91,
+      "content": "mapreduce是（ ）工具",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "MapReduce是Hadoop的分布式计算框架，负责将任务分解为Map和Reduce阶段并行处理海量数据，属于数据处理工具，而非存储、网络或安全工具。"
+    },
+    {
+      "id": 92,
+      "content": "下列说法错误的是:",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "Hadoop框架用Java实现，但MapReduce程序可用多种语言编写，如通过Hadoop Streaming支持Python、C++等，故B错误；其余选项描述均符合框架特性。"
+    },
+    {
+      "id": 93,
+      "content": "下列传统并行计算框架，说法错误的是哪一项?( )",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "传统并行计算框架多采用共享内存或共享存储，节点故障易导致整体失效，容错性较差，故B说法错误；其硬件昂贵、扩展性差、编程难度高、适合计算密集型任务。"
+    },
+    {
+      "id": 94,
+      "content": "下列关于MapReduce工作流程，哪个描述是正确的?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "MapReduce框架中数据交换由框架自身通过Shuffle机制完成，Map任务间、Reduce任务间均不直接通信，用户也不能显式跨机器发消息，故A正确。"
+    },
+    {
+      "id": 95,
+      "content": "下列关于Map和Reduce函数的描述，哪个是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Reduce输入的<k2,List(v2)>中List(v2)是同一key对应的所有value集合，而非不同key的value，故C错误；A、B、D描述符合Map和Reduce函数语义。"
+    },
+    {
+      "id": 96,
+      "content": "对于文本行“hello hadoop hello world”，经过WordCount的Reduce函数处理后的结果是:",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "WordCount中Map输出<hello,1>两次及<hadoop,1>、<world,1>，Shuffle按key分组后Reduce累加，得到<hello,2><hadoop,1><world,1>，故A正确。"
+    },
+    {
+      "id": 100,
+      "content": "在HBase中，关于数据操作的描述，下列哪一项是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "HBase使用Put更新单元格，使用Delete删除数据，按行键定位记录。其数据按未经解释的字节序列保存，不提供复杂表间关系；C项否认修改能力，因此错误。"
+    },
+    {
+      "id": 102,
+      "content": "关于HBase的三层结构中各层次的名称和作用的说法，哪个是错误的?( )",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "在题目所述的旧版HBase三层寻址结构中，ZooKeeper保存-ROOT-位置，-ROOT-索引.META.，.META.记录用户表Region位置。A项混淆了这些层级。"
+    },
+    {
+      "id": 103,
+      "content": "下面关于Region的说法，哪个是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "在旧版HBase三层寻址结构中，-ROOT-表只有一个Region，用于定位.META.。一个Region由单个RegionServer提供服务，客户端缓存定位信息；C项所述多个Region不成立。"
+    },
+    {
+      "id": 106,
+      "content": "关系数据库已经流行很多年，并且Hadoop已经有了HDFS和MapReduce，为什么需要HBase?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "analysis": "HBase面向海量稀疏数据和低延迟随机访问，针对HDFS不支持随机覆盖写、MapReduce批处理延迟，以及传统关系库横向扩展和动态列结构的限制进行设计。"
+    },
+    {
+      "id": 107,
+      "content": "HBase的三层结构中，三层指的是哪三层?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "题目所述的旧版HBase三层寻址结构由ZooKeeper、-ROOT-表和.META.表组成，用于逐层定位用户表Region。数据类型不属于该寻址结构。"
+    },
+    {
+      "id": 108,
+      "content": "HBase的实现包括哪三个主要的功能组件?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "HBase实现包含链接到客户端的库函数、一个Master主服务器和多个Region服务器三个功能组件，廉价计算机集群是部署基础而非组件。"
+    },
+    {
+      "id": 109,
+      "content": "‌下列关于Hive的说法正确的是:",
+      "answer": {
+        "answer": "D"
+      },
+      "analysis": "本题按Hive 2.x讨论：Hive通过LOAD DATA等方式批量装载数据，并曾提供有限的索引。其主要面向大规模分析，频繁行级更新不属于主要使用场景，因此选择D。"
+    },
+    {
+      "id": 110,
+      "content": "以下哪个不是数据仓库的特性:( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "数据仓库四大特性为面向主题、集成、相对稳定（非易失）、反映历史变化。数据一旦进入仓库通常不修改，只定期加载，因此“动态变化”不是其特性，C错误。"
+    },
+    {
+      "id": 111,
+      "content": "关于Hive和传统关系数据库的对比分析，下面描述错误的是:( )",
+      "answer": {
+        "answer": "B"
+      },
+      "analysis": "本题按Hive 2.x及以前的索引机制讨论：Hive曾支持有限的索引，B项对索引能力的绝对否定不成立。Hive 3.0已移除该索引功能，学习时需区分版本。"
+    },
+    {
+      "id": 112,
+      "content": "传统数据仓库面临哪些挑战:( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      "analysis": "传统数据仓库难以横向扩展、存储与计算能力有限，且难以处理多样数据类型，故A、B、D是挑战；C“具有很强扩展性”与事实相反。"
+    },
+    {
+      "id": 113,
+      "content": "当采用MapReduce作为Hive的执行引擎时，下面描述正确的是:( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "HiveQL经驱动模块编译器解析、优化器优化后交执行器，执行器启动MapReduce任务，简单查询如SELECT可只扫描不启动作业，故D“一定包含Map和Reduce”错误。"
+    },
+    {
+      "id": 114,
+      "content": "Hive主要由哪三个模块组成:( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      "analysis": "Hive体系结构由用户接口模块、驱动模块（含编译器、优化器、执行器）和元数据存储模块组成，不含“用户查询模块”，故选A、C、D。"
+    },
+    {
+      "id": 117,
+      "content": "在Spark生态系统组件的应用场景中，下列哪项说法是错误的?( )",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Spark Streaming面向实时流数据处理，而非基于历史数据的数据挖掘；数据挖掘多由Spark MLlib承担。A、B、D对应用场景描述正确。"
+    },
+    {
+      "id": 118,
+      "content": "‏RDD操作分为转换（Transformation）和动作（Action）两种类型，下列属于动作（Action）类型的操作的是:",
+      "answer": {
+        "answer": "A"
+      },
+      "analysis": "count触发作业执行并返回结果，属Action；filter、map、groupBy均返回新RDD，属Transformation，惰性执行不立即计算。"
+    },
+    {
+      "id": 119,
+      "content": "‏Spark的主要特点包括:",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "analysis": "Spark以内存计算实现高速，支持Standalone、YARN、Mesos等多种运行模式，提供Scala/Java/Python等易用API，并集成SQL、流处理、机器学习、图计算组件，通用性好。"
+    },
+    {
+      "id": 120,
+      "content": "下列适用于批处理计算的框架有哪些：",
+      "answer": {
+        "answers": [
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "analysis": "MapReduce、Spark、Flink均支持批处理；Storm为流式计算框架，不适用于批处理。Flink兼具流批能力，故B、C、D正确。"
+    },
+    {
+      "id": 121,
+      "content": "Spark支持哪三种不同类型的部署方式?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "Spark支持Standalone、Spark on Mesos、Spark on YARN三种集群部署模式；HDFS是存储系统而非资源调度部署方式，D不成立。"
+    },
+    {
+      "id": 122,
+      "content": "Spark采用RDD以后能够实现高效计算的原因主要在于?( )",
+      "answer": {
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "analysis": "RDD通过血缘关系重算实现高效容错，中间结果可缓存内存供多次复用，且可存储Java对象避免序列化开销；D数据复制是HDFS容错方式，非RDD高效计算原因。"
+    },
+    {
+      "id": 135,
+      "content": "逻辑回归模型主要用于回归分析，不能用做分类模型。",
+      "answer": {
+        "answer": "false"
+      },
+      "analysis": "逻辑回归虽名为回归，但通过sigmoid函数输出概率并按阈值判定类别，是常用二分类模型，故原命题错误。"
+    },
+    {
+      "id": 137,
+      "content": "利用混淆矩阵计算模型准确率的公式是(TP+TN)/(TP+TN+FP+FN)",
+      "answer": {
+        "answer": "true"
+      },
+      "analysis": "准确率表示全部预测中判断正确的比例。TP和TN分别为正确预测的正例和反例，分母为全部样本数，因此准确率为(TP+TN)/(TP+TN+FP+FN)。"
+    },
+    {
+      "id": 141,
+      "content": "Hadoop的两大核心是（ ）和（ ）",
+      "answer": {
+        "answer": "C"
+      },
+      "analysis": "Hadoop两大核心是分布式文件系统HDFS与分布式计算框架MapReduce；GFS是谷歌论文原型，HBase是构建于HDFS之上的NoSQL数据库，非核心组件。"
+    }
+  ]
+}

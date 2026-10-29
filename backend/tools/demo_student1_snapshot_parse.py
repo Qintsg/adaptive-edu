@@ -12,6 +12,7 @@ from tools.demo_student1_snapshot_types import (
     PathNodeSnapshot,
     QuestionSnapshot,
 )
+from assessments.services.question_explanations import curated_explanations
 
 
 PRESET_VERSION = "2026-05-14-student1-big-data-inline"
@@ -1014,6 +1015,12 @@ def question_payload_with_points(payload: dict[str, object]) -> dict[str, object
     :return: 带知识点名称列表的题目快照字典。
     """
     enriched_payload = dict(payload)
+    explanation = curated_explanations().get(str(enriched_payload["content"]))
+    if explanation:
+        if not enriched_payload.get("analysis"):
+            enriched_payload["analysis"] = explanation["analysis"]
+        if "options" in explanation:
+            enriched_payload["options"] = explanation["options"]
     order = int(enriched_payload["order"])
     enriched_payload["knowledge_point_names"] = list(
         INLINE_QUESTION_KNOWLEDGE_POINTS.get(

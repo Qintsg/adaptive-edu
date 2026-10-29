@@ -1,10 +1,12 @@
-"""阶段测试评分与每题反馈详情构建。"""
+# 文件描述：阶段测试评分与逐题反馈。
+# 项目名：adaptive-edu；文件名：evaluation.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
 import logging
 
 from assessments.models import AnswerHistory, Question
+from assessments.services.question_explanations import ensure_question_explanations
 from common.domain.utils import (
     build_answer_display,
     build_normalized_score_map,
@@ -33,6 +35,7 @@ def evaluate_stage_test(
     question_ids = question_ids_from_answers(answers)
     question_map = question_map_for_node(node, question_ids)
     questions = [question_map[question_id] for question_id in question_ids if question_id in question_map]
+    ensure_question_explanations(questions)
     grading = grade_stage_questions(answers, questions)
     question_result_map = {
         str(item["question_id"]): item

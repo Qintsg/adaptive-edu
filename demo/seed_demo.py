@@ -106,6 +106,9 @@ def seed_demo() -> None:
     )
 
     course = Course.objects.get(name=DEMO_COURSE)
+    from assessments.services.question_explanations import apply_curated_question_data
+    from assessments.models import Question
+    apply_curated_question_data(list(Question.objects.filter(course=course)))
     student1 = User.objects.get(username="student1")
     align_profile_summary_with_mastery(course=course, student=student1)
     seed_completed_homework(course=course, student=student1)
@@ -113,6 +116,9 @@ def seed_demo() -> None:
         sync_neo4j(int(course.pk))
     except Exception as error:
         print(f"Neo4j 图谱同步失败，页面将使用 PostgreSQL 图谱回退：{error}")
+
+    from platform_ai.rag import student_learning_rag
+    student_learning_rag.build_index(course.pk, persist=True, force_rebuild=True)
 
     if not verify_demo(require_fresh_student=True):
         raise RuntimeError("演示基线验收未通过")

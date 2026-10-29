@@ -1,7 +1,6 @@
 /**
- * 学生端 AI 问答流状态管理。
- *
- * :returns: 可响应 WebSocket 增量消息的问答状态。
+ * 文件描述：管理课程问答的加载状态和实时输出。
+ * 项目名：adaptive-edu；文件名：useStudentAIStream.js；作者：Qintsg；日期：2026-10-29。
  */
 import { nextTick, onUnmounted, reactive, ref } from 'vue'
 import { aiChat, createStudentAIChatSocket } from '@/api/student/ai'
@@ -36,7 +35,8 @@ const createAssistantMessage = () => reactive({
   streamed: false
 })
 
-const normalizeSourceList = (value) => Array.isArray(value) ? value : []
+const normalizeSourceList = (value) => Array.isArray(value)
+  ? value.filter(item => !item || typeof item !== 'object' || !['community_report', 'question'].includes(item.kind)) : []
 
 /**
  * 网络链路均不可用时，给出完整的课程学习引导。

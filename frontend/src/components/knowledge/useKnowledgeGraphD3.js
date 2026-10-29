@@ -1,4 +1,7 @@
-/** 知识图谱的 D3 渲染、筛选与交互逻辑。 */
+/**
+ * 文件描述：知识图谱的布局、模块筛选和节点交互。
+ * 项目名：adaptive-edu；文件名：useKnowledgeGraphD3.js；作者：Qintsg；日期：2026-10-29。
+ */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import * as d3 from 'd3'
 import { appMessage } from '@/utils/feedback'
@@ -14,12 +17,19 @@ import {
   normalizeText
 } from './knowledgeGraphModels'
 
+/**
+ * 建立知识图谱的显示状态和操作。
+ * :param props: 图谱数据及显示设置。
+ * :param emit: 组件事件发送函数。
+ * :returns: 图谱状态与操作函数。
+ */
 export function useKnowledgeGraphD3(props, emit) {
   const containerRef = ref(null)
   const graphSurfaceRef = ref(null)
   const svgRef = ref(null)
   const searchText = ref('')
   const chapterFilter = ref('')
+  const sectionFilter = ref('')
   const drawerVisible = ref(false)
   const drawerTitle = ref('知识点详情')
   const selectedNode = ref(null)
@@ -39,10 +49,25 @@ export function useKnowledgeGraphD3(props, emit) {
   const d3ForceLink = d3['forceLink']
   const d3ForceCenter = d3['forceCenter']
 
+  /**
+   * 读取知识点所属的课程模块。
+   * :param node: 知识点数据。
+   * :returns: 章节路径中的首级名称。
+   */
+  const sectionForNode = (node) => {
+    const chapter = node.chapterText.split(/\s*>\s*/)[0]
+    if (chapter) return chapter
+    if (localNodes.value.some(item => item.chapterText.split(/\s*>\s*/)[0] === node.nodeName)) return node.nodeName
+    const parentEdge = localEdges.value.find(edge => edge.relationType === 'includes' && edge.targetNodeId === node.nodeId)
+    const parent = parentEdge && localNodes.value.find(item => item.nodeId === parentEdge.sourceNodeId)
+    return parent ? parent.chapterText.split(/\s*>\s*/)[0] || parent.nodeName : node.nodeName
+  }
+  const sectionList = computed(() => [...new Set(localNodes.value.map(sectionForNode))].sort())
+
   const chapterList = computed(() => {
     const chapters = new Set()
     localNodes.value.forEach((node) => {
-      if (node.chapterText) chapters.add(node.chapterText)
+      if (node.chapterText && (!sectionFilter.value || sectionForNode(node) === sectionFilter.value)) chapters.add(node.chapterText)
     })
     return [...chapters].sort()
   })
@@ -51,8 +76,9 @@ export function useKnowledgeGraphD3(props, emit) {
     const keyword = normalizeText(searchText.value).toLowerCase()
     return localNodes.value.filter((node) => {
       const chapterMatch = !chapterFilter.value || node.chapterText === chapterFilter.value
+      const sectionMatch = !sectionFilter.value || sectionForNode(node) === sectionFilter.value
       const keywordMatch = !keyword || `${node.nodeName}${node.nodeDescription}`.toLowerCase().includes(keyword)
-      return chapterMatch && keywordMatch
+      return sectionMatch && chapterMatch && keywordMatch
     })
   })
   const visibleNodeCount = computed(() => visibleNodes.value.length)
@@ -96,7 +122,7 @@ export function useKnowledgeGraphD3(props, emit) {
 
     const surfaceRect = graphSurfaceRef.value.getBoundingClientRect()
     const scale = Math.max(
-      0.45,
+      0.15,
       Math.min(1.25, 0.9 / Math.max(bounds.width / surfaceRect.width, bounds.height / surfaceRect.height))
     )
     const translateX = surfaceRect.width / 2 - scale * (bounds.x + bounds.width / 2)
@@ -153,7 +179,6 @@ export function useKnowledgeGraphD3(props, emit) {
     const heightValue = graphSurfaceRef.value.clientHeight || 640
     const searchKeyword = normalizeText(searchText.value).toLowerCase()
     const nodes = visibleNodes.value.map((node) => ({ ...node }))
-    const denseOverview = props.mode === 'view' && nodes.length > 30 && !chapterFilter.value && !searchKeyword
     const edges = visibleEdges.value.map((edge) => ({
       edgeId: edge.edgeId,
       source: edge.sourceNodeId,
@@ -185,7 +210,7 @@ export function useKnowledgeGraphD3(props, emit) {
     contentLayerRef.value = contentLayer
 
     const zoom = d3Zoom()
-      .scaleExtent([0.35, 2.5])
+      .scaleExtent([0.15, 2.5])
       .on('zoom', (event) => {
         contentLayer.attr('transform', event.transform)
       })
@@ -202,8 +227,8 @@ export function useKnowledgeGraphD3(props, emit) {
       .attr('stroke', (edge) => getRelationStroke(edge.relationType).color)
       .attr('stroke-width', (edge) => getRelationStroke(edge.relationType).width)
       .attr('stroke-dasharray', (edge) => getRelationStroke(edge.relationType).dash)
-      .attr('stroke-opacity', denseOverview ? 0.28 : 0.58)
-      .attr('marker-end', denseOverview ? null : 'url(#graph-arrow)')
+      .attr('stroke-opacity', 0.35)
+      .attr('marker-end', 'url(#graph-arrow)')
       .attr('stroke-linecap', 'round')
 
     const node = contentLayer
@@ -228,7 +253,7 @@ export function useKnowledgeGraphD3(props, emit) {
       .append('circle')
       .attr('r', (datum) => {
         const highlighted = Boolean(searchKeyword) && datum.nodeName.toLowerCase().includes(searchKeyword)
-        return highlighted ? 26 : 21
+        return highlighted ? 20 : 15
       })
       .attr('fill', (datum) => getMasteryColor(datum.masteryRate))
       .attr('stroke', '#ffffff')
@@ -238,15 +263,35 @@ export function useKnowledgeGraphD3(props, emit) {
       .append('title')
       .text((datum) => datum.nodeName)
 
+    const labelContext = document.createElement('canvas').getContext('2d')
+    labelContext.font = `600 14px ${getComputedStyle(svgRef.value).fontFamily}`
+    const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' })
+
     node
       .append('text')
-      .attr('class', denseOverview ? 'graph-node-label graph-node-label--muted' : 'graph-node-label')
+      .attr('class', 'graph-node-label')
       .attr('text-anchor', 'middle')
-      .attr('dy', 36)
+      .attr('dy', 28)
       .attr('fill', 'var(--text-primary)')
-      .attr('font-size', 12)
+      .attr('font-size', 14)
       .attr('font-weight', 600)
-      .text((datum) => (datum.nodeName.length > 10 ? `${datum.nodeName.slice(0, 10)}…` : datum.nodeName))
+      .each(function (datum) {
+        const lines = []
+        let currentLine = ''
+        for (const { segment } of segmenter.segment(datum.nodeName)) {
+          if (currentLine && labelContext.measureText(currentLine + segment).width > 116) {
+            lines.push(currentLine.trim())
+            currentLine = segment
+          } else {
+            currentLine += segment
+          }
+        }
+        if (currentLine.trim()) lines.push(currentLine.trim())
+        d3Select(this).selectAll('tspan').data(lines).join('tspan')
+          .attr('x', 0)
+          .attr('dy', (_line, index) => index ? '1.2em' : 0)
+          .text(line => line)
+      })
 
     const drag = d3Drag()
       .on('start', (event, datum) => {
@@ -270,12 +315,14 @@ export function useKnowledgeGraphD3(props, emit) {
 
     const simulation = d3
       .forceSimulation(nodes)
-      .force('link', d3ForceLink(edges).id((datum) => datum.nodeId).distance(170))
-      .force('charge', d3.forceManyBody().strength(-420))
+      .force('link', d3ForceLink(edges).id((datum) => datum.nodeId).distance(115))
+      .force('charge', d3.forceManyBody().strength(-240))
       .force('center', d3ForceCenter(width / 2, heightValue / 2))
-      .force('collide', d3.forceCollide().radius(42))
+      .force('x', d3.forceX(width / 2).strength(0.04))
+      .force('y', d3.forceY(heightValue / 2).strength(0.2))
+      .force('collide', d3.forceCollide().radius(64))
 
-    simulation.on('tick', () => {
+    const updatePositions = () => {
       link
         .attr('x1', (datum) => getLinkCoordinate(datum, 'source', 'x'))
         .attr('y1', (datum) => getLinkCoordinate(datum, 'source', 'y'))
@@ -283,11 +330,15 @@ export function useKnowledgeGraphD3(props, emit) {
         .attr('y2', (datum) => getLinkCoordinate(datum, 'target', 'y'))
 
       node.attr('transform', (datum) => `translate(${datum.x},${datum.y})`)
-    })
+    }
+
+    simulation.stop().tick(220)
+    updatePositions()
+    simulation.on('tick', updatePositions)
 
     simulationRef.value = simulation
     simulation.on('end', () => fitView())
-    requestAnimationFrame(() => fitView())
+    fitView()
   }
 
   const addNode = () => {
@@ -359,6 +410,11 @@ export function useKnowledgeGraphD3(props, emit) {
     void renderGraph()
   })
 
+  watch(sectionFilter, () => {
+    chapterFilter.value = ''
+    void renderGraph()
+  })
+
   watch(
     () => props.height,
     () => {
@@ -382,6 +438,8 @@ export function useKnowledgeGraphD3(props, emit) {
     addNode,
     chapterFilter,
     chapterList,
+    sectionFilter,
+    sectionList,
     containerRef,
     deleteNode,
     drawerTitle,

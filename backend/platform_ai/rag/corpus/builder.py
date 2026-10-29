@@ -1,4 +1,5 @@
-"""GraphRAG 课程索引构建流程。"""
+# 文件描述：构建课程知识、资源和题目的检索索引。
+# 项目名：adaptive-edu；文件名：builder.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
@@ -264,7 +265,11 @@ def populate_resources(state: GraphCorpusBuildState) -> None:
 
 
 def populate_questions(state: GraphCorpusBuildState) -> None:
-    """Create question entities and connect them to assessed knowledge points."""
+    """建立题目索引并关联对应知识点。
+
+    :param state: 当前课程的索引构建状态。
+    :returns: 无。
+    """
     for question in visible_questions(state.course_id):
         question_id = f"question:{question.id}"
         _, chapter_name = state.remember_chapter_member(question.chapter or "", question_id)
@@ -274,7 +279,7 @@ def populate_questions(state: GraphCorpusBuildState) -> None:
             GraphEntity(
                 id=question_id,
                 entity_type="question",
-                title=f"题目 {question.id}",
+                title=question.content.strip()[:60],
                 summary=summary,
                 url=f"/student/knowledge-map?question={question.id}",
                 metadata={
@@ -289,7 +294,7 @@ def populate_questions(state: GraphCorpusBuildState) -> None:
             CorpusDocument(
                 id=question_id,
                 kind="question",
-                title=f"题目 {question.id}",
+                title=question.content.strip()[:60],
                 content=summary,
                 url=f"/student/knowledge-map?question={question.id}",
                 metadata={
