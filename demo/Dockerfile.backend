@@ -1,4 +1,4 @@
-# 答辩后端镜像：内含课程原始素材，首次启动建立独立演示数据。
+# 文件描述：答辩后端镜像。项目：adaptive-edu；文件：Dockerfile.backend；作者：Qintsg；日期：2026-10-29。
 FROM python:3.12-slim-bookworm
 
 ARG DEMO_LLM_API_KEY=""
@@ -28,6 +28,7 @@ COPY backend/ ./
 RUN cp /tmp/demo-pyproject.toml pyproject.toml \
     && cp /tmp/demo-uv.lock uv.lock
 COPY demo/seed_demo.py ./demo_seed.py
+COPY demo/scripts/compact_course_text.py ./compact_course_text.py
 COPY demo/presets/ ./demo_presets/
 COPY demo/backend-entrypoint.sh /usr/local/bin/demo-backend-entrypoint
 RUN chmod 755 /usr/local/bin/demo-backend-entrypoint
