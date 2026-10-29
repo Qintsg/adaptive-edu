@@ -1,3 +1,4 @@
+<!-- 文件描述：班级详情。项目：adaptive-edu；文件：ClassDetailView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="class-detail-view">
     <n-page-header @back="goBack">
@@ -62,7 +63,7 @@
               <n-button size="small" @click="copyInviteText(currentInviteCode)">复制邀请说明</n-button>
             </div>
           </div>
-          <n-alert v-else title="生成邀请码后，学生可在课程选择页或我的班级页输入邀请码加入。" type="info" show-icon
+          <n-alert v-else title="生成邀请码，邀请学生加入" type="info" show-icon
             :closable="false" />
 
           <n-divider content-position="left">邀请码记录</n-divider>
@@ -142,7 +143,7 @@
         </n-form-item>
         <n-form-item label="使用次数">
           <n-input-number v-model="inviteForm.maxUses" :min="0" :max="10000" :step="1" style="width: 100%;" />
-          <div class="form-tip">填 0 表示不限次数，建议按班级人数设置。</div>
+          <div class="form-tip">0 表示不限次数</div>
         </n-form-item>
       </n-form>
       <template #footer>

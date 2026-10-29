@@ -1,3 +1,4 @@
+<!-- 文件描述：课程编辑。项目：adaptive-edu；文件：CourseEditView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="course-edit-view">
     <n-page-header @back="goBack">
@@ -32,7 +33,7 @@
               </n-icon>
               <div class="el-upload__text">拖拽 ZIP 压缩包到此处，或 <em>点击上传</em></div>
               <template #tip>
-                <div class="el-upload__tip">支持直接导入课程图谱、题库、PPT、视频、教材与作业库压缩包</div>
+                <div class="el-upload__tip">ZIP：知识图谱、题库、课件、视频、教材</div>
               </template>
             </n-upload>
           </n-form-item>
@@ -49,14 +50,12 @@
           <div class="card-title">导入说明</div>
         </template>
         <div class="guide-content">
-          <p>创建课程时可直接上传 ZIP 压缩包，系统会自动导入以下内容：</p>
           <ul>
             <li>知识图谱 Excel / JSON</li>
             <li>初始评测与作业题库</li>
             <li>PPT、视频、电子教材</li>
             <li>课程资源 JSON 与作业库</li>
           </ul>
-          <p>没有压缩包也可先创建课程，之后再添加题目、资源和知识点。</p>
         </div>
       </n-card>
     </div>

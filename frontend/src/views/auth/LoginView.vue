@@ -1,10 +1,9 @@
-<!-- 登录页面：保留角色跳转与记住登录状态，统一表单视觉和键盘提交。 -->
+<!-- 文件描述：登录页面。项目：adaptive-edu；文件：LoginView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <!-- 登录表单同时提供密码找回提示与注册入口。 -->
   <div class="login-view w-full">
     <div class="form-heading">
       <h2 class="form-title">登录自适应学习</h2>
-      <p class="form-desc">登录后查看课程、学习路径和最近进展。</p>
     </div>
 
     <n-form ref="formRef" :model="form" :rules="rules" label-placement="top" class="login-form"
@@ -41,7 +40,6 @@
       </n-form-item>
 
       <div class="form-footer mt-6">
-        <span>还没有账号？</span>
         <router-link to="/register" class="register-link">立即注册</router-link>
       </div>
     </n-form>

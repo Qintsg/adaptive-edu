@@ -1,4 +1,4 @@
-<!-- 学生作业反馈页面：在分析生成期间展示进度。 -->
+<!-- 文件描述：作业反馈报告。项目：adaptive-edu；文件：FeedbackReportView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="feedback-report-view">
     <!-- Page-level navigation keeps the report in the homework flow. -->
@@ -64,11 +64,9 @@
 
         <div class="analysis-content">
           <!-- Status alert changes first so the student immediately knows whether to wait or retry. -->
-          <n-alert v-if="feedbackStatus === 'pending'" :title="aiAnalysis.summary || '成绩已生成，反馈报告正在生成…'" type="info"
-            :closable="false" show-icon />
-          <n-alert v-else-if="feedbackStatus === 'failed'" title="暂时无法获取反馈报告，可以重试" type="warning" :closable="false"
+          <n-alert v-if="feedbackStatus === 'failed'" title="报告读取中断" type="warning" :closable="false"
             show-icon />
-          <n-alert v-else :title="aiAnalysis.summary || '暂无分析摘要'" type="info" :closable="false" show-icon />
+          <n-alert v-else-if="feedbackStatus !== 'pending' && aiAnalysis.summary" :title="aiAnalysis.summary" type="info" :closable="false" show-icon />
 
           <!-- Pending state keeps the page useful while background generation finishes. -->
           <div v-if="feedbackStatus === 'pending'" class="ai-pending">

@@ -1,4 +1,4 @@
-<!-- 学生学习画像页面：独立展示 AI 建议的处理状态。 -->
+<!-- 文件描述：学习画像。项目：adaptive-edu；文件：ProfileView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="profile-view">
     <div v-if="loading" class="loading-container">
@@ -10,7 +10,6 @@
       <div v-if="noAssessmentDone" class="assessment-empty-card">
         <div>
           <h3>先完成初始测评</h3>
-          <p>测评结果和学习记录会显示在这里。</p>
         </div>
         <n-button type="primary" @click="$router.push('/student/assessment')">
           前往测评中心
@@ -96,7 +95,7 @@
             <n-icon>
               <DataAnalysis />
             </n-icon>
-            <p>暂无能力数据，请先完成能力测评。</p>
+            <p>完成能力测评后查看。</p>
             <n-button type="primary" size="small" @click="$router.push('/student/assessment/ability')">
               前往能力测评
             </n-button>
@@ -154,7 +153,7 @@
             <n-icon>
               <DataAnalysis />
             </n-icon>
-            <p>暂无知识数据，请先完成知识测评。</p>
+            <p>完成知识测评后查看。</p>
             <n-button type="primary" size="small" @click="$router.push('/student/assessment/knowledge')">
               前往知识测评
             </n-button>
@@ -200,7 +199,7 @@
             <n-icon>
               <DataAnalysis />
             </n-icon>
-            <p>请先完成初始测评，系统才会生成 AI 学习建议。</p>
+            <p>完成初始测评后查看。</p>
             <n-button type="primary" size="small" @click="$router.push('/student/assessment')">
               前往测评中心
             </n-button>
@@ -220,7 +219,6 @@
             </template>
             <template v-else>
               <!-- Suggestions are rendered as a merged flat list because the API may split them across fields. -->
-              <p class="ai-lead">系统基于当前画像，推荐以下学习动作：</p>
               <div v-if="aiSuggestions.length" class="suggestion-grid">
                 <article v-for="(suggestion, index) in aiSuggestions" :key="index" class="suggestion-card">
                   <span>{{ String(index + 1).padStart(2, '0') }}</span>

@@ -1,4 +1,4 @@
-<!-- 学生学习资源生成页面：保留 AI 请求的可见处理状态。 -->
+<!-- 文件描述：学习资源生成。项目：adaptive-edu；文件：AgentLearningView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import AgentRunTimeline from '@/components/agent/AgentRunTimeline.vue'
@@ -67,7 +67,20 @@ const qualityScoreText = computed(() => {
   return `${Math.round(percentage)}%`
 })
 const canGenerate = computed(() => Boolean(currentCourseId.value && form.target.trim()))
-const profileFields = computed(() => Object.entries(form.profile).filter(([, value]) => value))
+const profileLabels: Record<string, string> = {
+  course_goal: '学习目标', weaknesses: '薄弱内容', preferred_resource: '资源偏好',
+  learning_style: '学习方式', practice_preference: '练习偏好', pace: '学习节奏',
+  available_time: '学习时间', major_or_background: '专业背景', knowledge_foundation: '知识基础'
+}
+const profileValues: Record<string, string> = {
+  video: '视频', coding_case: '实操', exercise: '练习', reading: '阅读',
+  visual: '视觉学习', auditory: '听觉学习', kinesthetic: '实践学习',
+  hands_on: '动手练习', fast: '快速', medium: '适中', slow: '循序渐进'
+}
+const profileFields = computed(() => Object.entries(form.profile)
+  .filter(([key, value]) => profileLabels[key] && value)
+  .map(([key, value]) => [profileLabels[key], (Array.isArray(value) ? value : [value])
+    .map(item => profileValues[String(item)] || String(item)).join('、')]))
 const pathBindings = computed(() => packageResult.value?.path_suggestion.suggested_bindings || [])
 const qualityStatusType = computed(() => {
   const status = qualityReport.value?.status
@@ -98,7 +111,7 @@ async function extractProfile(): Promise<void> {
   try {
     const result = await awaitAIResult(submitProfileDialog(currentCourseId.value, message))
     form.profile = result.profile
-    showSuccess(result.next_question ? `学习信息已更新。还可以补充：${result.next_question}` : '学习信息已更新')
+    showSuccess('学习信息已更新')
   } catch {
     showError('暂时无法读取学习信息，请重试')
   } finally {
@@ -211,7 +224,6 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
   <div class="agent-learning-view">
     <PageHero
       title="生成学习资源"
-      description="描述学习目标并选择资源类型。生成后可查看依据，或加入学习路径。"
     >
       <template #actions>
         <n-button type="primary" :loading="loadingPackage" :disabled="!canGenerate" @click="generatePackage">
@@ -278,18 +290,18 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
             </template>
           </ToolbarRow>
 
-          <n-alert v-if="profileLoading" title="正在整理学习信息，请稍候…" type="info" :closable="false" />
+          <n-alert v-if="profileLoading" title="正在整理学习信息…" type="info" :closable="false" />
 
           <div v-if="profileFields.length" class="profile-chips">
             <n-tag v-for="[key, value] in profileFields" :key="key" :bordered="false">
-              {{ key }}：{{ Array.isArray(value) ? value.join('、') : value }}
+              {{ key }}：{{ value }}
             </n-tag>
           </div>
         </SectionCard>
 
         <SectionCard title="生成资源">
-          <n-alert v-if="loadingPackage" title="正在生成适合当前目标的学习资源…" type="info" :closable="false" />
-          <n-empty v-if="!resources.length && !loadingPackage" description="尚无资源包。填写学习目标后点击“生成资源包”。" />
+          <n-alert v-if="loadingPackage" title="正在生成学习资源…" type="info" :closable="false" />
+          <n-empty v-if="!resources.length && !loadingPackage" description="填写学习目标，生成资源包" />
           <n-skeleton v-if="loadingPackage" :rows="8" animated />
           <div v-else class="resource-grid">
             <GeneratedResourceCard
@@ -312,7 +324,7 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
         </SectionCard>
 
         <SectionCard title="加入学习路径">
-          <n-empty v-if="!pathBindings.length" description="生成资源包后显示可加入的路径节点。" />
+          <n-empty v-if="!pathBindings.length" description="生成资源后查看" />
           <div v-else class="binding-list">
             <article v-for="binding in pathBindings" :key="binding.resource_id" class="binding-item">
               <strong>{{ binding.title }}</strong>
@@ -351,9 +363,6 @@ async function submitFeedback(resourceId: number, payload: ResourceFeedbackReque
               <span>平均评分</span>
             </div>
           </div>
-          <n-alert v-if="warnings.length" type="warning" title="生成提示" :closable="false" class="warning-alert">
-            {{ warnings[0] }}
-          </n-alert>
         </SectionCard>
       </aside>
     </div>

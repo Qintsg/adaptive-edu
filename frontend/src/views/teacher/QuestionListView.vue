@@ -1,6 +1,7 @@
+<!-- 文件描述：课程题库管理。项目：adaptive-edu；文件：QuestionListView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="question-list-view">
-    <PageHero title="题库管理" description="管理本课程的题目、知识点关联、难度和分值。">
+    <PageHero title="题库管理">
       <template #actions>
         <n-upload :auto-upload="false" :show-file-list="false" accept=".xlsx,.xls,.csv" :on-change="handleImportFile">
           <n-button plain><n-icon>
@@ -59,7 +60,7 @@
           </template>
         </n-table-column>
         <template #empty>
-          <n-empty description="暂无题目，点击右上角添加" />
+          <n-empty description="暂无题目" />
         </template>
       </n-table>
 

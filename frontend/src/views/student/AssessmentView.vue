@@ -1,9 +1,8 @@
-<!-- 学生初始测评中心：生成画像时保留可见的处理状态。 -->
+<!-- 文件描述：初始测评入口。项目：adaptive-edu；文件：AssessmentView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="assessment-view" v-loading="loading">
     <n-card class="page-header" shadow="never">
       <h2>初始测评</h2>
-      <p v-if="!profileGenerated">完成三项测评后，查看学习路径。</p>
     </n-card>
 
     <!-- 画像已生成提示 -->
@@ -11,7 +10,6 @@
       style="margin-bottom: 20px;">
       <template #default>
         <div class="assessment-alert-actions">
-          <span>能力评测和学习偏好可以随时更新。</span>
           <n-button type="primary" plain size="small" @click="viewAssessmentReport">
             查看评测报告
           </n-button>

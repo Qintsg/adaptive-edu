@@ -1,4 +1,4 @@
-<!-- 教师首页：教学数据与常用操作的工作区概览。 -->
+<!-- 文件描述：教学首页。项目：adaptive-edu；文件：DashboardView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="dashboard-view management-dashboard">
     <n-row :gutter="20">
@@ -7,7 +7,7 @@
         <n-card class="welcome-card" shadow="hover">
           <div class="welcome-content">
             <div class="welcome-text">
-              <h2>欢迎回来，{{ username }}老师！</h2>
+              <h2>教学概览</h2>
               <p>今天有 {{ pendingTasks.exams }} 份待开始的作业</p>
             </div>
           </div>

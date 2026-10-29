@@ -1,4 +1,5 @@
 <!-- 学生作答页：题目、计时器与答题卡保持清晰且可用键盘操作。 -->
+<!-- 文件描述：作业答题。项目：adaptive-edu；文件：ExamTakingView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="exam-taking-view" v-loading.fullscreen.lock="loading || submitting"
     :element-loading-text="submitting ? '正在提交作业，成绩会先显示，反馈报告稍后生成…' : '正在加载作业…'">
@@ -150,15 +151,6 @@
               </div>
             </n-card>
 
-            <!-- 作业说明或其他信息 -->
-            <n-card class="info-card" shadow="never" style="margin-top: 15px;">
-              <div class="info-text">
-                <n-icon>
-                  <InfoFilled />
-                </n-icon>
-                作答期间请勿切换页面或刷新，系统会自动保存您的答题进度。
-              </div>
-            </n-card>
           </div>
         </n-col>
       </n-row>
@@ -167,7 +159,7 @@
 </template>
 
 <script setup>
-import { Timer, Document, ArrowLeft, ArrowRight, InfoFilled } from '@/theme/element-icons'
+import { Timer, Document, ArrowLeft, ArrowRight } from '@/theme/element-icons'
 import { useExamTaking } from './useExamTaking'
 
 const {

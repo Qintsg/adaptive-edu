@@ -1,4 +1,4 @@
-# 答辩演示专用 Compose：项目名和持久卷与开发环境隔离。
+# 文件描述：答辩服务配置。项目：adaptive-edu；文件：compose.yaml；作者：Qintsg；日期：2026-10-29。
 name: adaptive-edu-defense-demo
 
 services:
@@ -54,7 +54,7 @@ services:
       GRAPHRAG_QDRANT_PATH: runtime_logs/rag/qdrant
       RESOURCE_MCP_ENABLED: "False"
       LLM_MAX_RETRIES: "0"
-      LLM_REQUEST_TIMEOUT: ${DEMO_LLM_REQUEST_TIMEOUT:-5}
+      LLM_REQUEST_TIMEOUT: ${DEMO_LLM_REQUEST_TIMEOUT:-120}
       LLM_LOW_REASONING_MODE: "True"
       KT_USE_GPU: "False"
       KT_MEFKT_NG_DEVICE: cpu

@@ -1,10 +1,10 @@
-<!-- 学生首页：以当前课程、下一步学习和真实进度为核心。 -->
+<!-- 文件描述：学习首页。项目：adaptive-edu；文件：DashboardView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="dashboard-view" v-loading="loading">
     <section class="dashboard-hero" aria-labelledby="dashboard-title">
       <div class="hero-copy">
-        <p class="hero-eyebrow">学习总览 <span aria-hidden="true">/</span> {{ currentCourseName }}</p>
-        <h1 id="dashboard-title">欢迎回来，{{ username }}<span class="hero-title-mark">。</span></h1>
+        <p class="hero-eyebrow">学习总览</p>
+        <h1 id="dashboard-title">{{ currentCourseName }}</h1>
         <div class="hero-actions flex flex-wrap gap-3">
           <n-button type="primary" @click="goToLearningPath">
             <template #icon><n-icon><Guide /></n-icon></template>
@@ -29,7 +29,7 @@
     </section>
 
     <!-- 未选课程提示 -->
-    <n-alert v-if="!courseStore.courseId" title="请先选择课程" type="info" show-icon description="请在顶部课程选择器中选择一门课程，以查看学习数据"
+    <n-alert v-if="!courseStore.courseId" title="选择课程后查看学习数据" type="info" show-icon
       :closable="false" style="margin-top: 20px;" />
 
     <n-row :gutter="20" class="stats-row">

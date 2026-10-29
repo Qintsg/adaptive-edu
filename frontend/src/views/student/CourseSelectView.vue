@@ -1,4 +1,4 @@
-<!-- 学生选课页：支持键盘选择课程，并明确展示空列表下一步。 -->
+<!-- 文件描述：课程选择。项目：adaptive-edu；文件：CourseSelectView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="course-select-view">
     <n-container class="main-container">
@@ -8,7 +8,6 @@
             <Collection />
           </n-icon>
           <h1>选择学习课程</h1>
-          <p>选择课程后，查看测评、任务和学习进度。</p>
         </div>
       </n-header>
 
@@ -24,7 +23,7 @@
         <div v-else-if="courses.length === 0" class="empty-state">
           <span class="empty-icon"><n-icon><Collection /></n-icon></span>
           <h2>还没有可选课程</h2>
-          <p>使用老师提供的邀请码加入班级后，就能在这里选择课程。</p>
+          <p>输入教师提供的邀请码。</p>
           <n-button type="primary" size="large" :loading="joiningClass" @click="showJoinDialog = true">
             加入班级
           </n-button>
@@ -51,7 +50,6 @@
                 <div class="card-content">
                   <h3 class="course-name">{{ course.name }}</h3>
                   <div class="course-meta">
-                    <n-tag size="small" effect="plain" type="info">ID: {{ course.id }}</n-tag>
                     <n-tag size="small" effect="plain" v-if="course.classId">班级: {{ course.className }}</n-tag>
                   </div>
                 </div>

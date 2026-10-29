@@ -1,4 +1,4 @@
-<!-- 学生任务学习页面：展示资源、测验和流式问答。 -->
+<!-- 文件描述：学习任务。项目：adaptive-edu；文件：TaskLearningView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="task-learning-view fade-in-up" v-loading="loading">
     <n-page-header @back="goBack" class="page-header">
@@ -58,7 +58,7 @@
                 <n-icon :class="{ 'is-loading': aiResourcesLoading }">
                   <MagicStick />
                 </n-icon>
-                <span>{{ aiResourcesLoading ? 'AI 正在联网查找适合你的学习资源，请稍候…' : 'AI 暂未找到合适资源，稍后会继续补充推荐。' }}</span>
+                <span>{{ aiResourcesLoading ? '正在查找学习资源…' : '暂无推荐资源' }}</span>
               </div>
             </template>
           </n-empty>
@@ -99,7 +99,7 @@
               <n-icon class="is-loading">
                 <MagicStick />
               </n-icon>
-              <span>AI 正在联网查找并筛选适合你的学习资源...</span>
+              <span>正在查找学习资源…</span>
             </div>
           </div>
         </n-card>
@@ -285,7 +285,6 @@
             <div class="stage-test-intro">
               <div class="stage-test-intro-text">
                 <h4>{{ stageTestTitle }}</h4>
-                <p>按作业方式完成本轮诊断，题目统一计分，提交后将生成 AI 分析报告。</p>
               </div>
               <div class="stage-test-intro-meta">
                 <n-tag type="warning" effect="plain">共 {{ stageTestQuestions.length }} 题</n-tag>
@@ -320,8 +319,7 @@
 
           <n-empty v-else description="暂无测试题目">
             <template #description>
-              <p>当前暂无匹配的测试题目</p>
-              <p style="font-size: 12px; color: #909399;">请联系教师补充题库或稍后重试</p>
+              <p>暂无测试题目</p>
             </template>
             <n-button type="primary" size="small" @click="loadStageTest">重新加载</n-button>
           </n-empty>
@@ -349,7 +347,7 @@
             <n-icon>
               <MagicStick />
             </n-icon>
-            <p>我是你的AI学习助手，有关于 <strong>{{ currentTask.titleText || '本节' }}</strong> 的问题都可以问我。</p>
+            <p>提问：{{ currentTask.titleText || '本节内容' }}</p>
           </div>
           <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['chat-msg', msg.role]">
             <div class="msg-bubble">

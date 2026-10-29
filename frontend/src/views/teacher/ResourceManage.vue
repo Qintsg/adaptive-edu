@@ -1,7 +1,8 @@
 <!-- 教师资源管理页：资源筛选、预览与编辑操作。 -->
+<!-- 文件描述：课程资源管理。项目：adaptive-edu；文件：ResourceManage.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="resource-manage">
-    <PageHero title="资源库管理" description="管理本课程的视频、文档和链接，并关联知识点。">
+    <PageHero title="资源库管理">
       <template #actions>
         <n-button type="primary" @click="showCreateDialog">
           <n-icon>

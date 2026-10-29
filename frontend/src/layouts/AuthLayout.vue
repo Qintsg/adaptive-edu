@@ -1,4 +1,4 @@
-<!-- 认证页面布局：以知识路径图形呈现平台的学习闭环。 -->
+<!-- 文件描述：登录与注册布局。项目：adaptive-edu；文件：AuthLayout.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="auth-layout min-h-dvh">
     <section class="auth-brand" aria-labelledby="brand-heading">
@@ -11,8 +11,7 @@
       </div>
 
       <div class="brand-content">
-        <h1 id="brand-heading">看清进度，<br /><em>知道下一步。</em></h1>
-        <p class="brand-subtitle">测评后查看掌握情况和学习路径。</p>
+        <h1 id="brand-heading">个性化<br /><em>学习路径</em></h1>
 
         <div class="learning-map" aria-hidden="true">
           <svg viewBox="0 0 540 270" role="presentation">

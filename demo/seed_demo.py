@@ -1,19 +1,12 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-答辩演示专用数据初始化与基线核验。
-@Project : adaptive-edu
-@File : seed_demo.py
-@Author : Qintsg
-@Date : 2026-09-27
-'''
+# 文件描述：答辩数据初始化与验收。
+# 项目：adaptive-edu；文件：seed_demo.py；作者：Qintsg；日期：2026-10-29。
 
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
@@ -143,24 +136,15 @@ def count_visible_weak_points(*, course: Course, student: User) -> int:
 
 
 def align_profile_summary_with_mastery(*, course: Course, student: User) -> None:
-    """修正预置画像中的薄弱项数量，使其与页面统计一致。
+    """根据当前掌握度生成画像摘要。
 
     :param course: 当前课程。
     :param student: 预置学习记录的学生。
     :returns: None。
-    :raises RuntimeError: 预置摘要缺少可替换的数量描述。
     """
     profile = ProfileSummary.objects.get(user=student, course=course)
     weak_count = count_visible_weak_points(course=course, student=student)
-    summary, replaced = re.subn(
-        r"\d+个知识点薄弱",
-        f"{weak_count}个知识点薄弱",
-        profile.summary or "",
-        count=1,
-    )
-    if replaced != 1:
-        raise RuntimeError("预置画像摘要缺少薄弱项数量")
-    profile.summary = summary
+    profile.summary = f"当前有{weak_count}个知识点薄弱。"
     profile.save(update_fields=["summary", "generated_at"])
 
 
@@ -270,7 +254,7 @@ def seed_completed_homework(*, course: Course, student: User) -> None:
             analysis={"analysis": analysis, "knowledge_gaps": gaps},
             recommendations=recommendations,
             next_tasks=next_tasks,
-            conclusion="报告依据本次真实作业题目和评分生成。",
+            conclusion="",
         )
 
 

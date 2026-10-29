@@ -1,3 +1,4 @@
+<!-- 文件描述：资源生成进度。项目：adaptive-edu；文件：AgentRunTimeline.vue；作者：Qintsg；日期：2026-10-29。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -23,6 +24,11 @@ const progressPercent = computed(() => {
   return events.length ? Math.max(...events.map(event => Number(event.percent) || 0)) : 0
 })
 
+/**
+ * 显示生成状态。
+ * :param status: 状态名称。
+ * :returns: 状态文字。
+ */
 function statusText(status: string): string {
   const map: Record<string, string> = {
     completed: '完成',
@@ -35,6 +41,11 @@ function statusText(status: string): string {
   return map[status] || status
 }
 
+/**
+ * 显示处理步骤。
+ * :param agent: 处理步骤名称。
+ * :returns: 步骤文字。
+ */
 function agentLabel(agent: string): string {
   const map: Record<string, string> = {
     profile_agent: '整理学习情况',
@@ -64,14 +75,6 @@ function agentLabel(agent: string): string {
       />
     </div>
 
-    <div v-if="progressEvents?.length" class="progress-events">
-      <div v-for="event in progressEvents" :key="event.stage" class="progress-event">
-        <span>{{ event.message }}</span>
-        <n-tag :type="statusTypeMap[event.status] || 'default'" size="small">
-          {{ event.percent }}%
-        </n-tag>
-      </div>
-    </div>
 
     <div class="trace-list">
       <div v-for="item in orderedTrace" :key="`${item.agent}-${item.summary}`" class="trace-item">
@@ -85,7 +88,6 @@ function agentLabel(agent: string): string {
               {{ statusText(item.status) }}
             </n-tag>
           </div>
-          <p>{{ item.summary }}</p>
           <p v-if="item.error" class="trace-error">{{ item.error }}</p>
         </div>
       </div>

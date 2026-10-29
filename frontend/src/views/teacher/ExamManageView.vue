@@ -1,6 +1,7 @@
+<!-- 文件描述：课程作业管理。项目：adaptive-edu；文件：ExamManageView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="exam-manage-view">
-    <PageHero title="作业管理" description="从课程题库组卷、发布到班级，并查看作答结果。">
+    <PageHero title="作业管理">
       <template #actions>
         <n-button type="primary" @click="showCreateDialog = true">
           <n-icon>
@@ -31,7 +32,7 @@
           </template>
         </n-table-column>
         <template #empty>
-          <n-empty description="暂无作业，点击右上角创建" />
+          <n-empty description="暂无作业" />
         </template>
       </n-table>
 

@@ -1,4 +1,4 @@
-<!-- 学生学习路径：可通过键盘选择路径节点。 -->
+<!-- 文件描述：学习路径。项目：adaptive-edu；文件：LearningPathView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="learning-path-view">
     <n-alert v-if="needAssessment" type="warning" :title="assessmentHint" show-icon :closable="false"
@@ -17,7 +17,7 @@
           <h2>学习路径</h2>
           <n-button type="primary" plain @click="refreshPath" :disabled="needAssessment" :loading="refreshingPath"
             class="refresh-btn">
-            主动刷新路径
+            更新路径
           </n-button>
         </div>
         <div class="header-stats">
@@ -47,7 +47,6 @@
         <h3>{{ aiProgressStageText }}</h3>
         <n-progress :percentage="aiProgressPercentage" :stroke-width="10" :show-text="true"
           style="width: 320px; margin: 12px 0;" />
-        <p style="color: #909399;">{{ refreshingDescription }}</p>
         <n-button v-if="!refreshingPath && !isAiProgressRunning" type="primary" style="margin-top: 16px;"
           @click="loadLearningPath">刷新查看</n-button>
       </div>
@@ -62,7 +61,7 @@
         <n-button type="primary" @click="loadLearningPath">重新加载</n-button>
       </n-empty>
       <n-empty v-else-if="!courseStore.courseId" description="请先在顶部选择课程" />
-      <n-empty v-else-if="!pathNodes.length && needAssessment" description="先完成初始测评，才能查看学习路径。">
+      <n-empty v-else-if="!pathNodes.length && needAssessment" description="完成初始测评后查看">
         <n-button type="primary" @click="goToAssessment">前往初始测评</n-button>
       </n-empty>
       <n-empty v-else-if="!pathNodes.length" description="暂无学习路径数据" />

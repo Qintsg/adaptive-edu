@@ -1,3 +1,4 @@
+<!-- 文件描述：生成学习资源卡片。项目：adaptive-edu；文件：GeneratedResourceCard.vue；作者：Qintsg；日期：2026-10-29。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -32,15 +33,21 @@ const typeIconMap: Record<string, string> = {
 }
 
 const payload = computed(() => props.resource.content_payload || {})
-const recommendationReason = computed(() => {
-  const metadata = props.resource.metadata || {}
-  return String(metadata.recommendation_reason || '')
-})
 
+/**
+ * 读取资源条目。
+ * :param value: 资源内容。
+ * :returns: 条目数组。
+ */
 function asArray(value: unknown): Array<Record<string, unknown>> {
   return Array.isArray(value) ? value.filter(item => typeof item === 'object' && item !== null) as Array<Record<string, unknown>> : []
 }
 
+/**
+ * 读取资源文字。
+ * :param value: 资源内容。
+ * :returns: 文字数组。
+ */
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map(item => String(item)) : []
 }
@@ -66,7 +73,7 @@ function asStringArray(value: unknown): string[] {
                 <AppIcon name="Info" />
               </n-button>
             </template>
-            查看证据
+            课程资料
           </n-tooltip>
           <n-tooltip trigger="hover">
             <template #trigger>
@@ -81,7 +88,6 @@ function asStringArray(value: unknown): string[] {
     </template>
 
     <div class="resource-body">
-      <p v-if="recommendationReason" class="reason">{{ recommendationReason }}</p>
 
       <div v-if="resource.resource_type === 'explanation'" class="markdown-body" v-html="renderMarkdown(resource.content)" />
 

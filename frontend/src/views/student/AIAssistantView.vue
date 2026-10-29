@@ -1,4 +1,4 @@
-<!-- 学生课程问答页面：逐块呈现回答并保留请求中的状态。 -->
+<!-- 文件描述：课程问答。项目：adaptive-edu；文件：AIAssistantView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="ai-assistant-view">
     <div class="assistant-layout">
@@ -12,7 +12,7 @@
         <div class="search-box">
           <n-input
             v-model="searchKeyword"
-            placeholder="输入知识点名称、概念或问题关键词"
+            placeholder="搜索知识点"
             clearable
             @keyup.enter="runSearch"
           >
@@ -40,7 +40,7 @@
             <span class="search-result-summary">{{ pointItem.description || '暂无摘要' }}</span>
           </button>
         </div>
-        <n-empty v-else description="输入关键词查找知识点" />
+        <n-empty v-else description="搜索知识点" />
 
         <div v-if="selectedPointDetail" class="point-detail-card">
           <div class="detail-header">
@@ -102,7 +102,7 @@
                 <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
               </div>
               <div v-if="messageItem.matchedPoint" class="message-context">
-                <span>命中知识点：{{ messageItem.matchedPoint.point_name }}</span>
+                <span>相关知识点：{{ messageItem.matchedPoint.point_name }}</span>
               </div>
             </div>
           </div>
@@ -121,7 +121,6 @@
           <div class="composer-actions">
             <div class="composer-context">
               <n-tag v-if="selectedPoint" size="small" type="info">当前知识点：{{ selectedPoint.point_name }}</n-tag>
-              <span v-else>未选知识点，将搜索当前课程。</span>
               <span class="composer-shortcut">Enter 发送 · Shift + Enter 换行</span>
             </div>
             <n-button type="primary" :loading="chatLoading" @click="askQuestion">发送问题</n-button>
@@ -159,7 +158,7 @@ const chatScrollRef = ref(null)
 const chatMessages = ref([
   {
     role: 'assistant',
-    content: '可以先查找知识点，再继续提问；也可以直接问当前课程的问题。',
+    content: '有什么课程问题？',
     sources: [],
     matchedPoint: null
   }

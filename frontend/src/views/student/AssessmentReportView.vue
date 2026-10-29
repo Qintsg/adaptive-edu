@@ -1,4 +1,4 @@
-<!-- 学生初始测评报告：异步生成期间展示连续进度。 -->
+<!-- 文件描述：初始测评报告。项目：adaptive-edu；文件：AssessmentReportView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="assessment-report-view">
     <n-page-header @back="goBack" class="page-header">
@@ -52,7 +52,6 @@
           </n-icon>
           <div class="generating-text">
             <p class="generating-title">{{ aiProgress.stageText.value }}</p>
-            <p class="generating-desc">正在根据答题结果生成学习路径和反馈报告，请稍候。</p>
             <n-progress :percentage="aiProgress.progress.value" :show-text="true" :stroke-width="6"
               style="margin-top: 12px; max-width: 400px;" />
           </div>
@@ -60,7 +59,7 @@
 
         <!-- 生成出错 -->
         <div v-else-if="generationError" class="generation-error">
-          <n-alert title="部分内容暂未更新" type="warning" description="请稍后重试，已生成的评分和答题记录仍可查看。" show-icon :closable="false" />
+          <n-alert title="报告更新中断" type="warning" show-icon :closable="false" />
           <n-button type="primary" size="small" style="margin-top: 12px;" @click="retryPoll">重试</n-button>
         </div>
 
@@ -190,7 +189,7 @@ const aiProgress = useAIProgress({
   stages: [
     { at: 0, text: '正在整理答题结果…' },
     { at: 50, text: '正在生成学习路径和反馈报告…' },
-    { at: 90, text: '仍在处理中，请稍候…' },
+    { at: 90, text: '正在整理报告…' },
   ],
 })
 

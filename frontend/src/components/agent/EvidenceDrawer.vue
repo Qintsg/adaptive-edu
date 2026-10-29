@@ -1,3 +1,4 @@
+<!-- 文件描述：课程资料来源。项目：adaptive-edu；文件：EvidenceDrawer.vue；作者：Qintsg；日期：2026-10-29。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { GeneratedLearningResource } from '@/api/student/agent'
@@ -14,12 +15,22 @@ const emit = defineEmits<{
 
 const evidenceItems = computed(() => props.resource?.evidence || [])
 
+/**
+ * 获取资料标题。
+ * :param item: 课程资料。
+ * :returns: 标题。
+ */
 function evidenceTitle(item: Record<string, unknown>): string {
   return String(item.title || item.name || `证据 ${item.id || ''}`).trim()
 }
 
+/**
+ * 获取资料摘要。
+ * :param item: 课程资料。
+ * :returns: 摘要。
+ */
 function evidenceSummary(item: Record<string, unknown>): string {
-  return String(item.summary || item.description || item.source_type || '课程证据').trim()
+  return String(item.summary || item.description || '').trim()
 }
 </script>
 
@@ -30,35 +41,22 @@ function evidenceSummary(item: Record<string, unknown>): string {
     placement="right"
     @update:show="value => emit('update:show', value)"
   >
-    <n-drawer-content :title="resource?.title || '证据追溯'">
+    <n-drawer-content :title="resource?.title || '课程资料'">
       <div class="evidence-drawer">
-        <n-alert v-if="warnings?.length" type="warning" title="生成限制" :closable="false">
+        <n-alert v-if="warnings?.length" type="warning" title="资源说明" :closable="false">
           <ul class="warning-list">
             <li v-for="warning in warnings" :key="warning">{{ warning }}</li>
           </ul>
         </n-alert>
 
-        <n-empty v-if="!evidenceItems.length" description="暂无课程证据，建议结合教师资料复核。" />
+        <n-empty v-if="!evidenceItems.length" description="暂无关联资料" />
 
         <div v-else class="evidence-list">
           <article v-for="item in evidenceItems" :key="`${item.source_type}-${item.id}-${item.title}`" class="evidence-item">
             <div class="evidence-title-row">
               <h4>{{ evidenceTitle(item) }}</h4>
-              <n-tag size="small" :bordered="false">
-                {{ item.source_type || 'course' }}
-              </n-tag>
             </div>
-            <p>{{ evidenceSummary(item) }}</p>
-            <dl>
-              <template v-if="item.resource_type">
-                <dt>资源类型</dt>
-                <dd>{{ item.resource_type }}</dd>
-              </template>
-              <template v-if="item.id">
-                <dt>来源 ID</dt>
-                <dd>{{ item.id }}</dd>
-              </template>
-            </dl>
+            <p v-if="evidenceSummary(item)">{{ evidenceSummary(item) }}</p>
           </article>
         </div>
       </div>

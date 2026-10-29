@@ -1,6 +1,7 @@
+<!-- 文件描述：课程管理。项目：adaptive-edu；文件：CourseListView.vue；作者：Qintsg；日期：2026-10-29。 -->
 <template>
   <div class="course-list-view">
-    <PageHero title="课程管理" description="管理课程，并进入题库、资源、知识图谱和作业。">
+    <PageHero title="课程管理">
       <template #actions>
         <n-button type="primary" @click="createCourse">
           <n-icon>
@@ -33,7 +34,7 @@
           </template>
         </n-table-column>
         <template #empty>
-          <n-empty description="暂无课程，点击右上角创建" />
+          <n-empty description="暂无课程" />
         </template>
       </n-table>
     </n-card>
