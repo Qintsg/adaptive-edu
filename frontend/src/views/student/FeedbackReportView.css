@@ -1,3 +1,6 @@
+/* 文件描述：作业反馈报告的成绩与逐题解析样式。
+ * 项目名：adaptive-edu；文件名：FeedbackReportView.css；作者：Qintsg；日期：2026-10-29。
+ */
 .feedback-report-view {
   padding: 0;
   display: flex;
@@ -27,7 +30,8 @@
 }
 
 .score-value {
-  font-size: 34px;
+  font-size: 28px;
+  white-space: nowrap;
   font-weight: 800;
   color: var(--text-primary);
 }
