@@ -1,9 +1,10 @@
+# 文件描述：课程列表与课程选择接口。项目名：adaptive-edu；文件名：courses_public.yaml；作者：Qintsg；日期：2026-11-02。
 listCourses:
   get:
     tags: [Courses]
     operationId: listCourses
     summary: 获取当前用户可访问课程
-    description: 学生返回已加入班级发布的课程；教师和管理员返回自己可管理或已发布的课程。
+    description: 学生返回已加入班级发布的课程；教师返回自己创建或任教班级关联的课程，包含尚未发布到班级的课程；管理员返回全部课程。
     responses:
       "200":
         description: data 包含 courses[] 与 current_course_id。
@@ -18,7 +19,7 @@ selectCourse:
     tags: [Courses]
     operationId: selectCourse
     summary: 选择当前课程上下文
-    description: 同一课程属于多个班级时，传入 class_id 精确选择班级；该班级必须对当前用户可访问且已发布此课程。省略时使用首个可访问班级。
+    description: 同一课程属于多个班级时，传入 class_id 精确选择班级；该班级必须对当前用户可访问且已发布此课程。省略时使用首个可访问班级。教师可以选择自己创建且尚未关联班级的课程，此时响应的 class_id 与 class_name 为 null。
     requestBody:
       required: true
       content:

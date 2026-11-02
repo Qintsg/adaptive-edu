@@ -1,14 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-"""
-课程模块 - 学生接口
-
-包含：课程列表、选课、班级加入/退出/查看
-@Project : adaptive-edu
-@File : student.py
-@Author : Qintsg
-@Date : 2026-09-24 20:00
-"""
+# 文件描述：课程列表、课程选择和学生班级接口。
+# 项目名：adaptive-edu；文件名：student.py；作者：Qintsg；日期：2026-11-02。
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -78,12 +69,12 @@ def _serialize_student_class(enrollment: Enrollment) -> dict[str, object | None]
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def course_list(request):
+def course_list(request: Request) -> Response:
     """
-    获取用户课程列表
-    GET /api/courses
-    
-    学生返回已选课程，教师返回教授的课程
+    返回学生已加入的课程，或教师与管理员可管理的课程。
+
+    :param request: 已认证用户的课程列表请求。
+    :returns: 课程列表与当前课程编号。
     """
     user = request.user
     
@@ -122,6 +113,13 @@ def course_list(request):
                         'class_name': c.name,
                         'student_count': Enrollment.objects.filter(class_obj=c).count()
                     })
+        for course in Course.get_manageable_courses(user).exclude(id__in=seen_courses):
+            courses.append({
+                **_serialize_course_summary(course),
+                'class_id': None,
+                'class_name': None,
+                'student_count': 0,
+            })
     
     context = UserCourseContext.objects.filter(user=user).first()
     current_course_id = context.current_course_id if context else None
@@ -179,7 +177,8 @@ def course_select(request: Request) -> Response:
         if class_id is not None:
             eligible_classes = eligible_classes.filter(id=class_id)
         class_obj = eligible_classes.first()
-        if not class_obj and (not user.is_superuser or class_id is not None):
+        can_manage_without_class = class_id is None and course.can_edit(user)
+        if not class_obj and not can_manage_without_class:
             return error_response(msg='您未教授该课程', code=403)
     
     # 更新用户课程上下文

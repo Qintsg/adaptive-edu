@@ -1,4 +1,5 @@
-"""认证接口的注册、登录与用户信息支撑逻辑。"""
+# 文件描述：认证接口的注册、登录与用户信息支撑逻辑。
+# 项目名：adaptive-edu；文件名：support.py；作者：Qintsg；日期：2026-11-02。
 
 from __future__ import annotations
 
@@ -159,7 +160,11 @@ def build_userinfo_payload(user: User) -> dict[str, object]:
 
 
 def build_user_learning_context(user: User) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
-    """读取学生加入班级与教师授课班级，并去重课程列表。"""
+    """读取班级关系和教师可管理课程，并去重课程列表。
+
+    :param user: 当前认证用户。
+    :returns: 班级列表和课程列表。
+    """
     classes: list[dict[str, object]] = []
     courses: list[dict[str, object]] = []
     course_ids_seen: set[int] = set()
@@ -174,6 +179,8 @@ def build_user_learning_context(user: User) -> tuple[list[dict[str, object]], li
             class_payload, course_id, course_name = build_teaching_class_payload(teaching_class)
             classes.append(class_payload)
             append_unique_course(courses, course_ids_seen, course_id, course_name)
+        for course in Course.get_manageable_courses(user):
+            append_unique_course(courses, course_ids_seen, course.id, course.name)
     return classes, courses
 
 
