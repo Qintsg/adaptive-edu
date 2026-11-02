@@ -16,7 +16,9 @@
         <n-table-column prop="title" label="作业名称" />
         <n-table-column prop="examTypeText" label="类型" width="120" />
         <n-table-column prop="totalScore" label="总分" width="100" />
-        <n-table-column prop="durationMinutes" label="时长(分钟)" width="100" />
+        <n-table-column prop="durationMinutes" label="作答时长" width="100">
+          <template #default="{ row }">{{ row.durationMinutes > 0 ? `${row.durationMinutes} 分钟` : '不限时' }}</template>
+        </n-table-column>
         <n-table-column prop="statusText" label="状态" width="100">
           <template #default="{ row }">
             <n-tag :type="row.statusTagType">{{ row.statusText }}</n-tag>
@@ -114,7 +116,7 @@
           </n-descriptions-item>
           <n-descriptions-item label="总分">{{ examDetail.totalScore }}</n-descriptions-item>
           <n-descriptions-item label="及格分">{{ examDetail.passScore }}</n-descriptions-item>
-          <n-descriptions-item label="作答时长">{{ examDetail.durationMinutes }} 分钟</n-descriptions-item>
+          <n-descriptions-item label="作答时长">{{ examDetail.durationMinutes > 0 ? `${examDetail.durationMinutes} 分钟` : '不限时' }}</n-descriptions-item>
           <n-descriptions-item label="状态">
             <n-tag :type="examDetail.statusTagType">{{ examDetail.statusText }}</n-tag>
           </n-descriptions-item>

@@ -1,3 +1,7 @@
+/**
+ * 文件描述：教师作业管理状态与展示数据。
+ * 项目名：adaptive-edu；文件名：useTeacherExamManage.js；作者：Qintsg；日期：2026-11-02。
+ */
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { appMessage, appDialog } from '@/utils/feedback'
@@ -67,7 +71,7 @@ const normalizePaginatedList = (value, key, mapper) => {
   return { items, total: normalizeNumber(payload?.['total'], items.length) }
 }
 
-const examTypeLabel = (type) => ({ chapter: '章节测试', midterm: '期中作业', final: '期末作业', quiz: '随堂小测', practice: '练习' }[type] || type || '-')
+const examTypeLabel = (type) => ({ chapter: '章节测试', midterm: '期中作业', final: '期末作业', quiz: '随堂小测', practice: '练习', question_set: '套题', node_test: '节点测验' }[type] || type || '-')
 const questionTypeName = (type) => ({ single: '单选', single_choice: '单选', multiple: '多选', multiple_choice: '多选', true_false: '判断', judge: '判断', fill_blank: '填空', fill: '填空', short_answer: '简答', essay: '简答' }[type] || '未知')
 const questionTagType = (type) => ({ single: 'info', single_choice: 'info', multiple: 'warning', multiple_choice: 'warning', true_false: 'success', judge: 'success', fill_blank: 'info', fill: 'info', short_answer: 'danger', essay: 'danger' }[type] || 'info')
 

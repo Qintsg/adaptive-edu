@@ -19,7 +19,7 @@
           <span><n-icon>
               <MagicStick />
             </n-icon> 知识点介绍</span>
-          <n-tag :type="difficultyTagType" size="small">{{ difficultyLabel }}</n-tag>
+          <n-tag v-if="nodeIntro.difficultyLevel" :type="difficultyTagType" size="small">{{ difficultyLabel }}</n-tag>
         </div>
       </template>
       <div class="intro-text markdown-body" v-html="renderMarkdown(nodeIntro.introductionText)"></div>

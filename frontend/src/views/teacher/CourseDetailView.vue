@@ -1,3 +1,4 @@
+<!-- 文件描述：教师课程详情。项目名：adaptive-edu；文件名：CourseDetailView.vue；作者：Qintsg；日期：2026-11-02。 -->
 <template>
     <div class="course-detail-view">
         <n-card class="course-header" shadow="never">
@@ -18,22 +19,22 @@
         <n-row :gutter="16" class="stat-row">
             <n-col :xs="12" :sm="6">
                 <n-card shadow="hover" class="stat-card">
-                    <n-statistic title="班级数" :value="stats.classCount" />
+                    <n-statistic label="班级数" :value="stats.classCount" />
                 </n-card>
             </n-col>
             <n-col :xs="12" :sm="6">
                 <n-card shadow="hover" class="stat-card">
-                    <n-statistic title="知识点" :value="stats.knowledgeCount" />
+                    <n-statistic label="知识点" :value="stats.knowledgeCount" />
                 </n-card>
             </n-col>
             <n-col :xs="12" :sm="6">
                 <n-card shadow="hover" class="stat-card">
-                    <n-statistic title="题目数" :value="stats.questionCount" />
+                    <n-statistic label="题目数" :value="stats.questionCount" />
                 </n-card>
             </n-col>
             <n-col :xs="12" :sm="6">
                 <n-card shadow="hover" class="stat-card">
-                    <n-statistic title="作业数" :value="stats.examCount" />
+                    <n-statistic label="作业数" :value="stats.examCount" />
                 </n-card>
             </n-col>
         </n-row>
@@ -281,7 +282,9 @@ const normalizeExamSummary = (value, index) => {
     return {
         id: exam?.['exam_id'] ?? exam?.['id'] ?? index,
         title: normalizeText(exam?.['title'] ?? exam?.['exam_name'] ?? exam?.['name']) || `作业 ${index + 1}`,
-        examType: normalizeText(exam?.['exam_type_display'] ?? exam?.['exam_type'] ?? exam?.['type']) || '-',
+        examType: normalizeText(exam?.['exam_type_display'])
+            || ({ question_set: '套题', node_test: '节点测验', chapter: '章节测试', midterm: '期中作业', final: '期末作业', practice: '练习' }[exam?.['exam_type'] ?? exam?.['type']])
+            || normalizeText(exam?.['exam_type'] ?? exam?.['type']) || '-',
         totalScore: normalizeNumber(exam?.['total_score']),
         status,
         statusText: statusDisplay.text,
