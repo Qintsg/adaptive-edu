@@ -1,9 +1,12 @@
-"""教师端考试管理视图。"""
+# 文件描述：教师作业管理与作业详情接口。
+# 项目名：adaptive-edu；文件名：exam_management.py；作者：Qintsg；日期：2026-11-02。
 
 from django.db import models, transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from common.http.permissions import IsTeacherOrAdmin
 from common.http.responses import error_response, success_response
@@ -13,6 +16,7 @@ from assessments.models import Question
 from exams.models import Exam, ExamQuestion, ExamSubmission
 from exams.services.score_policy import sync_exam_totals
 from exams.serializers import ExamCreateSerializer
+from exams.api.student.helpers import build_exam_score_map
 from exams.api.teacher.helpers import (
     _build_exam_question_rows,
     _ensure_teacher_exam_access,
@@ -154,8 +158,13 @@ def exam_publish(request, exam_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsTeacherOrAdmin])
-def exam_teacher_detail(request, exam_id):
-    """获取考试详情（教师端）。"""
+def exam_teacher_detail(request: Request, exam_id: int) -> Response:
+    """返回教师作业详情及与学生评分一致的题目分值。
+
+    :param request: 教师或管理员的已认证请求。
+    :param exam_id: 作业编号。
+    :returns: 作业、题目和提交统计。
+    """
     exam, exam_error = _get_exam_or_404(exam_id)
     if exam_error is not None:
         return exam_error
@@ -169,7 +178,10 @@ def exam_teacher_detail(request, exam_id):
     if permission_error is not None:
         return permission_error
 
-    exam_questions = ExamQuestion.objects.filter(exam=exam).select_related('question')
+    exam_questions = list(
+        ExamQuestion.objects.filter(exam=exam).select_related('question').order_by('order')
+    )
+    score_map = build_exam_score_map(exam, exam_questions)
     questions = [{
         'question_id': exam_question.question.id,
         'content': exam_question.question.content,
@@ -177,9 +189,9 @@ def exam_teacher_detail(request, exam_id):
         'question_type': exam_question.question.question_type,
         'options': exam_question.question.options,
         'correct_answer': exam_question.question.answer.get('answer', exam_question.question.answer) if isinstance(exam_question.question.answer, dict) else exam_question.question.answer,
-        'score': exam_question.score,
+        'score': score_map[str(exam_question.question_id)],
         'order': exam_question.order,
-    } for exam_question in exam_questions.order_by('order')]
+    } for exam_question in exam_questions]
 
     submissions = ExamSubmission.objects.filter(exam=exam)
     submission_count = submissions.count()

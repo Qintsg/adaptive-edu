@@ -1,3 +1,4 @@
+# 文件描述：教师作业接口。项目名：adaptive-edu；文件名：teacher_exams.yaml；作者：Qintsg；日期：2026-11-02。
 listTeacherExams:
   get:
     tags: [Exams]
@@ -76,7 +77,7 @@ getTeacherExamDetail:
       - $ref: ../components/parameters.yaml#/ExamIdPath
     responses:
       "200":
-        description: data 包含作业信息、题目标准答案和 statistics。
+        description: data 包含作业信息、题目标准答案和 statistics。题目分值按作业总分归一化，与学生作答评分一致。
         content:
           application/json:
             schema:
