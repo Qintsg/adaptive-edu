@@ -1,4 +1,4 @@
-<!-- 文件描述：初始测评报告。项目：adaptive-edu；文件：AssessmentReportView.vue；作者：Qintsg；日期：2026-10-29。 -->
+<!-- 文件描述：初始测评报告。项目：adaptive-edu；文件：AssessmentReportView.vue；作者：Qintsg；日期：2026-11-02。 -->
 <template>
   <div class="assessment-report-view">
     <n-page-header @back="goBack" class="page-header">
@@ -106,7 +106,7 @@
         <template #header><span>知识点掌握度</span></template>
         <div v-for="m in masteryItems" :key="m.id" class="mastery-item">
           <span class="mastery-name">{{ m.name }}</span>
-          <n-progress :percentage="Math.round(m.masteryRate * 100)"
+          <n-progress :percentage="Math.round(m.masteryRate * 100)" :show-indicator="false"
             :color="m.masteryRate >= 0.8 ? '#67c23a' : m.masteryRate >= 0.6 ? '#e6a23c' : '#f56c6c'" :stroke-width="16"
             style="flex: 1; margin: 0 12px;" />
           <span class="mastery-value">{{ Math.round(m.masteryRate * 100) }}%</span>
