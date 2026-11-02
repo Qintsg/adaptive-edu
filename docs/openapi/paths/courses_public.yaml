@@ -32,6 +32,7 @@ selectCourse:
                 type: integer
               class_id:
                 type: integer
+                nullable: true
                 description: 可选班级 ID；用于区分同一课程在不同班级中的上下文。
     responses:
       "200":

@@ -1,8 +1,5 @@
-"""
-课程模块 - 序列化器
-
-提供课程、班级、选课相关的序列化器
-"""
+# 文件描述：课程、班级与选课序列化器。
+# 项目名：adaptive-edu；文件名：serializers.py；作者：Qintsg；日期：2026-11-02。
 from rest_framework import serializers
 from courses.models import Course, Class, Enrollment, Announcement
 
@@ -61,7 +58,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class CourseSelectSerializer(serializers.Serializer):
     """课程选择序列化器"""
     course_id = serializers.IntegerField(required=True)
-    class_id = serializers.IntegerField(required=False)
+    class_id = serializers.IntegerField(required=False, allow_null=True)
 
 
 class AnnouncementSerializer(serializers.ModelSerializer):

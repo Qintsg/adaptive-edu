@@ -1,12 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-'''
-同一课程发布到多个班级时的课程上下文回归测试。
-@Project : adaptive-edu
-@File : test_course_selection.py
-@Author : Qintsg
-@Date : 2026-09-24 20:00
-'''
+# 文件描述：课程与班级选择上下文的接口回归测试。
+# 项目名：adaptive-edu；文件名：test_course_selection.py；作者：Qintsg；日期：2026-11-02。
 
 from rest_framework.test import APITestCase
 
@@ -111,3 +104,46 @@ class CourseSelectionTests(APITestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertFalse(UserCourseContext.objects.filter(user=self.teacher).exists())
+
+    def test_teacher_selects_owned_course_without_class_after_login(self) -> None:
+        """通过真实登录选择自建课程，并验证显式空班级和课程归属。
+
+        :returns: 无。
+        """
+        unpublished_course = Course.objects.create(name="未发布课程", created_by=self.teacher)
+        login_response = self.client.post(
+            "/api/auth/login",
+            {"username": self.teacher.username, "password": "Test123456"},
+            format="json",
+        )
+        self.assertEqual(login_response.status_code, 200)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {login_response.data['data']['token']}"
+        )
+        course_response = self.client.get("/api/courses")
+        self.assertEqual(course_response.status_code, 200)
+        self.assertIn(
+            unpublished_course.id,
+            [course["course_id"] for course in course_response.data["data"]["courses"]],
+        )
+        for selection in (
+            {"course_id": unpublished_course.id},
+            {"course_id": unpublished_course.id, "class_id": None},
+        ):
+            response = self.client.post("/api/courses/select", selection, format="json")
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNone(response.data["data"]["class_id"])
+            context = UserCourseContext.objects.get(user=self.teacher)
+            self.assertEqual(context.current_course_id, unpublished_course.id)
+            self.assertIsNone(context.current_class_id)
+
+        other_teacher = User.objects.create_user(
+            username="another_course_teacher", password="Test123456", role="teacher"
+        )
+        other_course = Course.objects.create(name="其他教师课程", created_by=other_teacher)
+        forbidden_response = self.client.post(
+            "/api/courses/select",
+            {"course_id": other_course.id, "class_id": None},
+            format="json",
+        )
+        self.assertEqual(forbidden_response.status_code, 403)
