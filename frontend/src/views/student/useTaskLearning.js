@@ -28,6 +28,7 @@ import {
   buildDefaultStageTestResultModel,
   buildDefaultTaskModel,
   buildStageTestAnswers,
+  buildStageTestTitle,
   formatStageAnswer,
   getDifficultyLabel,
   getDifficultyTagType,
@@ -84,7 +85,10 @@ export function useTaskLearning() {
   const stageTestAnswers = ref({})
   const stageTestResult = ref(buildDefaultStageTestResultModel())
   const stageTestLoading = ref(false)
-  const stageTestTitle = ref('')
+  const stageQuestionTitle = ref('阶段测试')
+  const stageTestTitle = computed(() => stageTestResult.value.hasResult
+    ? stageTestResult.value.titleText
+    : stageQuestionTitle.value)
   const stageTestPassScore = ref(60)
   const stageTestCardRef = ref(null)
 
@@ -228,7 +232,7 @@ export function useTaskLearning() {
     try {
       const stageTestPayload = normalizeObjectFromPayload(await getStageTest(currentNodeId.value))
       const questionList = normalizeListFromPayload(stageTestPayload.questions).map(normalizeStageQuestionPayload)
-      stageTestTitle.value = normalizeText(stageTestPayload.node_title ?? stageTestPayload.title) || '阶段测试'
+      stageQuestionTitle.value = buildStageTestTitle(stageTestPayload.questions)
       stageTestPassScore.value = normalizeNumber(stageTestPayload.pass_score, 60)
       stageTestQuestions.value = questionList
       stageTestAnswers.value = buildStageTestAnswers(questionList)

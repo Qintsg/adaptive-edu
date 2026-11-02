@@ -1,4 +1,5 @@
 ﻿# 答辩演示包导出脚本：保存镜像、PostgreSQL 基线和媒体/RAG 文件。
+# 项目名：AdaptiveEdu；文件名：Export-Demo.ps1；作者：Qintsg；日期：2026-11-02。
 param(
     [string]$OutputDirectory = 'C:\Users\qintsg\Desktop\adaptive-edu-defense-20260927'
 )
@@ -75,7 +76,7 @@ if (Test-Path -LiteralPath $targetFull) {
     if ($targetItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
         throw '工件输出目录是链接，停止覆盖。'
     }
-    Remove-Item -LiteralPath $targetFull -Recurse -Force
+    Remove-Item -LiteralPath $targetFull -Recurse
 }
 New-Item -ItemType Directory -Path $artifactTarget -Force | Out-Null
 Copy-Item -Path (Join-Path $artifactSource '*') -Destination $artifactTarget -Recurse -Force

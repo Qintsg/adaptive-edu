@@ -3,7 +3,7 @@
   <div class="task-learning-view fade-in-up" v-loading="loading">
     <n-page-header @back="goBack" class="page-header">
       <template #content>
-        <span>{{ currentTask.titleText || '任务学习' }}</span>
+        <span>{{ isTestNode ? stageTestTitle : (currentTask.titleText || '任务学习') }}</span>
       </template>
       <template #extra>
         <n-button :icon="ChatDotRound" type="primary" plain @click="chatDrawerVisible = true">

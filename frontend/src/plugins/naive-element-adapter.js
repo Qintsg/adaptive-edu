@@ -1,4 +1,7 @@
-/** Naive UI 与旧版 Element 风格模板的兼容注册入口。 */
+/**
+ * 文件描述：Naive UI 与旧版 Element 风格模板的兼容注册入口。
+ * 项目名：AdaptiveEdu；文件名：naive-element-adapter.js；作者：Qintsg；日期：2026-11-02。
+ */
 import { defineComponent, h, ref } from 'vue'
 import { NColAdapter, NRowAdapter } from './responsive-grid-adapter'
 import { loadingDirective } from './loading-directive'
@@ -325,12 +328,23 @@ const NUploadAdapter = defineComponent({
     return () => {
       const {
         beforeUpload,
+        'before-upload': kebabBeforeUpload,
         onBeforeUpload,
+        'on-before-upload': kebabOnBeforeUpload,
         onChange,
+        'on-change': kebabOnChange,
         onRemove,
+        'on-remove': kebabOnRemove,
         fileList,
+        'file-list': kebabFileList,
+        autoUpload,
+        'auto-upload': kebabAutoUpload,
+        limit,
         ...safeAttrs
       } = attrs
+      const changeHandler = onChange || kebabOnChange
+      const removeHandler = onRemove || kebabOnRemove
+      const defaultUpload = autoUpload ?? kebabAutoUpload
       const normalizeOptions = options => ({
         ...options,
         file: toElementUploadFile(options?.file),
@@ -338,22 +352,23 @@ const NUploadAdapter = defineComponent({
       })
       const handleBeforeUpload = options => {
         const normalized = normalizeOptions(options)
-        const legacyHandler = beforeUpload || onBeforeUpload
+        const legacyHandler = beforeUpload || kebabBeforeUpload || onBeforeUpload || kebabOnBeforeUpload
         return legacyHandler ? legacyHandler(normalized.file, normalized.fileList) : true
       }
       const handleChange = options => {
         const normalized = normalizeOptions(options)
-        onChange?.(normalized.file, normalized.fileList, normalized)
+        changeHandler?.(normalized.file, normalized.fileList, normalized)
       }
       const handleRemove = options => {
         const normalized = normalizeOptions(options)
-        return onRemove ? onRemove(normalized.file, normalized.fileList, normalized) : true
+        return removeHandler ? removeHandler(normalized.file, normalized.fileList, normalized) : true
       }
       return h('div', { class: 'app-upload-adapter' }, [
         h(NaiveUpload, {
           ...safeAttrs,
-          fileList,
-          beforeUpload: handleBeforeUpload,
+          fileList: fileList ?? kebabFileList,
+          ...(defaultUpload === undefined ? {} : { defaultUpload }),
+          ...(limit === undefined ? {} : { max: limit }),
           onBeforeUpload: handleBeforeUpload,
           onChange: handleChange,
           onRemove: handleRemove

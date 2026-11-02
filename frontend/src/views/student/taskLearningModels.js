@@ -1,3 +1,7 @@
+/**
+ * 文件描述：学习任务、资源与阶段测试的展示数据。
+ * 项目名：adaptive-edu；文件名：taskLearningModels.js；作者：Qintsg；日期：2026-11-02。
+ */
 import { toBackendAbsoluteUrl } from '@/api/backend'
 
 export const normalizeText = (rawValue) => {
@@ -115,6 +119,7 @@ export const buildDefaultStageFeedbackReportModel = () => ({
 
 export const buildDefaultStageTestResultModel = () => ({
   hasResult: false,
+  titleText: '阶段测试',
   scoreValue: 0,
   totalScoreValue: 100,
   isPassed: false,
@@ -253,12 +258,30 @@ const normalizeStageMistakePayload = (rawPayload) => {
   }
 }
 
+/**
+ * 根据实际题目关联的知识点生成阶段测试标题。
+ *
+ * :param {Array<object>} rawQuestions: 作答题目或已提交的逐题详情。
+ * :returns {string}: 按题目顺序去重的测试范围标题。
+ */
+export const buildStageTestTitle = (rawQuestions) => {
+  const pointNames = normalizeListFromPayload(rawQuestions).flatMap((rawQuestion) => {
+    const question = normalizeObjectFromPayload(rawQuestion)
+    return normalizeListFromPayload(question.knowledge_points)
+      .map((rawPoint) => normalizeText(normalizeObjectFromPayload(rawPoint).name).trim())
+      .filter(Boolean)
+  })
+  const uniqueNames = [...new Set(pointNames)]
+  return uniqueNames.length ? `阶段测试：${uniqueNames.join('、')}` : '阶段测试'
+}
+
 export const normalizeStageTestResultPayload = (rawPayload) => {
   const payload = normalizeObjectFromPayload(rawPayload)
   if (!Object.keys(payload).length) return buildDefaultStageTestResultModel()
 
   return {
     hasResult: true,
+    titleText: buildStageTestTitle(payload.question_details),
     scoreValue: normalizeNumber(payload.score),
     totalScoreValue: normalizeNumber(payload.total_score, 100),
     isPassed: normalizeBoolean(payload.passed),

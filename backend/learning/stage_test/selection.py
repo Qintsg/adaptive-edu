@@ -1,4 +1,5 @@
-"""阶段测试取题与响应构造逻辑。"""
+# 文件描述：阶段测试取题与响应构造逻辑。
+# 项目名：adaptive-edu；文件名：selection.py；作者：Qintsg；日期：2026-11-02。
 
 from __future__ import annotations
 
@@ -28,7 +29,7 @@ def build_stage_test_payload(node: PathNode, node_id: int) -> tuple[dict[str, ob
         {
             "node_id": node.id,
             "node_title": node.title,
-            "questions": _serialize_stage_questions(questions, knowledge_point_ids),
+            "questions": _serialize_stage_questions(questions),
             "total_score": 100,
             "pass_score": 60,
             "result": stage_test_result,
@@ -213,7 +214,6 @@ def _empty_stage_test_payload(node: PathNode, stage_test_result: object) -> dict
 
 def _serialize_stage_questions(
     questions: list[Question],
-    knowledge_point_ids: set[int],
 ) -> list[dict[str, object]]:
     """序列化阶段测试题目列表。"""
     stage_score_map = build_normalized_score_map(
@@ -222,14 +222,13 @@ def _serialize_stage_questions(
         equal_weight=True,
     )
     return [
-        _serialize_stage_question(question, knowledge_point_ids, stage_score_map)
+        _serialize_stage_question(question, stage_score_map)
         for question in questions
     ]
 
 
 def _serialize_stage_question(
     question: Question,
-    knowledge_point_ids: set[int],
     stage_score_map: dict[str, float],
 ) -> dict[str, object]:
     """序列化单道阶段测试题。"""
@@ -241,7 +240,7 @@ def _serialize_stage_question(
         "score": stage_score_map.get(str(question.id), 0),
         "knowledge_points": [
             {"id": point.id, "name": point.name}
-            for point in question.knowledge_points.filter(id__in=knowledge_point_ids)
+            for point in question.knowledge_points.all()
         ],
     }
     if question.question_type in ("single_choice", "multiple_choice", "true_false"):

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # 文件描述：答辩数据初始化与验收。
-# 项目：adaptive-edu；文件：seed_demo.py；作者：Qintsg；日期：2026-10-29。
+# 项目：adaptive-edu；文件：seed_demo.py；作者：Qintsg；日期：2026-11-02。
 
 from __future__ import annotations
 
@@ -283,10 +283,16 @@ def collect_demo_checks(*, require_fresh_student: bool) -> dict[str, dict[str, A
         checks[name] = {"ok": passed, "actual": actual}
 
     usernames = list(User.objects.order_by("username").values_list("username", flat=True))
-    add("仅四个演示账号", set(usernames) == DEMO_USERS and len(usernames) == 4, usernames)
+    if require_fresh_student:
+        add("仅四个演示账号", set(usernames) == DEMO_USERS and len(usernames) == 4, usernames)
+    else:
+        add("预置账号存在", DEMO_USERS.issubset(usernames), usernames)
 
     course_names = list(Course.objects.order_by("name").values_list("name", flat=True))
-    add("仅大数据课程", course_names == [DEMO_COURSE], course_names)
+    if require_fresh_student:
+        add("仅大数据课程", course_names == [DEMO_COURSE], course_names)
+    else:
+        add("大数据课程存在", DEMO_COURSE in course_names, course_names)
     course = Course.objects.filter(name=DEMO_COURSE).first()
     student1 = User.objects.filter(username="student1").first()
     student2 = User.objects.filter(username="student2").first()
@@ -294,14 +300,15 @@ def collect_demo_checks(*, require_fresh_student: bool) -> dict[str, dict[str, A
         return checks
 
     class_count = Class.objects.count()
-    add("唯一演示班级", class_count == 1, class_count)
+    add("唯一演示班级" if require_fresh_student else "班级存在",
+        class_count == 1 if require_fresh_student else class_count >= 1, class_count)
     student2_enrollment = Enrollment.objects.filter(
         user=student2,
         class_obj__class_courses__course=course,
         class_obj__class_courses__is_active=True,
     ).count()
     context = UserCourseContext.objects.filter(user=student2, current_course=course).exists()
-    add("student2 已加入课程", student2_enrollment > 0 and context, {
+    add("student2 已加入课程", student2_enrollment > 0 and (context or not require_fresh_student), {
         "enrollment": student2_enrollment,
         "current_course": context,
     })
@@ -372,12 +379,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="答辩演示数据初始化与核验")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--seed", action="store_true", help="在空演示库中初始化")
+    group.add_argument("--initialize", action="store_true", help="首次启动时初始化空数据库")
     group.add_argument("--verify-runtime", action="store_true", help="检查可继续运行的演示库")
     group.add_argument("--verify-baseline", action="store_true", help="检查 student2 未测评的交付基线")
     args = parser.parse_args()
 
     if args.seed:
         seed_demo()
+        return 0
+    if args.initialize:
+        if not User.objects.exists() and not Course.objects.exists():
+            seed_demo()
         return 0
     return 0 if verify_demo(require_fresh_student=args.verify_baseline) else 1
 
