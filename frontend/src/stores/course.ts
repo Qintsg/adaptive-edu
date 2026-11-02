@@ -1,7 +1,6 @@
 /**
- * 课程状态存储
- * 使用Composition API风格实现
- * 管理课程列表、当前选中课程和班级信息
+ * 文件描述：课程列表、当前课程与班级状态。
+ * 项目名：adaptive-edu；文件名：course.ts；作者：Qintsg；日期：2026-11-02。
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
@@ -35,6 +34,7 @@ export interface SelectedClassInfo {
 
 interface CourseListPayload {
   courses?: CourseRecord[]
+  current_course_id?: CourseIdentifier
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -105,14 +105,14 @@ export const useCourseStore = defineStore('course', () => {
   // ==================== 方法定义 ====================
 
   /**
-   * 获取课程列表
-   * 从服务器获取用户可访问的课程
-   * @param {Object} [params] - 查询参数
-   * @returns {Promise<Array>} 课程列表
+   * 获取可访问课程，并恢复服务器保存的当前课程。
+   * :param params: 查询参数。
+   * :returns: 课程列表。
    */
   async function fetchCourses(params: Record<string, unknown> = {}): Promise<NormalizedCourse[]> {
+    if (!currentCourse.value) init()
     // 缓存命中时直接返回，避免冗余请求
-    if (_coursesCacheTime && Date.now() - _coursesCacheTime < COURSES_CACHE_TTL && courses.value.length > 0) {
+    if (_coursesCacheTime && currentCourse.value && Date.now() - _coursesCacheTime < COURSES_CACHE_TTL && courses.value.length > 0) {
       return courses.value
     }
     loading.value = true
@@ -124,9 +124,9 @@ export const useCourseStore = defineStore('course', () => {
         : []
       _coursesCacheTime = Date.now()
 
-      // 如果有课程但未选择，默认选择第一个
       if (courses.value.length > 0 && !currentCourse.value) {
-        selectCourse(courses.value[0])
+        const selectedCourseId = Array.isArray(data) ? null : normalizeIdentifier(data.current_course_id)
+        selectCourse(courses.value.find(course => course.course_id === selectedCourseId) ?? courses.value[0])
       }
 
       return courses.value
