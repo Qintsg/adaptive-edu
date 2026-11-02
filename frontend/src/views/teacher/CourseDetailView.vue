@@ -250,10 +250,10 @@ const normalizeKnowledgeRelation = (value, index) => {
     const relation = value && typeof value === 'object' ? value : {}
     return {
         id: relation?.['id'] ?? relation?.['relation_id'] ?? index,
-        sourceKey: normalizeIdentifier(relation?.['source_id'] ?? relation?.['source'] ?? relation?.['pre_point_id'] ?? relation?.['pre_point']),
-        sourceName: normalizeText(relation?.['source'] ?? relation?.['pre_point']),
-        targetKey: normalizeIdentifier(relation?.['target_id'] ?? relation?.['target'] ?? relation?.['post_point_id'] ?? relation?.['post_point']),
-        targetName: normalizeText(relation?.['target'] ?? relation?.['post_point']),
+        sourceKey: normalizeIdentifier(relation?.['from_point_id'] ?? relation?.['source_id'] ?? relation?.['source'] ?? relation?.['pre_point_id'] ?? relation?.['pre_point']),
+        sourceName: normalizeText(relation?.['from_point_name'] ?? relation?.['source'] ?? relation?.['pre_point']),
+        targetKey: normalizeIdentifier(relation?.['to_point_id'] ?? relation?.['target_id'] ?? relation?.['target'] ?? relation?.['post_point_id'] ?? relation?.['post_point']),
+        targetName: normalizeText(relation?.['to_point_name'] ?? relation?.['target'] ?? relation?.['post_point']),
         relationType: normalizeText(relation?.['relation_type']) || 'prerequisite'
     }
 }

@@ -1,6 +1,6 @@
 /**
- * 用户认证相关API
- * 包含登录、注册、Token刷新、用户信息管理等功能
+ * 文件描述：用户登录、注册、令牌刷新与账号管理接口。
+ * 项目名：adaptive-edu；文件名：auth.ts；作者：Qintsg；日期：2026-11-02。
  * 
  * 认证流程：
  * 1. 用户登录/注册获取access_token和refresh_token
@@ -9,6 +9,7 @@
  * 4. refresh_token过期需重新登录
  */
 import request from './index'
+import { getStoredAccessToken, getStoredRefreshToken } from './authTokens'
 
 /**
  * 用户登录
@@ -104,11 +105,13 @@ export function resetPassword(data) {
 }
 
 /**
- * 退出登录
- * 将refresh token加入黑名单
- * @returns {Promise<Object>} 退出结果
+ * 使用当前认证信息退出登录，并将刷新令牌加入黑名单。
+ * :returns: 服务端退出结果。
  */
 export function logout() {
-  const refreshToken = localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token')
-  return request.post('/api/auth/logout', { refresh: refreshToken })
+  const refreshToken = getStoredRefreshToken()
+  const accessToken = getStoredAccessToken()
+  return request.post('/api/auth/logout', { refresh: refreshToken }, {
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+  })
 }

@@ -49,6 +49,8 @@ from users.models import HabitPreference, User, UserCourseContext
 
 DEMO_COURSE = "大数据技术与应用"
 DEMO_USERS = {"admin", "teacher1", "student1", "student2"}
+PUBLISHED_HOMEWORK = "第3章 分布式文件系统HDFS"
+DRAFT_HOMEWORK = "第7章 Spark"
 
 
 def build_demo_seed() -> dict[str, Any]:
@@ -112,6 +114,7 @@ def seed_demo() -> None:
     student1 = User.objects.get(username="student1")
     align_profile_summary_with_mastery(course=course, student=student1)
     seed_completed_homework(course=course, student=student1)
+    prepare_homework_states(course=course)
     try:
         sync_neo4j(int(course.pk))
     except Exception as error:
@@ -264,6 +267,37 @@ def seed_completed_homework(*, course: Course, student: User) -> None:
         )
 
 
+@transaction.atomic
+def prepare_homework_states(*, course: Course) -> None:
+    """为内置课程安排待发布作业与已发布的待参加作业。
+
+    :param course: 已导入题目和套题的大数据课程。
+    :returns: None。
+    :raises RuntimeError: 题目缺失、总分异常或预备作业已有提交。
+    """
+    teacher = User.objects.get(username="teacher1")
+    teaching_class = Class.objects.get(name="2024春季班", teacher=teacher)
+    Exam.objects.filter(course=course, created_by__isnull=True).update(created_by=teacher)
+    for title, status, target_class in (
+        (DRAFT_HOMEWORK, "draft", None),
+        (PUBLISHED_HOMEWORK, "published", teaching_class),
+    ):
+        exam = Exam.objects.get(course=course, title=title)
+        if not exam.questions.exists() or exam.total_score != Decimal("100"):
+            raise RuntimeError(f"作业题目或总分异常：{title}")
+        if ExamSubmission.objects.filter(exam=exam).exists():
+            raise RuntimeError(f"预备作业已有提交：{title}")
+        exam.created_by = teacher
+        exam.status = status
+        exam.target_class = target_class
+        exam.duration = 30
+        exam.start_time = None
+        exam.end_time = None
+        exam.save(update_fields=[
+            "created_by", "status", "target_class", "duration", "start_time", "end_time",
+        ])
+
+
 def collect_demo_checks(*, require_fresh_student: bool) -> dict[str, dict[str, Any]]:
     """读取数据库并计算可重复的演示基线断言。
 
@@ -331,6 +365,24 @@ def collect_demo_checks(*, require_fresh_student: bool) -> dict[str, dict[str, A
     add("student1 已有学习记录", all(value > 0 for value in student1_counts.values()), student1_counts)
 
     if require_fresh_student:
+        teacher = User.objects.get(username="teacher1")
+        for title, status in ((DRAFT_HOMEWORK, "draft"), (PUBLISHED_HOMEWORK, "published")):
+            exam = Exam.objects.filter(course=course, title=title).first()
+            actual = {
+                "状态": exam.status if exam else None,
+                "总分": float(exam.total_score) if exam else None,
+                "题目数": exam.questions.count() if exam else 0,
+                "创建教师": exam.created_by_id if exam else None,
+                "目标班级": exam.target_class_id if exam else None,
+                "提交数": ExamSubmission.objects.filter(exam=exam).count() if exam else 0,
+            }
+            valid = bool(exam) and actual["状态"] == status and actual["总分"] == 100
+            valid = valid and actual["题目数"] > 0 and actual["创建教师"] == teacher.id
+            valid = valid and actual["提交数"] == 0
+            if status == "published":
+                valid = valid and exam.target_class_id is not None
+            add(f"{title}预置状态", valid, actual)
+
         expected_weak_count = count_visible_weak_points(course=course, student=student1)
         profile_summary = ProfileSummary.objects.filter(user=student1, course=course).first()
         profile_text = profile_summary.summary if profile_summary else ""
@@ -380,6 +432,7 @@ def main() -> int:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--seed", action="store_true", help="在空演示库中初始化")
     group.add_argument("--initialize", action="store_true", help="首次启动时初始化空数据库")
+    group.add_argument("--prepare-homework", action="store_true", help="准备内置课程的待发布与已发布作业")
     group.add_argument("--verify-runtime", action="store_true", help="检查可继续运行的演示库")
     group.add_argument("--verify-baseline", action="store_true", help="检查 student2 未测评的交付基线")
     args = parser.parse_args()
@@ -390,6 +443,9 @@ def main() -> int:
     if args.initialize:
         if not User.objects.exists() and not Course.objects.exists():
             seed_demo()
+        return 0
+    if args.prepare_homework:
+        prepare_homework_states(course=Course.objects.get(name=DEMO_COURSE))
         return 0
     return 0 if verify_demo(require_fresh_student=args.verify_baseline) else 1
 

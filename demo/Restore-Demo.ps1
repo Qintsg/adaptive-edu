@@ -1,4 +1,5 @@
 ﻿# 答辩演示包恢复脚本。只重置演示专用 Compose 项目及其卷。
+# 项目名：adaptive-edu；文件名：Restore-Demo.ps1；作者：Qintsg；日期：2026-11-02。
 param(
     [string]$BundleDirectory = 'C:\Users\qintsg\Desktop\adaptive-edu-defense-20260927',
     [switch]$KeepCurrentImages,
@@ -72,6 +73,9 @@ if (-not $backendContainer) { throw '找不到演示后端容器。' }
 if ($LASTEXITCODE -ne 0) { throw '课程文件与 RAG 归档传入失败。' }
 & docker exec $backendContainer tar -C /app/backend -xf /tmp/media-rag-baseline.tar
 if ($LASTEXITCODE -ne 0) { throw '课程文件与 RAG 归档恢复失败。' }
+
+& docker @composeArgs exec -T backend python demo_seed.py --prepare-homework
+if ($LASTEXITCODE -ne 0) { throw '内置作业状态准备失败。' }
 
 & docker @composeArgs exec -T backend python tools.py neo4j-sync-all
 if ($LASTEXITCODE -ne 0) { throw 'Neo4j 图谱重建失败。' }
