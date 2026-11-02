@@ -1,6 +1,5 @@
-#!/user/bin/env python
-# -*- coding: UTF-8 -*-
-"""套题导入的 Excel 读取、题库匹配与建卷辅助逻辑。"""
+# 文件描述：套题导入的 Excel 读取、题库匹配与建卷辅助逻辑。
+# 项目名：adaptive-edu；文件名：support.py；作者：Qintsg；日期：2026-11-02。
 
 from __future__ import annotations
 
@@ -42,16 +41,12 @@ class ExamSetImportResult:
     question_count: int
 
 
-def load_pandas_module() -> ModuleType | None:
+def load_pandas_module() -> ModuleType:
     """
     加载 pandas 依赖。
-    :return: pandas 模块对象；依赖缺失时返回 None。
+    :return: pandas 模块对象。
     """
-    try:
-        import pandas as pandas_module
-    except ImportError:
-        print("请先安装 pandas openpyxl xlrd")
-        return None
+    import pandas as pandas_module
     return pandas_module
 
 
@@ -344,6 +339,7 @@ def create_exam_set(
     with transaction.atomic():
         exam = Exam.objects.create(
             course=course,
+            created_by=course.created_by,
             title=exam_title,
             description=f"来自作业库 {file_path.name} 的套题",
             exam_type="question_set",
