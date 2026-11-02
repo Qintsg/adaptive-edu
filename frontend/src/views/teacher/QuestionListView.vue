@@ -1,4 +1,4 @@
-<!-- 文件描述：课程题库管理。项目：adaptive-edu；文件：QuestionListView.vue；作者：Qintsg；日期：2026-10-29。 -->
+<!-- 文件描述：课程题库管理。项目：adaptive-edu；文件：QuestionListView.vue；作者：Qintsg；日期：2026-11-02。 -->
 <template>
   <div class="question-list-view">
     <PageHero title="题库管理">
@@ -82,17 +82,19 @@
           <n-input v-model="questionForm.contentText" type="textarea" :rows="3" placeholder="请输入题目内容" />
         </n-form-item>
         <n-form-item label="选项" v-if="supportsOptions(questionForm.questionType)">
-          <div v-for="(optionText, optionIndex) in questionForm.optionTextList" :key="optionIndex" class="option-item">
-            <div class="option-row">
-              <span class="option-label">{{ getOptionLabel(optionIndex) }}</span>
-              <n-input v-model="questionForm.optionTextList[optionIndex]"
-                :placeholder="`选项${getOptionLabel(optionIndex)}`" />
-              <n-button v-if="questionForm.optionTextList.length > 2" type="danger" link
-                @click="removeOption(optionIndex)">删除</n-button>
+          <div class="option-list">
+            <div v-for="(optionText, optionIndex) in questionForm.optionTextList" :key="optionIndex" class="option-item">
+              <div class="option-row">
+                <span class="option-label">{{ getOptionLabel(optionIndex) }}</span>
+                <n-input v-model="questionForm.optionTextList[optionIndex]" type="textarea"
+                  :autosize="{ minRows: 1, maxRows: 3 }" :placeholder="`选项${getOptionLabel(optionIndex)}`" />
+                <n-button v-if="questionForm.optionTextList.length > 2" type="danger" link
+                  @click="removeOption(optionIndex)">删除</n-button>
+              </div>
             </div>
+            <n-button v-if="questionForm.optionTextList.length < 8" text type="primary" @click="addOption">+
+              添加选项</n-button>
           </div>
-          <n-button v-if="questionForm.optionTextList.length < 8" text type="primary" @click="addOption">+
-            添加选项</n-button>
         </n-form-item>
         <n-form-item label="正确答案" prop="answerText">
           <n-input v-model="questionForm.answerText" placeholder="请输入正确答案（如A或AB）" />

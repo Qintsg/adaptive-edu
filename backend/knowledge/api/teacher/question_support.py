@@ -1,4 +1,5 @@
-"""教师端题库视图的序列化与更新辅助逻辑。"""
+# 文件描述：教师端题库视图的序列化与更新辅助逻辑。
+# 项目名：adaptive-edu；文件名：question_support.py；作者：Qintsg；日期：2026-11-02。
 
 from __future__ import annotations
 
@@ -34,6 +35,7 @@ def build_question_list_item(question: Question) -> dict[str, Any]:
         "content": content,
         "type": question.question_type,
         "difficulty": question.difficulty,
+        "score": float(question.score),
         "points": list(question.knowledge_points.values_list("id", flat=True)),
         "created_at": question.created_at.isoformat(),
     }

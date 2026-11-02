@@ -1,3 +1,6 @@
+/* 文件描述：课程题库与题目编辑布局。
+ * 项目名：adaptive-edu；文件名：QuestionListView.css；作者：Qintsg；日期：2026-11-02。
+ */
 .question-list-view {
   display: grid;
   gap: 20px;
@@ -15,14 +18,22 @@
   justify-content: flex-end;
 }
 
-.option-item {
-  margin-bottom: 8px;
+.option-list {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 .option-row {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.option-row :deep(.n-input) {
+  flex: 1;
+  min-width: 0;
 }
 
 .option-label {

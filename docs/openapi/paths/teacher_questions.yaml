@@ -1,3 +1,4 @@
+# 文件描述：教师题库接口。项目名：adaptive-edu；文件名：teacher_questions.yaml；作者：Qintsg；日期：2026-11-02。
 listTeacherQuestions:
   get:
     tags: [Knowledge]
@@ -25,7 +26,7 @@ listTeacherQuestions:
       - $ref: ../components/parameters.yaml#/PageSize
     responses:
       "200":
-        description: data 包含 total、questions[]。
+        description: data 包含 total、questions[]。题目包含 question_id、content、type、difficulty、score、points、created_at；score 为题目默认分值。
         content:
           application/json:
             schema:
